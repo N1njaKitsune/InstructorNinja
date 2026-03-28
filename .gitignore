@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Nested repos — these are their own Git repositories
+_REPOS/
+
+# Editor and IDE files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.bak
+
+# OS generated
+Thumbs.db
+ehthumbs.db
+Desktop.ini
