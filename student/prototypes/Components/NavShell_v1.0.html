@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nendō — Navigation Shell v1.0</title>
+
+  <!-- Google Fonts: Cinzel & Crimson Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================================
+       DESIGN SYSTEM & THEMING
+       ============================================================================ */
+
+    :root {
+      /* Core palette */
+      --color-bg-deep: #050508;
+      --color-frame-bg: #0A0A12;
+      --color-text-primary: #F5F0E8;
+
+      /* Discipline colors for indicators */
+      --color-mushin-green: rgba(122, 184, 154, 1);
+      --color-metsuke-blue: rgba(141, 184, 212, 1);
+      --color-tachi-red: rgba(212, 130, 106, 1);
+
+      /* Fonts */
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Crimson Pro', serif;
+
+      /* Spacing & sizing */
+      --frame-width-phone: 844px;
+      --frame-height-phone: 390px;
+      --frame-width-tablet: 1194px;
+      --frame-height-tablet: 834px;
+    }
+
+    /* ============================================================================
+       RESET & BASE
+       ============================================================================ */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--color-bg-deep);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    /* ============================================================================
+       DEVICE FRAME & RESPONSIVE WRAPPER
+       ============================================================================ */
+
+    .device-frame {
+      position: relative;
+      width: var(--frame-width-phone);
+      height: var(--frame-height-phone);
+      margin: auto;
+      background: var(--color-frame-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+    }
+
+    /* Toggle between phone (844x390) and tablet (1194x834) */
+    body.tablet-mode .device-frame {
+      --frame-width-phone: var(--frame-width-tablet);
+      --frame-height-phone: var(--frame-height-tablet);
+    }
+
+    /* Vertically center the device frame on the viewport */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================================================
+       CANVAS CONTAINER: holds background layers
+       ============================================================================ */
+
+    .canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(
+        135deg,
+        rgba(10, 10, 18, 0.3) 0%,
+        rgba(5, 5, 8, 0.5) 100%
+      );
+    }
+
+    /* Simple gradient background for demo */
+    .canvas::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        ellipse at 50% 50%,
+        rgba(122, 184, 154, 0.03) 0%,
+        transparent 70%
+      );
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    /* ============================================================================
+       NAVIGATION SHELL: Top Bar (z-index: 50)
+       ============================================================================ */
+
+    .nav-shell {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 36px;
+      background: rgba(10, 10, 18, 0.3);
+      backdrop-filter: blur(14px);
+      border-bottom: 0.5px solid rgba(245, 240, 232, 0.05);
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      gap: 12px;
+      animation: navFadeIn 0.6s ease-out;
+    }
+
+    @keyframes navFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ============================================================================
+       NAV BACK BUTTON
+       ============================================================================ */
+
+    .nav-back-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px 8px;
+      font-family: var(--font-heading);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      color: rgba(245, 240, 232, 0.32);
+      text-transform: uppercase;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .nav-back-btn:hover {
+      color: rgba(245, 240, 232, 0.6);
+      transform: translateX(-2px);
+    }
+
+    .nav-back-btn:active {
+      transform: translateX(-4px);
+    }
+
+    .nav-back-arrow {
+      font-size: 10px;
+    }
+
+    /* ============================================================================
+       NAV TITLE (Centre)
+       ============================================================================ */
+
+    .nav-title {
+      flex: 1;
+      text-align: center;
+      font-family: var(--font-heading);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: rgba(245, 240, 232, 0.25);
+      text-transform: uppercase;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      user-select: none;
+      animation: titleFade 0.8s ease-out;
+    }
+
+    @keyframes titleFade {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* ============================================================================
+       NAV DISCIPLINE INDICATOR
+       Small coloured dot + label showing which discipline is active.
+       ============================================================================ */
+
+    .nav-discipline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      font-family: var(--font-heading);
+      font-size: 8px;
+      letter-spacing: 0.1em;
+      color: rgba(245, 240, 232, 0.4);
+      text-transform: uppercase;
+      user-select: none;
+    }
+
+    .nav-discipline-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--color-mushin-green);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(122, 184, 154, 0.4);
+    }
+
+    .nav-discipline.metsuke .nav-discipline-dot {
+      background: var(--color-metsuke-blue);
+      box-shadow: 0 0 8px rgba(141, 184, 212, 0.4);
+    }
+
+    .nav-discipline.tachi .nav-discipline-dot {
+      background: var(--color-tachi-red);
+      box-shadow: 0 0 8px rgba(212, 130, 106, 0.4);
+    }
+
+    /* ============================================================================
+       CONTENT AREA (below nav)
+       ============================================================================ */
+
+    .content-area {
+      position: absolute;
+      top: 36px;
+      left: 0;
+      width: 100%;
+      height: calc(100% - 36px);
+      overflow: hidden;
+      z-index: 10;
+    }
+
+    /* ============================================================================
+       DEMO: Cycling screen titles
+       ============================================================================ */
+
+    .demo-screens {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 20;
+      color: rgba(245, 240, 232, 0.4);
+      font-family: var(--font-body);
+      line-height: 1.6;
+    }
+
+    .demo-screens h2 {
+      font-family: var(--font-heading);
+      font-size: 14px;
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+      color: rgba(245, 240, 232, 0.6);
+    }
+
+    .demo-screens p {
+      font-size: 11px;
+      margin: 4px 0;
+    }
+
+    /* ============================================================================
+       UTILITY STYLES
+       ============================================================================ */
+
+    .invisible {
+      visibility: hidden;
+    }
+
+    /* ============================================================================
+       DEVICE FRAME TOGGLE (Dev)
+       ============================================================================ */
+
+    .frame-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 8px 12px;
+      background: rgba(10, 10, 18, 0.6);
+      border: 0.5px solid rgba(245, 240, 232, 0.2);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font-heading);
+      color: rgba(245, 240, 232, 0.6);
+      letter-spacing: 0.08em;
+      z-index: 100;
+      user-select: none;
+    }
+
+    .frame-toggle:hover {
+      background: rgba(10, 10, 18, 0.8);
+      color: rgba(245, 240, 232, 0.9);
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Device Frame -->
+  <div class="device-frame">
+    <!-- Background Canvas -->
+    <div class="canvas"></div>
+
+    <!-- Navigation Shell (z-index: 50) -->
+    <nav class="nav-shell">
+      <!-- Back Button -->
+      <button class="nav-back-btn" onclick="goBack()">
+        <span class="nav-back-arrow">←</span>
+        <span>BACK</span>
+      </button>
+
+      <!-- Screen Title (Centre) -->
+      <div class="nav-title" id="screenTitle">Home Hub</div>
+
+      <!-- Discipline Indicator -->
+      <div class="nav-discipline mushin" id="disciplineIndicator">
+        <div class="nav-discipline-dot"></div>
+        <span id="disciplineLabel">Mushin</span>
+      </div>
+    </nav>
+
+    <!-- Content Area (Below Nav) -->
+    <div class="content-area">
+      <!-- Demo: Screen-cycling -->
+      <div class="demo-screens">
+        <h2>Nav Shell v1.0</h2>
+        <p>Navigation floats at z-index: 50</p>
+        <p>Screen titles cycle every 3 seconds</p>
+        <p>Discipline indicator updates in sync</p>
+        <p style="margin-top: 12px; font-size: 10px; opacity: 0.3;">
+          Click "BACK" to see smooth transition
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frame Toggle Button (dev only) -->
+  <div class="frame-toggle" onclick="toggleFrame()">
+    📱 Toggle Frame
+  </div>
+
+  <script>
+    /* ========================================================================
+       SCREEN DATA
+       Define all screens with titles and disciplines.
+       Customize this array per your app's navigation.
+       ======================================================================== */
+
+    const screens = [
+      { title: 'Home Hub', discipline: 'none' },
+      { title: 'Mushin Sanctuary', discipline: 'mushin' },
+      { title: 'Breathing Practice', discipline: 'mushin' },
+      { title: 'Metsuke Waters', discipline: 'metsuke' },
+      { title: 'Ocean Gaze', discipline: 'metsuke' },
+      { title: 'Tachi Mountain', discipline: 'tachi' },
+      { title: 'Sword Path', discipline: 'tachi' },
+    ];
+
+    let currentScreenIndex = 0;
+
+    /* ========================================================================
+       UPDATE NAV WITH CURRENT SCREEN
+       ======================================================================== */
+
+    function updateNav(screenIndex) {
+      const screen = screens[screenIndex];
+      const titleEl = document.getElementById('screenTitle');
+      const disciplineEl = document.getElementById('disciplineIndicator');
+      const disciplineLabel = document.getElementById('disciplineLabel');
+
+      // Fade out
+      titleEl.style.opacity = '0';
+      disciplineEl.style.opacity = '0';
+
+      // Update after fade
+      setTimeout(() => {
+        titleEl.textContent = screen.title;
+        disciplineLabel.textContent = screen.discipline.charAt(0).toUpperCase() + screen.discipline.slice(1);
+
+        // Update discipline class
+        disciplineEl.className = `nav-discipline ${screen.discipline}`;
+
+        // Hide discipline indicator if no discipline
+        if (screen.discipline === 'none') {
+          disciplineEl.classList.add('invisible');
+        } else {
+          disciplineEl.classList.remove('invisible');
+        }
+
+        // Fade in
+        titleEl.style.opacity = '1';
+        disciplineEl.style.opacity = '1';
+      }, 150);
+    }
+
+    /* ========================================================================
+       SCREEN CYCLING (Demo)
+       Auto-cycle through screens every 3 seconds.
+       ======================================================================== */
+
+    function nextScreen() {
+      currentScreenIndex = (currentScreenIndex + 1) % screens.length;
+      updateNav(currentScreenIndex);
+    }
+
+    setInterval(nextScreen, 3000);
+
+    /* ========================================================================
+       BACK BUTTON
+       ======================================================================== */
+
+    function goBack() {
+      currentScreenIndex = currentScreenIndex > 0 ? currentScreenIndex - 1 : screens.length - 1;
+      updateNav(currentScreenIndex);
+    }
+
+    /* ========================================================================
+       DEVICE FRAME TOGGLE
+       Switch between phone (844x390) and tablet (1194x834) layouts.
+       ======================================================================== */
+
+    function toggleFrame() {
+      document.body.classList.toggle('tablet-mode');
+      const btn = document.querySelector('.frame-toggle');
+      btn.textContent = document.body.classList.contains('tablet-mode')
+        ? '📱 Phone Mode'
+        : '📱 Tablet Mode';
+    }
+
+    /* ========================================================================
+       INIT
+       ======================================================================== */
+
+    // Initialize with first screen
+    updateNav(0);
+
+    // Add fade-in transition to title & discipline on page load
+    const titleEl = document.getElementById('screenTitle');
+    const disciplineEl = document.getElementById('disciplineIndicator');
+    titleEl.style.transition = 'opacity 0.3s ease-out';
+    disciplineEl.style.transition = 'opacity 0.3s ease-out';
+
+  </script>
+</body>
+</html>

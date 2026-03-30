@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nendō Home Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: #0A0A12;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 20px;
+            min-height: 100vh;
+            color: rgba(245, 240, 232, 0.7);
+        }
+
+        /* DEVICE FRAME CONTAINER */
+        .frame-container {
+            display: flex;
+            gap: 30px;
+            align-items: flex-start;
+            flex-wrap: wrap;
+        }
+
+        .device-frame {
+            position: relative;
+            overflow: hidden;
+            background: #0A0A12;
+            width: 844px;
+            height: 390px;
+            border: 12px solid #1a1a2e;
+            border-radius: 40px;
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.5);
+            font-size: 16px;
+        }
+
+        .device-frame.ipad {
+            width: 1194px;
+            height: 834px;
+            border-radius: 50px;
+            border-width: 16px;
+        }
+
+        /* ENVIRONMENT LAYERS */
+        .environment {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Sky gradient layer (deep indigo to dark warm purple) */
+        .sky-layer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(180deg, #1a1a3e 0%, #2d1f3e 50%, #3d2a3a 100%);
+            opacity: 0.9;
+        }
+
+        /* Village silhouette (placeholder) */
+        .village-layer {
+            position: absolute;
+            top: 42%;
+            left: 0;
+            width: 100%;
+            height: 15%;
+            background: linear-gradient(to bottom, transparent, rgba(20, 12, 30, 0.6));
+            /* Placeholder silhouette shapes */
+            background-image:
+                radial-gradient(circle at 15% 30%, rgba(10, 8, 15, 0.8) 5%, transparent 5%),
+                radial-gradient(circle at 35% 40%, rgba(10, 8, 15, 0.7) 8%, transparent 8%),
+                radial-gradient(circle at 60% 25%, rgba(10, 8, 15, 0.75) 6%, transparent 6%),
+                radial-gradient(circle at 80% 35%, rgba(10, 8, 15, 0.7) 7%, transparent 7%),
+                radial-gradient(circle at 92% 30%, rgba(10, 8, 15, 0.8) 5%, transparent 5%);
+            background-size: 100% 100%;
+            background-position: 0 0;
+            background-repeat: no-repeat;
+        }
+
+        /* Dojo frame (wooden edges) */
+        .dojo-frame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            border: 3px solid rgba(60, 40, 25, 0.4);
+            box-shadow: inset 0 0 60px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Floor layer (dark wooden gradient) */
+        .floor-layer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 35%;
+            background: linear-gradient(180deg, rgba(30, 18, 12, 0.3) 0%, rgba(20, 12, 8, 0.7) 100%);
+            background-image:
+                linear-gradient(180deg, rgba(30, 18, 12, 0.3) 0%, rgba(20, 12, 8, 0.7) 100%),
+                repeating-linear-gradient(90deg,
+                    transparent,
+                    transparent 2%,
+                    rgba(10, 6, 4, 0.3) 2%,
+                    rgba(10, 6, 4, 0.3) 3%);
+            background-size: 100% 100%, 100% 100%;
+        }
+
+        /* Paper texture overlay */
+        .paper-texture {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image:
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px);
+            opacity: 0.03;
+            pointer-events: none;
+        }
+
+        /* Vignette overlay */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            pointer-events: none;
+        }
+
+        /* Warm ambient glow */
+        .ambient-glow {
+            position: absolute;
+            bottom: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60%;
+            height: 40%;
+            background: radial-gradient(ellipse at center, rgba(180, 120, 80, 0.08) 0%, transparent 70%);
+            filter: blur(40px);
+            pointer-events: none;
+        }
+
+        /* CONTENT LAYER */
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        /* Navigation bar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 20px;
+            background: rgba(15, 12, 25, 0.4);
+            border-bottom: 1px solid rgba(122, 184, 154, 0.1);
+            height: 50px;
+        }
+
+        .navbar-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1em;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            color: rgba(245, 240, 232, 0.8);
+            text-transform: uppercase;
+        }
+
+        .nav-exit {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: rgba(245, 240, 232, 0.6);
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            padding: 6px 12px;
+            border-radius: 4px;
+        }
+
+        .nav-exit:hover {
+            color: rgba(245, 240, 232, 0.9);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Main content area */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            position: relative;
+        }
+
+        /* Three doors container */
+        .doors-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        /* Individual door styles */
+        .door {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: rgba(20, 15, 30, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .door::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            opacity: 0;
+            transition: all 0.4s ease;
+            animation: glow-pulse 3s ease-in-out infinite;
+        }
+
+        /* Door glow variants */
+        .door.mushin::before {
+            background: radial-gradient(circle at center, rgba(122, 184, 154, 0.3), transparent 70%);
+            box-shadow: 0 0 30px rgba(122, 184, 154, 0.2), inset 0 0 30px rgba(122, 184, 154, 0.1);
+        }
+
+        .door.metsuke::before {
+            background: radial-gradient(circle at center, rgba(141, 184, 212, 0.3), transparent 70%);
+            box-shadow: 0 0 30px rgba(141, 184, 212, 0.2), inset 0 0 30px rgba(141, 184, 212, 0.1);
+        }
+
+        .door.tachi::before {
+            background: radial-gradient(circle at center, rgba(212, 130, 106, 0.3), transparent 70%);
+            box-shadow: 0 0 30px rgba(212, 130, 106, 0.2), inset 0 0 30px rgba(212, 130, 106, 0.1);
+        }
+
+        .door:hover::before {
+            opacity: 1;
+        }
+
+        .door:hover {
+            transform: scale(1.08);
+            backdrop-filter: blur(15px);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .door.mushin:hover {
+            box-shadow: 0 0 40px rgba(122, 184, 154, 0.4);
+        }
+
+        .door.metsuke:hover {
+            box-shadow: 0 0 40px rgba(141, 184, 212, 0.4);
+        }
+
+        .door.tachi:hover {
+            box-shadow: 0 0 40px rgba(212, 130, 106, 0.4);
+        }
+
+        .door:active {
+            transform: scale(1.05) translateY(2px);
+        }
+
+        .door-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .door-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            color: rgba(245, 240, 232, 0.9);
+            line-height: 1;
+        }
+
+        .door-subtitle {
+            font-family: 'Crimson Pro', serif;
+            font-size: 0.7em;
+            color: rgba(245, 240, 232, 0.6);
+            font-weight: 400;
+            margin-top: 4px;
+        }
+
+        /* Aura orb indicator */
+        .aura-orb {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, rgba(255, 200, 100, 0.6), rgba(200, 120, 80, 0.4));
+            box-shadow: 0 0 30px rgba(255, 150, 80, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.2);
+            animation: aura-breathe 3s ease-in-out infinite;
+            z-index: 15;
+        }
+
+        /* Ember particles */
+        .embers {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .ember {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 180, 100, 0.8);
+            border-radius: 50%;
+            box-shadow: 0 0 4px rgba(255, 180, 100, 0.6);
+            animation: ember-float linear infinite;
+        }
+
+        /* ANIMATIONS */
+        @keyframes glow-pulse {
+            0%, 100% {
+                opacity: 0.3;
+            }
+            50% {
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes aura-breathe {
+            0%, 100% {
+                transform: translateX(-50%) scale(1);
+                box-shadow: 0 0 30px rgba(255, 150, 80, 0.5), inset 0 0 15px rgba(255, 255, 255, 0.2);
+            }
+            50% {
+                transform: translateX(-50%) scale(1.1);
+                box-shadow: 0 0 50px rgba(255, 150, 80, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.3);
+            }
+        }
+
+        @keyframes ember-float {
+            0% {
+                opacity: 0;
+                transform: translateY(0) translateX(0);
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-100px) translateX(var(--drift));
+            }
+        }
+
+        /* CONTROLS PANEL */
+        .controls-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 12, 25, 0.9);
+            border: 1px solid rgba(122, 184, 154, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            z-index: 100;
+            font-size: 14px;
+            max-width: 200px;
+        }
+
+        .controls-panel h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: rgba(122, 184, 154, 0.8);
+            letter-spacing: 0.05em;
+        }
+
+        .device-toggles {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .device-btn {
+            flex: 1;
+            padding: 6px 8px;
+            background: rgba(122, 184, 154, 0.2);
+            border: 1px solid rgba(122, 184, 154, 0.4);
+            color: rgba(245, 240, 232, 0.7);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85em;
+            transition: all 0.2s ease;
+            font-family: 'Crimson Pro', serif;
+        }
+
+        .device-btn:hover {
+            background: rgba(122, 184, 154, 0.3);
+            color: rgba(245, 240, 232, 0.9);
+        }
+
+        .device-btn.active {
+            background: rgba(122, 184, 154, 0.5);
+            color: rgba(245, 240, 232, 1);
+            border-color: rgba(122, 184, 154, 0.7);
+        }
+
+        .layer-toggles {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .layer-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            color: rgba(245, 240, 232, 0.6);
+            font-size: 0.8em;
+            transition: color 0.2s ease;
+        }
+
+        .layer-toggle:hover {
+            color: rgba(245, 240, 232, 0.9);
+        }
+
+        .layer-toggle input {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: rgba(122, 184, 154, 0.7);
+        }
+
+        .layer-toggle label {
+            cursor: pointer;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1600px) {
+            .frame-container {
+                flex-direction: column;
+            }
+        }
+
+        @media (max-width: 900px) {
+            body {
+                padding: 10px;
+                gap: 10px;
+            }
+            .device-frame {
+                width: 100%;
+                height: auto;
+                aspect-ratio: 844 / 390;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="frame-container">
+        <div class="device-frame iphone" id="deviceFrame">
+            <!-- ENVIRONMENT LAYERS -->
+            <div class="environment">
+                <div class="sky-layer"></div>
+                <div class="village-layer"></div>
+                <!-- ASSET: village-silhouette.png -->
+                <div class="floor-layer"></div>
+                <div class="dojo-frame"></div>
+                <div class="ambient-glow"></div>
+                <div class="paper-texture"></div>
+                <div class="vignette"></div>
+            </div>
+
+            <!-- CONTENT LAYER -->
+            <div class="content">
+                <!-- Navigation bar -->
+                <div class="navbar">
+                    <div class="navbar-title">Nendō</div>
+                    <div class="nav-exit">
+                        <span>← Exit</span>
+                    </div>
+                </div>
+
+                <!-- Main content -->
+                <div class="main-content">
+                    <!-- Embers -->
+                    <div class="embers" id="embers"></div>
+
+                    <!-- Three doors -->
+                    <div class="doors-container">
+                        <!-- Mushin (Still Mind) - Green -->
+                        <div class="door mushin" data-discipline="mushin">
+                            <!-- ASSET: door-mushin.png -->
+                            <div class="door-content">
+                                <div class="door-name">無心</div>
+                                <div class="door-subtitle">The Still Mind</div>
+                            </div>
+                        </div>
+
+                        <!-- Metsuke (Reading Mind) - Blue -->
+                        <div class="door metsuke" data-discipline="metsuke">
+                            <!-- ASSET: door-metsuke.png -->
+                            <div class="door-content">
+                                <div class="door-name">目付</div>
+                                <div class="door-subtitle">The Reading Mind</div>
+                            </div>
+                        </div>
+
+                        <!-- Tachi (Striking Mind) - Red -->
+                        <div class="door tachi" data-discipline="tachi">
+                            <!-- ASSET: door-tachi.png -->
+                            <div class="door-content">
+                                <div class="door-name">太刀</div>
+                                <div class="door-subtitle">The Striking Mind</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Aura orb indicator -->
+                    <div class="aura-orb"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Panel -->
+    <div class="controls-panel">
+        <h3>Settings</h3>
+        <div class="device-toggles">
+            <button class="device-btn active" onclick="switchDevice('iphone')">iPhone</button>
+            <button class="device-btn" onclick="switchDevice('ipad')">iPad</button>
+        </div>
+        <div class="layer-toggles">
+            <div class="layer-toggle">
+                <input type="checkbox" id="sky-toggle" checked onchange="toggleLayer('sky-layer')">
+                <label for="sky-toggle">Sky</label>
+            </div>
+            <div class="layer-toggle">
+                <input type="checkbox" id="village-toggle" checked onchange="toggleLayer('village-layer')">
+                <label for="village-toggle">Village</label>
+            </div>
+            <div class="layer-toggle">
+                <input type="checkbox" id="floor-toggle" checked onchange="toggleLayer('floor-layer')">
+                <label for="floor-toggle">Floor</label>
+            </div>
+            <div class="layer-toggle">
+                <input type="checkbox" id="vignette-toggle" checked onchange="toggleLayer('vignette')">
+                <label for="vignette-toggle">Vignette</label>
+            </div>
+            <div class="layer-toggle">
+                <input type="checkbox" id="glow-toggle" checked onchange="toggleLayer('ambient-glow')">
+                <label for="glow-toggle">Ambient Glow</label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate ember particles
+        function generateEmbers() {
+            const embersContainer = document.getElementById('embers');
+            const emberCount = 15;
+
+            for (let i = 0; i < emberCount; i++) {
+                const ember = document.createElement('div');
+                ember.className = 'ember';
+
+                const startX = Math.random() * 100;
+                const drift = (Math.random() - 0.5) * 40;
+                const duration = 3 + Math.random() * 2;
+                const delay = Math.random() * 5;
+
+                ember.style.left = startX + '%';
+                ember.style.bottom = '-5px';
+                ember.style.setProperty('--drift', drift + 'px');
+                ember.style.animation = `ember-float ${duration}s linear ${delay}s infinite`;
+
+                embersContainer.appendChild(ember);
+            }
+        }
+
+        // Device switching
+        function switchDevice(device) {
+            const frame = document.getElementById('deviceFrame');
+            const buttons = document.querySelectorAll('.device-btn');
+
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (device === 'ipad') {
+                frame.classList.add('ipad');
+            } else {
+                frame.classList.remove('ipad');
+            }
+        }
+
+        // Layer toggle
+        function toggleLayer(layerId) {
+            const layer = document.querySelector('.' + layerId);
+            const toggle = document.getElementById(layerId + '-toggle');
+
+            if (toggle.checked) {
+                layer.style.display = 'block';
+            } else {
+                layer.style.display = 'none';
+            }
+        }
+
+        // Door interactions
+        document.querySelectorAll('.door').forEach(door => {
+            door.addEventListener('click', function() {
+                const discipline = this.getAttribute('data-discipline');
+                console.log('Entering ' + discipline + ' discipline...');
+                // Placeholder for navigation logic
+                this.style.animation = 'none';
+                setTimeout(() => {
+                    this.style.animation = '';
+                }, 10);
+            });
+        });
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            generateEmbers();
+        });
+    </script>
+</body>
+</html>

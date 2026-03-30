@@ -1,0 +1,355 @@
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+
+/* ── Landscape note: designs are landscape-optimised ── */
+.rotate-msg{display:none}
+
+.aura-wrap{
+  background:#0A0A12;
+  padding:32px 28px 36px;
+  border-radius:16px;
+  font-family:'Crimson Pro',serif;
+}
+.aura-title{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.22em;
+  color:rgba(245,240,232,0.3);
+  text-align:center;
+  margin-bottom:28px;
+  text-transform:uppercase;
+}
+.phase-block{
+  margin-bottom:20px;
+}
+.phase-label{
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.2em;
+  color:rgba(245,240,232,0.25);
+  text-transform:uppercase;
+  margin-bottom:10px;
+  padding-left:2px;
+}
+.stage-row{
+  display:flex;
+  gap:8px;
+}
+.stage{
+  flex:1;
+  cursor:pointer;
+  transition:transform 0.15s ease;
+}
+.stage:hover{transform:translateY(-2px);}
+.stage:hover .orb{opacity:1;}
+.stage:hover .stage-name{opacity:0.9;}
+.orb{
+  width:100%;
+  aspect-ratio:1;
+  border-radius:50%;
+  margin:0 auto 6px;
+  max-width:52px;
+  display:block;
+  opacity:0.85;
+  transition:opacity 0.15s;
+  border:1px solid rgba(255,255,255,0.08);
+}
+.stage-num{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.1em;
+  color:rgba(245,240,232,0.2);
+  text-align:center;
+  margin-bottom:2px;
+}
+.stage-name{
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.06em;
+  text-align:center;
+  opacity:0.55;
+  line-height:1.2;
+}
+.phase-divider{
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(245,240,232,0.06),transparent);
+  margin:4px 0 20px;
+}
+
+.stage-13-wrap{
+  margin-top:8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+.stage-13-connector{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+}
+.connector-dot{
+  width:3px;height:3px;border-radius:50%;
+  background:rgba(245,240,232,0.15);
+}
+.stage-13-orb-wrap{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+.stage-13-orb{
+  width:72px;height:72px;
+  border-radius:50%;
+  background:#1A0535;
+  border:1px solid rgba(138,43,226,0.35);
+  cursor:pointer;
+  transition:transform 0.2s ease;
+  position:relative;
+}
+.stage-13-orb:hover{transform:scale(1.06);}
+.stage-13-inner{
+  position:absolute;
+  inset:8px;
+  border-radius:50%;
+  background:#120325;
+  border:1px solid rgba(138,43,226,0.2);
+  display:flex;align-items:center;justify-content:center;
+}
+.stage-13-core{
+  width:16px;height:16px;border-radius:50%;
+  background:#2D0A5A;
+  border:1px solid rgba(180,80,255,0.4);
+}
+.stage-13-label{
+  text-align:center;
+  margin-top:10px;
+}
+.stage-13-num{
+  font-family:'Cinzel',serif;
+  font-size:8px;letter-spacing:0.15em;
+  color:rgba(138,43,226,0.5);
+  margin-bottom:3px;
+}
+.stage-13-name{
+  font-family:'Cinzel',serif;
+  font-size:14px;font-weight:600;
+  letter-spacing:0.12em;
+  color:rgba(180,80,255,0.7);
+  margin-bottom:4px;
+}
+.stage-13-meaning{
+  font-size:11px;font-style:italic;
+  color:rgba(245,240,232,0.25);
+  letter-spacing:0.04em;
+}
+
+.detail-panel{
+  margin-top:24px;
+  padding:16px 20px;
+  border:0.5px solid rgba(245,240,232,0.08);
+  border-radius:10px;
+  background:rgba(245,240,232,0.03);
+  min-height:64px;
+  display:none;
+}
+.detail-panel.visible{display:block;}
+.detail-header{
+  display:flex;align-items:center;gap:12px;margin-bottom:8px;
+}
+.detail-swatch{
+  width:28px;height:28px;border-radius:50%;
+  flex-shrink:0;
+  border:1px solid rgba(255,255,255,0.1);
+}
+.detail-title{
+  font-family:'Cinzel',serif;
+  font-size:13px;letter-spacing:0.08em;
+  color:rgba(245,240,232,0.85);
+}
+.detail-phase-tag{
+  font-family:'Cinzel',serif;
+  font-size:8px;letter-spacing:0.15em;
+  color:rgba(245,240,232,0.3);
+  margin-left:auto;
+}
+.detail-meaning{
+  font-size:12px;font-style:italic;
+  color:rgba(245,240,232,0.45);
+  line-height:1.6;
+}
+.detail-hex{
+  font-family:monospace;
+  font-size:10px;
+  color:rgba(245,240,232,0.2);
+  margin-top:6px;
+}
+</style>
+
+<!-- Landscape enforcement message -->
+<div class="rotate-msg">
+  <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="32" height="20" rx="3" stroke="rgba(245,240,232,0.3)" stroke-width="1.5"/><path d="M24 38v4M20 42h8" stroke="rgba(245,240,232,0.2)" stroke-width="1.2" stroke-linecap="round"/><path d="M36 8l4 4-4 4" stroke="rgba(245,240,232,0.25)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Rotate to landscape</span>
+</div>
+
+<div class="aura-wrap">
+  <div class="aura-title">Aura progression · 13 stages</div>
+
+  <div class="phase-block">
+    <div class="phase-label">Phase 1 — Kindling</div>
+    <div class="stage-row">
+      <div class="stage" onclick="showDetail(1)">
+        <div class="orb" style="background:#FAF6EE;border-color:rgba(250,246,238,0.3)"></div>
+        <div class="stage-num">01</div>
+        <div class="stage-name" style="color:#FAF6EE">Tomoshibi</div>
+      </div>
+      <div class="stage" onclick="showDetail(2)">
+        <div class="orb" style="background:#F5EDD0;border-color:rgba(245,237,208,0.3)"></div>
+        <div class="stage-num">02</div>
+        <div class="stage-name" style="color:#F5EDD0">Hikari</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-divider"></div>
+
+  <div class="phase-block">
+    <div class="phase-label">Phase 2 — Rising</div>
+    <div class="stage-row">
+      <div class="stage" onclick="showDetail(3)">
+        <div class="orb" style="background:#F0D060;border-color:rgba(240,208,96,0.3)"></div>
+        <div class="stage-num">03</div>
+        <div class="stage-name" style="color:#F0D060">Kogane</div>
+      </div>
+      <div class="stage" onclick="showDetail(4)">
+        <div class="orb" style="background:#E8B830;border-color:rgba(232,184,48,0.3)"></div>
+        <div class="stage-num">04</div>
+        <div class="stage-name" style="color:#E8B830">Kohaku</div>
+      </div>
+      <div class="stage" onclick="showDetail(5)">
+        <div class="orb" style="background:#D89018;border-color:rgba(216,144,24,0.3)"></div>
+        <div class="stage-num">05</div>
+        <div class="stage-name" style="color:#D89018">Kagayaki</div>
+      </div>
+      <div class="stage" onclick="showDetail(6)">
+        <div class="orb" style="background:#C86C08;border-color:rgba(200,108,8,0.3)"></div>
+        <div class="stage-num">06</div>
+        <div class="stage-name" style="color:#C86C08">Moeru</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-divider"></div>
+
+  <div class="phase-block">
+    <div class="phase-label">Phase 3 — Burning</div>
+    <div class="stage-row">
+      <div class="stage" onclick="showDetail(7)">
+        <div class="orb" style="background:#C05020;border-color:rgba(192,80,32,0.3)"></div>
+        <div class="stage-num">07</div>
+        <div class="stage-name" style="color:#C05020">Akane</div>
+      </div>
+      <div class="stage" onclick="showDetail(8)">
+        <div class="orb" style="background:#A83018;border-color:rgba(168,48,24,0.3)"></div>
+        <div class="stage-num">08</div>
+        <div class="stage-name" style="color:#A83018">Honoo</div>
+      </div>
+      <div class="stage" onclick="showDetail(9)">
+        <div class="orb" style="background:#8A1A10;border-color:rgba(138,26,16,0.3)"></div>
+        <div class="stage-num">09</div>
+        <div class="stage-name" style="color:#8A1A10">Homura</div>
+      </div>
+      <div class="stage" onclick="showDetail(10)">
+        <div class="orb" style="background:#6A0808;border-color:rgba(106,8,8,0.3)"></div>
+        <div class="stage-num">10</div>
+        <div class="stage-name" style="color:#9A4040">Shinku</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-divider"></div>
+
+  <div class="phase-block">
+    <div class="phase-label">Phase 4 — Forging</div>
+    <div class="stage-row">
+      <div class="stage" onclick="showDetail(11)">
+        <div class="orb" style="background:#4A0A28;border-color:rgba(100,20,80,0.4)"></div>
+        <div class="stage-num">11</div>
+        <div class="stage-name" style="color:#A04070">Kurenai</div>
+      </div>
+      <div class="stage" onclick="showDetail(12)">
+        <div class="orb" style="background:#2A0535;border-color:rgba(120,30,160,0.4)"></div>
+        <div class="stage-num">12</div>
+        <div class="stage-name" style="color:#9050B0">Tasogare</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="phase-divider"></div>
+
+  <div class="stage-13-wrap">
+    <div class="stage-13-connector">
+      <div class="connector-dot"></div>
+      <div class="connector-dot"></div>
+      <div class="connector-dot"></div>
+    </div>
+    <div class="stage-13-orb-wrap" onclick="showDetail(13)">
+      <div class="stage-13-orb">
+        <div class="stage-13-inner">
+          <div class="stage-13-core"></div>
+        </div>
+      </div>
+    </div>
+    <div class="stage-13-label">
+      <div class="stage-13-num">Stage 13</div>
+      <div class="stage-13-name">— · —</div>
+      <div class="stage-13-meaning">Unnamed · Beyond the system</div>
+    </div>
+  </div>
+
+  <div id="detail" class="detail-panel">
+    <div class="detail-header">
+      <div class="detail-swatch" id="d-swatch"></div>
+      <div>
+        <div class="detail-title" id="d-title"></div>
+        <div class="detail-meaning" id="d-meaning" style="margin-top:2px;font-size:11px;"></div>
+      </div>
+      <div class="detail-phase-tag" id="d-phase"></div>
+    </div>
+    <div class="detail-hex" id="d-hex"></div>
+  </div>
+</div>
+
+<script>
+const stages=[
+  {name:'Tomoshibi',meaning:'A single small flame — the first flicker of awareness',phase:'Phase 1 · Kindling',hex:'#FAF6EE',color:'#FAF6EE'},
+  {name:'Hikari',meaning:'Warm light — the aura becomes visible for the first time',phase:'Phase 1 · Kindling',hex:'#F5EDD0',color:'#F5EDD0'},
+  {name:'Kogane',meaning:'Gold — energy builds, the aura warms and brightens',phase:'Phase 2 · Rising',hex:'#F0D060',color:'#F0D060'},
+  {name:'Kohaku',meaning:'Amber — the gold deepens, intention strengthens',phase:'Phase 2 · Rising',hex:'#E8B830',color:'#E8B830'},
+  {name:'Kagayaki',meaning:'Radiance — the aura is visible at a distance',phase:'Phase 2 · Rising',hex:'#D89018',color:'#D89018'},
+  {name:'Moeru',meaning:'Smouldering — heat building toward combustion',phase:'Phase 2 · Rising',hex:'#C86C08',color:'#C86C08'},
+  {name:'Akane',meaning:'Red-orange — fire finding its true form',phase:'Phase 3 · Burning',hex:'#C05020',color:'#C05020'},
+  {name:'Honoo',meaning:'Full flame — total combustion, nothing held back',phase:'Phase 3 · Burning',hex:'#A83018',color:'#A83018'},
+  {name:'Homura',meaning:'Blaze — the fire at its most intense',phase:'Phase 3 · Burning',hex:'#8A1A10',color:'#8A1A10'},
+  {name:'Shinku',meaning:'Deep crimson — fire condensing into mastery',phase:'Phase 3 · Burning',hex:'#6A0808',color:'#9A4040'},
+  {name:'Kurenai',meaning:'Ancient crimson bleeding toward violet — power transforming',phase:'Phase 4 · Forging',hex:'#4A0A28',color:'#A04070'},
+  {name:'Tasogare',meaning:'Twilight — the moment between fire and something beyond',phase:'Phase 4 · Forging',hex:'#2A0535',color:'#9050B0'},
+  {name:'—',meaning:'No name has been given to this stage. Those who reach it do not need one.',phase:'Stage 13 · Alone',hex:'#1A0535',color:'#B060FF'},
+];
+function showDetail(n){
+  const s=stages[n-1];
+  document.getElementById('d-swatch').style.background=s.hex;
+  document.getElementById('d-swatch').style.borderColor=s.color+'55';
+  document.getElementById('d-title').textContent=s.name;
+  document.getElementById('d-title').style.color=s.color;
+  document.getElementById('d-meaning').textContent=s.meaning;
+  document.getElementById('d-phase').textContent=s.phase;
+  document.getElementById('d-hex').textContent=s.hex;
+  const p=document.getElementById('detail');
+  p.classList.add('visible');
+}
+</script>

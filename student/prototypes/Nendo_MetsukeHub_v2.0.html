@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metsuke Hub · Prototype v2.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;color:#F5F0E8;font-family:'Crimson Pro',serif;overflow:hidden;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center}
+
+/* Device frame toggle */
+.device-toggle{position:absolute;top:20px;right:20px;display:flex;gap:8px;z-index:50}
+.device-toggle button{background:rgba(141,184,212,0.15);border:0.5px solid rgba(141,184,212,0.3);color:rgba(245,240,232,0.6);padding:6px 12px;cursor:pointer;font-size:11px;border-radius:4px;font-family:'Cinzel',serif;transition:all 0.3s}
+.device-toggle button.active{background:rgba(141,184,212,0.3);color:rgba(141,184,212,0.9);border-color:rgba(141,184,212,0.6)}
+.device-toggle button:hover{background:rgba(141,184,212,0.2)}
+
+/* Device container */
+.device-container{position:relative;display:flex;align-items:center;justify-content:center;width:100%;height:100%}
+
+/* iPhone frame */
+.device.iphone{width:844px;height:390px;border-radius:40px;border:12px solid #1a1a1a;box-shadow:0 0 60px rgba(0,0,0,0.8);overflow:hidden;background:#0A0A12;display:none}
+.device.iphone.active{display:block}
+
+/* iPad frame */
+.device.ipad{width:1194px;height:834px;border-radius:28px;border:16px solid #1a1a1a;box-shadow:0 0 80px rgba(0,0,0,0.9);overflow:hidden;background:#0A0A12;display:none}
+.device.ipad.active{display:block}
+
+/* Screen content wrapper */
+.screen{width:100%;height:100%;display:flex;flex-direction:column;position:relative;overflow:hidden}
+
+/* === PAINTED ENVIRONMENT LAYERS === */
+.environment{position:absolute;inset:0;overflow:hidden;z-index:1}
+
+/* Sky gradient — cool blue tint */
+.sky{position:absolute;inset:0;background:linear-gradient(180deg, rgba(20,25,45,1) 0%, rgba(15,18,35,0.95) 40%, rgba(10,10,18,0.9) 100%);z-index:1}
+
+/* Dojo frame (architectural elements) */
+.dojo-frame{position:absolute;inset:0;z-index:2;opacity:0.08}
+svg{display:block;width:100%;height:100%}
+
+/* Ambient glow — cool blue cast */
+.ambient-glow{position:absolute;inset:0;z-index:3;background:radial-gradient(ellipse at 50% 50%, rgba(141,184,212,0.12) 0%, rgba(141,184,212,0.03) 40%, transparent 80%);pointer-events:none}
+
+/* Paper texture overlay */
+.paper-texture{position:absolute;inset:0;z-index:4;background-image:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4"/></filter><rect width="200" height="200" fill="%23ffffff" filter="url(%23noise)" opacity="0.02"/></svg>');opacity:0.6;pointer-events:none}
+
+/* Vignette */
+.vignette{position:absolute;inset:0;z-index:5;background:radial-gradient(ellipse at 50% 50%, transparent 0%, rgba(0,0,0,0.25) 70%, rgba(0,0,0,0.5) 100%);pointer-events:none}
+
+/* Floating particles (blue ambient dust) */
+@keyframes drift{
+  0%,100%{transform:translate(0,0)}
+  25%{transform:translate(8px,-4px)}
+  50%{transform:translate(4px,8px)}
+  75%{transform:translate(-6px,2px)}
+}
+
+.particles{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden}
+.particle{position:absolute;border-radius:50%;background:radial-gradient(circle, rgba(141,184,212,0.4) 0%, rgba(141,184,212,0) 70%);animation:drift linear infinite;opacity:0.3}
+.particle:nth-child(1){width:3px;height:3px;left:12%;top:20%;animation-duration:8s}
+.particle:nth-child(2){width:2px;height:2px;left:85%;top:35%;animation-duration:10s;animation-delay:1s}
+.particle:nth-child(3){width:4px;height:4px;left:25%;top:75%;animation-duration:12s;animation-delay:2s}
+.particle:nth-child(4){width:2px;height:2px;left:75%;top:60%;animation-duration:9s;animation-delay:0.5s}
+.particle:nth-child(5){width:3px;height:3px;left:40%;top:10%;animation-duration:11s;animation-delay:1.5s}
+
+/* === SCREEN CONTENT === */
+.content{position:relative;z-index:10;width:100%;height:100%;display:flex;flex-direction:column}
+
+/* Top bar */
+.topbar{height:44px;display:flex;align-items:center;padding:0 16px;border-bottom:0.5px solid rgba(245,240,232,0.07);flex-shrink:0;gap:12px}
+.back-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:rgba(245,240,232,0.35);background:none;border:none;cursor:pointer;padding:0 8px;text-align:left;transition:color 0.3s}
+.back-btn:hover{color:rgba(245,240,232,0.65)}
+.tb-title{flex:1;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:rgba(141,184,212,0.85)}
+.tb-right{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:rgba(141,184,212,0.3)}
+
+/* Main body */
+.body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:24px 20px;overflow-y:auto;gap:20px}
+
+/* Central motif (scroll) */
+.motif-container{position:relative;display:flex;align-items:center;justify-content:center;width:100px;height:100px;margin:8px 0;filter:drop-shadow(0 0 16px rgba(141,184,212,0.15))}
+.motif-glow{position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle, rgba(141,184,212,0.25) 0%, transparent 70%);animation:pulse-glow 3s ease-in-out infinite}
+@keyframes pulse-glow{
+  0%,100%{opacity:0.3}
+  50%{opacity:0.7}
+}
+.motif-icon{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:64px}
+
+/* Subtitle under motif */
+.discipline-sub{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.12em;color:rgba(141,184,212,0.5);text-transform:uppercase;margin-bottom:12px}
+
+/* Category cards grid */
+.cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;width:100%;max-width:320px;margin:0 auto}
+
+/* Card */
+.card{background:rgba(13,13,26,0.7);border:0.5px solid rgba(141,184,212,0.2);border-radius:8px;padding:16px;display:flex;flex-direction:column;align-items:center;text-align:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;inset:-1px;background:linear-gradient(135deg, rgba(141,184,212,0.1) 0%, transparent 100%);opacity:0;transition:opacity 0.3s;border-radius:8px}
+.card:hover{background:rgba(13,13,26,0.85);border-color:rgba(141,184,212,0.4);transform:translateY(-2px);box-shadow:0 8px 20px rgba(141,184,212,0.1)}
+.card:hover::before{opacity:1}
+
+/* Card icon placeholder */
+.card-icon{width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;font-size:28px;opacity:0.8}
+
+/* Card label */
+.card-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;color:rgba(141,184,212,0.8);margin-bottom:4px;font-weight:600}
+
+/* Card description */
+.card-desc{font-family:'Crimson Pro',serif;font-size:9px;font-style:italic;color:rgba(245,240,232,0.35);line-height:1.3}
+
+/* Bottom progress indicator */
+.progress-section{width:100%;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:16px;padding-top:12px;border-top:0.5px solid rgba(141,184,212,0.1)}
+.progress-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;color:rgba(141,184,212,0.3);text-transform:uppercase}
+.progress-dots{display:flex;gap:6px}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(141,184,212,0.2);transition:all 0.3s}
+.dot.active{background:rgba(141,184,212,0.7)}
+
+/* Mantra at bottom */
+.mantra{font-family:'Crimson Pro',serif;font-size:8px;color:rgba(141,184,212,0.15);font-style:italic;margin-top:12px;text-align:center;line-height:1.4}
+
+/* Scrollbar for body (subtle) */
+.body::-webkit-scrollbar{width:4px}
+.body::-webkit-scrollbar-track{background:transparent}
+.body::-webkit-scrollbar-thumb{background:rgba(141,184,212,0.15);border-radius:2px}
+.body::-webkit-scrollbar-thumb:hover{background:rgba(141,184,212,0.3)}
+
+/* Responsive for iPad */
+@media (min-width:1100px){
+  .cards-grid{grid-template-columns:repeat(3,1fr);max-width:420px}
+  .topbar{padding:0 24px}
+  .body{padding:32px 24px;gap:24px}
+  .motif-container{width:120px;height:120px}
+  .motif-icon{font-size:80px}
+}
+
+</style>
+</head>
+<body>
+
+<!-- Device toggle -->
+<div class="device-toggle">
+  <button class="active" onclick="switchDevice('iphone')">iPhone</button>
+  <button onclick="switchDevice('ipad')">iPad</button>
+</div>
+
+<!-- Device container -->
+<div class="device-container">
+  <!-- iPhone -->
+  <div class="device iphone active">
+    <div class="screen">
+      <!-- Environment layers -->
+      <div class="environment">
+        <div class="sky"></div>
+        <div class="dojo-frame">
+          <svg viewBox="0 0 844 390" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <!-- ASSET: Dojo architectural frame (tatami, pillars, roof) -->
+            <rect width="844" height="390" fill="none"/>
+          </svg>
+        </div>
+        <div class="ambient-glow"></div>
+        <div class="paper-texture"></div>
+        <div class="vignette"></div>
+        <div class="particles">
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Top bar -->
+        <div class="topbar">
+          <button class="back-btn" onclick="goBack()">← Back</button>
+          <div class="tb-title">Metsuke · The Reading Mind</div>
+          <div class="tb-right">目付</div>
+        </div>
+
+        <!-- Body -->
+        <div class="body">
+          <!-- Central motif: scroll -->
+          <div class="motif-container">
+            <div class="motif-glow"></div>
+            <!-- ASSET: motif-metsuke.png (scroll icon) -->
+            <div class="motif-icon">📜</div>
+          </div>
+
+          <div class="discipline-sub">Five Paths to Clarity</div>
+
+          <!-- Challenge category cards -->
+          <div class="cards-grid">
+            <div class="card" onclick="viewCategory('pattern')">
+              <div class="card-icon">🔷</div>
+              <div class="card-label">Pattern</div>
+              <div class="card-desc">Spot the sequence</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('difference')">
+              <div class="card-icon">👁</div>
+              <div class="card-label">Difference</div>
+              <div class="card-desc">Find the change</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('comprehension')">
+              <div class="card-icon">📖</div>
+              <div class="card-label">Comprehend</div>
+              <div class="card-desc">Read & understand</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('hidden')">
+              <div class="card-icon">🔍</div>
+              <div class="card-label">Hidden Detail</div>
+              <div class="card-desc">What you miss</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('memory')">
+              <div class="card-icon">⚡</div>
+              <div class="card-label">Memory</div>
+              <div class="card-desc">Recall & repeat</div>
+            </div>
+          </div>
+
+          <!-- Progress section -->
+          <div class="progress-section">
+            <span class="progress-label">Stage</span>
+            <div class="progress-dots">
+              <div class="dot active"></div>
+              <div class="dot active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span class="progress-label">2 / 5</span>
+          </div>
+
+          <!-- Mantra -->
+          <div class="mantra">The untrained eye sees.<br>The ninja's eye reads.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- iPad -->
+  <div class="device ipad">
+    <div class="screen">
+      <!-- Environment layers -->
+      <div class="environment">
+        <div class="sky"></div>
+        <div class="dojo-frame">
+          <svg viewBox="0 0 1194 834" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+            <!-- ASSET: Dojo architectural frame (tatami, pillars, roof) -->
+            <rect width="1194" height="834" fill="none"/>
+          </svg>
+        </div>
+        <div class="ambient-glow"></div>
+        <div class="paper-texture"></div>
+        <div class="vignette"></div>
+        <div class="particles">
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+          <div class="particle"></div>
+        </div>
+      </div>
+
+      <!-- Content -->
+      <div class="content">
+        <!-- Top bar -->
+        <div class="topbar">
+          <button class="back-btn" onclick="goBack()">← Back</button>
+          <div class="tb-title">Metsuke · The Reading Mind</div>
+          <div class="tb-right">目付</div>
+        </div>
+
+        <!-- Body -->
+        <div class="body">
+          <!-- Central motif: scroll -->
+          <div class="motif-container">
+            <div class="motif-glow"></div>
+            <!-- ASSET: motif-metsuke.png (scroll icon) -->
+            <div class="motif-icon">📜</div>
+          </div>
+
+          <div class="discipline-sub">Five Paths to Clarity</div>
+
+          <!-- Challenge category cards -->
+          <div class="cards-grid">
+            <div class="card" onclick="viewCategory('pattern')">
+              <div class="card-icon">🔷</div>
+              <div class="card-label">Pattern</div>
+              <div class="card-desc">Spot the sequence</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('difference')">
+              <div class="card-icon">👁</div>
+              <div class="card-label">Difference</div>
+              <div class="card-desc">Find the change</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('comprehension')">
+              <div class="card-icon">📖</div>
+              <div class="card-label">Comprehend</div>
+              <div class="card-desc">Read & understand</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('hidden')">
+              <div class="card-icon">🔍</div>
+              <div class="card-label">Hidden Detail</div>
+              <div class="card-desc">What you miss</div>
+            </div>
+
+            <div class="card" onclick="viewCategory('memory')">
+              <div class="card-icon">⚡</div>
+              <div class="card-label">Memory</div>
+              <div class="card-desc">Recall & repeat</div>
+            </div>
+          </div>
+
+          <!-- Progress section -->
+          <div class="progress-section">
+            <span class="progress-label">Stage</span>
+            <div class="progress-dots">
+              <div class="dot active"></div>
+              <div class="dot active"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+              <div class="dot"></div>
+            </div>
+            <span class="progress-label">2 / 5</span>
+          </div>
+
+          <!-- Mantra -->
+          <div class="mantra">The untrained eye sees. The ninja's eye reads.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchDevice(device){
+  document.querySelectorAll('.device').forEach(d => d.classList.remove('active'));
+  document.querySelector(`.device.${device}`).classList.add('active');
+  document.querySelectorAll('.device-toggle button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+}
+
+function viewCategory(category){
+  const labels = {
+    'pattern': 'Pattern Recognition · Spot the sequence',
+    'difference': 'Spot the Difference · Find what changed',
+    'comprehension': 'Comprehension · Read and understand',
+    'hidden': 'Hidden Detail · The detail others miss',
+    'memory': 'Memory Sequences · Watch, remember, repeat'
+  };
+  alert('Viewing: ' + labels[category]);
+}
+
+function goBack(){
+  alert('← Returning to Nendō Home');
+}
+</script>
+
+</body>
+</html>

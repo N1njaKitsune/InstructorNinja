@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shiho · v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #050508;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px 24px 56px;
+  gap: 24px;
+  font-family: 'Crimson Pro', serif;
+  color: #F5F0E8;
+}
+
+/* ── Device toggle ── */
+.device-toggle {
+  display: flex; gap: 8px; z-index: 50;
+}
+.device-toggle button {
+  background: rgba(200,180,120,0.08);
+  border: 0.5px solid rgba(200,180,120,0.2);
+  color: rgba(245,240,232,0.45);
+  padding: 5px 14px;
+  cursor: pointer; font-size: 10px; border-radius: 4px;
+  font-family: 'Cinzel', serif; letter-spacing: 0.1em; transition: all 0.2s;
+}
+.device-toggle button.active {
+  background: rgba(200,180,120,0.18);
+  color: rgba(200,180,120,0.9);
+  border-color: rgba(200,180,120,0.4);
+}
+
+/* ── Frame ── */
+.frame {
+  position: relative; overflow: hidden; border-radius: 4px;
+  box-shadow: 0 0 0 1.5px rgba(245,240,232,0.06), 0 24px 80px rgba(0,0,0,0.8);
+  transition: all 0.4s ease;
+  background: #080608;
+}
+.frame.iphone { width: 844px; height: 390px; }
+.frame.ipad   { width: 1194px; height: 834px; }
+
+/* ── Background — painting slot ── */
+.hero {
+  position: absolute; inset: 0; z-index: 1;
+  /* PAINTING SLOT: background-image: url("data:image/png;base64,..."); */
+  background-size: cover; background-position: center;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(160,130,70,0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 50% 80%, rgba(100,80,40,0.04) 0%, transparent 50%),
+    linear-gradient(180deg, #0C0A06 0%, #080608 50%, #060408 100%);
+}
+
+/* ── Environment overlays ── */
+.env-warmth {
+  position: absolute; inset: 0; z-index: 2;
+  background: radial-gradient(ellipse at 50% 50%, rgba(180,150,80,0.04) 0%, transparent 60%);
+  pointer-events: none;
+}
+.env-texture {
+  position: absolute; inset: 0; z-index: 3; opacity: 0.01;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%23f5f0e8' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-repeat: repeat; pointer-events: none;
+}
+.env-vignette {
+  position: absolute; inset: 0; z-index: 4;
+  background: radial-gradient(ellipse at center, transparent 15%, rgba(4,3,5,0.65) 100%);
+  pointer-events: none;
+}
+
+/* ── Canvas particles ── */
+canvas.particles {
+  position: absolute; inset: 0; z-index: 5; pointer-events: none;
+}
+
+/* ── UI Layer ── */
+.ui-layer {
+  position: absolute; inset: 0; z-index: 20;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding-bottom: 32px; /* nav bar height */
+}
+
+/* ── Top label ── */
+.shiho-label {
+  position: absolute;
+  top: 18px; left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  pointer-events: none;
+}
+.shiho-kanji-small {
+  font-family: serif;
+  font-size: 13px; line-height: 1;
+  color: rgba(200,180,120,0.55);
+  letter-spacing: 0.08em;
+}
+.shiho-word {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: rgba(200,180,120,0.38);
+}
+
+/* ── Central mandala ── */
+.mandala-wrap {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.mandala-svg {
+  display: block;
+  filter: drop-shadow(0 0 18px rgba(180,155,90,0.12));
+}
+
+/* Progress ring — fills over ritual-duration */
+.ring-progress {
+  stroke-dasharray: 565;
+  stroke-dashoffset: 565;
+  transform-origin: center;
+  transform: rotate(-90deg);
+  transition: stroke-dashoffset 0.1s linear;
+}
+.ring-progress.running {
+  animation: ringFill var(--ritual-duration, 10s) linear forwards;
+}
+@keyframes ringFill {
+  from { stroke-dashoffset: 565; }
+  to   { stroke-dashoffset: 0; }
+}
+
+/* Outer tick marks pulse once ring passes them */
+.ring-outer { opacity: 0.18; }
+
+/* ── Kanji overlay on mandala ── */
+.mandala-kanji {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: serif;
+  font-size: 28px; line-height: 1;
+  color: rgba(245,240,232,0.72);
+  text-shadow: 0 0 28px rgba(180,155,90,0.3);
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+/* ── Breath cue text ── */
+.breath-cue {
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.32);
+  margin-top: 14px;
+  text-align: center;
+  transition: opacity 0.8s ease;
+  min-height: 14px;
+  pointer-events: none;
+}
+
+/* ── Mantra ── */
+.mantra {
+  font-family: 'Crimson Pro', serif;
+  font-size: 9px; font-style: italic;
+  color: rgba(245,240,232,0.2);
+  text-align: center;
+  margin-top: 6px;
+  letter-spacing: 0.04em;
+  pointer-events: none;
+}
+
+/* ── Begin button ── */
+.begin-btn {
+  margin-top: 16px;
+  padding: 8px 24px;
+  font-family: 'Cinzel', serif;
+  font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(200,180,120,0.7);
+  background: rgba(8,7,4,0.35);
+  border: 0.5px solid rgba(200,180,120,0.28);
+  border-radius: 4px;
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.8s ease, transform 0.8s ease, background 0.3s, border-color 0.3s;
+  pointer-events: none;
+}
+.begin-btn.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.begin-btn.visible:hover {
+  background: rgba(200,180,120,0.1);
+  border-color: rgba(200,180,120,0.5);
+  color: rgba(200,180,120,0.9);
+}
+
+/* ── Nav bar ── */
+.nav-bar {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 32px; display: flex; align-items: center; padding: 0 16px;
+  background: rgba(6,5,3,0.4);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 0.5px solid rgba(245,240,232,0.04); z-index: 30;
+}
+.nav-back {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.12em;
+  color: rgba(245,240,232,0.28); cursor: pointer; width: 70px; transition: color 0.2s;
+}
+.nav-back:hover { color: rgba(245,240,232,0.55); }
+.nav-title {
+  flex: 1; text-align: center;
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.18em;
+  color: rgba(200,180,120,0.32); text-transform: uppercase;
+}
+.nav-right {
+  width: 70px; text-align: right;
+  font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 0.12em;
+  color: rgba(245,240,232,0.2);
+  display: flex; align-items: center; justify-content: flex-end; gap: 5px;
+}
+.aura-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: rgba(122,184,154,0.5);
+  box-shadow: 0 0 6px rgba(122,184,154,0.4);
+  animation: auraPulse 3s ease-in-out infinite;
+}
+@keyframes auraPulse {
+  0%,100% { box-shadow: 0 0 6px rgba(122,184,154,0.3); }
+  50%      { box-shadow: 0 0 12px rgba(122,184,154,0.6); }
+}
+
+/* ── iPad overrides ── */
+.frame.ipad .shiho-kanji-small { font-size: 20px; }
+.frame.ipad .shiho-word        { font-size: 13px; }
+.frame.ipad .shiho-label       { top: 28px; gap: 5px; }
+.frame.ipad .mandala-kanji     { font-size: 48px; }
+.frame.ipad .breath-cue        { font-size: 13px; margin-top: 22px; }
+.frame.ipad .mantra            { font-size: 13px; margin-top: 10px; }
+.frame.ipad .begin-btn         { margin-top: 24px; padding: 12px 36px; font-size: 12px; }
+.frame.ipad .nav-bar           { height: 48px; padding: 0 28px; }
+.frame.ipad .nav-back,
+.frame.ipad .nav-title,
+.frame.ipad .nav-right         { font-size: 12px; }
+.frame.ipad .nav-back,
+.frame.ipad .nav-right         { width: 100px; }
+
+/* ── Dev controls ── */
+.controls {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 40px;
+  background: rgba(8,8,14,0.92);
+  border-top: 0.5px solid rgba(245,240,232,0.06);
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 0 12px; z-index: 100;
+}
+.ctrl-btn {
+  font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.08em;
+  padding: 5px 10px; border-radius: 4px;
+  border: 0.5px solid rgba(245,240,232,0.1);
+  background: rgba(245,240,232,0.03);
+  color: rgba(245,240,232,0.4); cursor: pointer; transition: all 0.2s;
+}
+.ctrl-btn:hover { background: rgba(245,240,232,0.06); color: rgba(245,240,232,0.65); }
+.ctrl-btn.active { border-color: rgba(200,180,120,0.4); color: rgba(200,180,120,0.8); background: rgba(200,180,120,0.05); }
+.ctrl-sep { width: 1px; height: 16px; background: rgba(245,240,232,0.07); margin: 0 2px; }
+
+.version-label {
+  position: fixed; bottom: 48px; right: 16px;
+  font-family: 'Cinzel', serif; font-size: 8px; letter-spacing: 0.12em;
+  color: rgba(245,240,232,0.15); z-index: 90;
+}
+</style>
+</head>
+<body>
+
+<div class="device-toggle">
+  <button id="btn-iphone" class="active" onclick="setDevice('iphone')">iPhone</button>
+  <button id="btn-ipad"              onclick="setDevice('ipad')">iPad</button>
+</div>
+
+<div class="frame iphone" id="frame">
+
+  <!-- Background -->
+  <div class="hero"></div>
+  <div class="env-warmth"></div>
+  <div class="env-texture"></div>
+  <div class="env-vignette"></div>
+  <canvas class="particles" id="canvas"></canvas>
+
+  <!-- UI -->
+  <div class="ui-layer" id="ui-layer">
+
+    <!-- Top label -->
+    <div class="shiho-label">
+      <div class="shiho-kanji-small">四方</div>
+      <div class="shiho-word">Shiho</div>
+    </div>
+
+    <!-- Mandala -->
+    <div class="mandala-wrap" id="mandala-wrap">
+      <svg class="mandala-svg" id="mandala-svg" width="180" height="180" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+
+        <!-- Outer decorative ring (static) -->
+        <circle cx="100" cy="100" r="92"
+          fill="none"
+          stroke="rgba(200,180,120,0.06)"
+          stroke-width="0.5"/>
+
+        <!-- 8 radiating lines — four directions + diagonals -->
+        <!-- N --> <line x1="100" y1="100" x2="100" y2="12"  stroke="rgba(200,180,120,0.14)" stroke-width="0.6"/>
+        <!-- NE--> <line x1="100" y1="100" x2="165" y2="35"  stroke="rgba(200,180,120,0.08)" stroke-width="0.5"/>
+        <!-- E --> <line x1="100" y1="100" x2="188" y2="100" stroke="rgba(200,180,120,0.14)" stroke-width="0.6"/>
+        <!-- SE--> <line x1="100" y1="100" x2="165" y2="165" stroke="rgba(200,180,120,0.08)" stroke-width="0.5"/>
+        <!-- S --> <line x1="100" y1="100" x2="100" y2="188" stroke="rgba(200,180,120,0.14)" stroke-width="0.6"/>
+        <!-- SW--> <line x1="100" y1="100" x2="35"  y2="165" stroke="rgba(200,180,120,0.08)" stroke-width="0.5"/>
+        <!-- W --> <line x1="100" y1="100" x2="12"  y2="100" stroke="rgba(200,180,120,0.14)" stroke-width="0.6"/>
+        <!-- NW--> <line x1="100" y1="100" x2="35"  y2="35"  stroke="rgba(200,180,120,0.08)" stroke-width="0.5"/>
+
+        <!-- 4 cardinal tick marks on the outer ring -->
+        <line x1="100" y1="8"  x2="100" y2="18" stroke="rgba(200,180,120,0.35)" stroke-width="1"/>
+        <line x1="192" y1="100" x2="182" y2="100" stroke="rgba(200,180,120,0.35)" stroke-width="1"/>
+        <line x1="100" y1="192" x2="100" y2="182" stroke="rgba(200,180,120,0.35)" stroke-width="1"/>
+        <line x1="8"   y1="100" x2="18"  y2="100" stroke="rgba(200,180,120,0.35)" stroke-width="1"/>
+
+        <!-- Inner still circle -->
+        <circle cx="100" cy="100" r="52"
+          fill="none"
+          stroke="rgba(200,180,120,0.1)"
+          stroke-width="0.5"/>
+
+        <!-- Centre glow -->
+        <circle cx="100" cy="100" r="28"
+          fill="radial-gradient(circle, rgba(200,180,120,0.08) 0%, transparent 100%)"
+          opacity="0.5"/>
+        <radialGradient id="centreGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stop-color="rgba(200,180,120,0.15)"/>
+          <stop offset="100%" stop-color="rgba(200,180,120,0)"/>
+        </radialGradient>
+        <circle cx="100" cy="100" r="28" fill="url(#centreGlow)"/>
+
+        <!-- Progress ring — the key animated element -->
+        <!-- circumference of r=90 ≈ 565.49 -->
+        <circle cx="100" cy="100" r="90"
+          fill="none"
+          stroke="rgba(200,180,120,0.65)"
+          stroke-width="1.2"
+          stroke-linecap="round"
+          class="ring-progress"
+          id="ring-progress"/>
+
+      </svg>
+
+      <!-- Kanji overlay centered on mandala -->
+      <div class="mandala-kanji" id="mandala-kanji">四方</div>
+    </div>
+
+    <!-- Breath cue -->
+    <div class="breath-cue" id="breath-cue">Be still</div>
+
+    <!-- Mantra -->
+    <div class="mantra">In stillness, all directions are open.</div>
+
+    <!-- Begin button -->
+    <button class="begin-btn" id="begin-btn" onclick="beginPractice()">
+      Begin Practice &rarr;
+    </button>
+
+    <!-- Nav bar -->
+    <div class="nav-bar" id="nav-bar">
+      <div class="nav-back">← Back</div>
+      <div class="nav-title">Shiho</div>
+      <div class="nav-right"><div class="aura-dot"></div> Aura</div>
+    </div>
+
+  </div>
+</div><!-- /frame -->
+
+<!-- Dev controls -->
+<div class="controls">
+  <button class="ctrl-btn active">Shiho</button>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn active" id="btn-particles" onclick="toggleParticles(this)">Particles: On</button>
+  <button class="ctrl-btn active" id="btn-nav" onclick="toggleNav(this)">Nav: On</button>
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn" onclick="resetRitual()">↺ Reset</button>
+  <button class="ctrl-btn" onclick="skipRitual()">Skip →</button>
+</div>
+
+<div class="version-label">Shiho · v1.0 · March 2026</div>
+
+<script>
+/* ── Config ── */
+var RITUAL_DURATION = 10000; // ms
+
+/* ── Device toggle ── */
+function setDevice(type) {
+  var frame = document.getElementById('frame');
+  frame.className = 'frame ' + type;
+  document.getElementById('btn-iphone').classList.toggle('active', type === 'iphone');
+  document.getElementById('btn-ipad').classList.toggle('active', type === 'ipad');
+  resizeCanvas();
+  resetRitual();
+}
+
+/* ── Ritual state ── */
+var ritualTimer   = null;
+var cueTimer      = null;
+var ritualRunning = false;
+
+var CUES = [
+  { at: 0,    text: 'Be still' },
+  { at: 3500, text: 'Centre yourself' },
+  { at: 7000, text: 'You are ready' }
+];
+
+function startRitual() {
+  if (ritualRunning) return;
+  ritualRunning = true;
+
+  // Kick off progress ring animation
+  var ring = document.getElementById('ring-progress');
+  ring.style.animationDuration = RITUAL_DURATION + 'ms';
+  ring.classList.add('running');
+
+  // Cycle through breath cue phrases
+  CUES.forEach(function(cue) {
+    var t = setTimeout(function() {
+      setCue(cue.text);
+    }, cue.at);
+    cueTimer = t; // save last (for cleanup)
+  });
+
+  // Show begin button when ritual completes
+  ritualTimer = setTimeout(function() {
+    document.getElementById('begin-btn').classList.add('visible');
+    setCue('');
+  }, RITUAL_DURATION);
+}
+
+function setCue(text) {
+  var el = document.getElementById('breath-cue');
+  el.style.opacity = '0';
+  setTimeout(function() {
+    el.textContent = text;
+    el.style.opacity = '1';
+  }, 400);
+}
+
+function resetRitual() {
+  // Clear timers
+  clearTimeout(ritualTimer);
+  clearTimeout(cueTimer);
+  CUES.forEach(function(c) { if (c._t) clearTimeout(c._t); });
+  ritualRunning = false;
+
+  // Reset ring
+  var ring = document.getElementById('ring-progress');
+  ring.classList.remove('running');
+  ring.style.animationDuration = '';
+  // Force reflow to restart animation cleanly
+  void ring.getBoundingClientRect();
+
+  // Reset UI
+  document.getElementById('breath-cue').textContent = 'Be still';
+  document.getElementById('breath-cue').style.opacity = '1';
+  document.getElementById('begin-btn').classList.remove('visible');
+
+  // Start fresh after brief pause
+  setTimeout(startRitual, 400);
+}
+
+function skipRitual() {
+  clearTimeout(ritualTimer);
+  ritualRunning = false;
+  var ring = document.getElementById('ring-progress');
+  ring.classList.remove('running');
+  ring.style.strokeDashoffset = '0';
+  setCue('');
+  document.getElementById('begin-btn').classList.add('visible');
+}
+
+function beginPractice() {
+  console.log('Navigate to: Sequence / Challenge');
+  // In production: setScreen('sequence') or similar
+}
+
+// Auto-start ritual when page loads
+window.addEventListener('load', function() {
+  setTimeout(startRitual, 600);
+});
+
+/* ── Particle system — sparse golden motes ── */
+var particlesOn = true;
+var canvas = document.getElementById('canvas');
+var ctx    = canvas.getContext('2d');
+var motes  = [];
+
+function resizeCanvas() {
+  var frame = document.getElementById('frame');
+  canvas.width  = frame.offsetWidth;
+  canvas.height = frame.offsetHeight;
+}
+
+function Mote() { this.reset(); }
+Mote.prototype.reset = function() {
+  this.x     = Math.random() * canvas.width;
+  this.y     = canvas.height + 4;
+  this.size  = 0.4 + Math.random() * 0.9;
+  this.speed = 0.12 + Math.random() * 0.28;
+  this.drift = (Math.random() - 0.5) * 0.15;
+  this.life  = 0;
+  this.maxLife = 250 + Math.random() * 300;
+  // Golden tones
+  var golds = [[200,180,120],[220,195,130],[180,160,100],[240,210,140]];
+  this.color = golds[Math.floor(Math.random() * golds.length)];
+};
+Mote.prototype.update = function() {
+  this.y    -= this.speed;
+  this.x    += this.drift;
+  this.life += 1;
+};
+Mote.prototype.draw = function() {
+  var prog = this.life / this.maxLife;
+  var opacity = prog < 0.12
+    ? prog / 0.12
+    : prog > 0.8
+      ? (1 - prog) / 0.2
+      : 1;
+  opacity *= 0.3;
+  var c = this.color;
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + opacity + ')';
+  ctx.fill();
+  ctx.beginPath();
+  ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (opacity * 0.12) + ')';
+  ctx.fill();
+};
+
+// Sparse — only 20 motes (very quiet atmosphere)
+for (var i = 0; i < 20; i++) {
+  var m = new Mote();
+  m.y    = Math.random() * canvas.height;
+  m.life = Math.random() * m.maxLife;
+  motes.push(m);
+}
+
+function animateMotes() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  if (particlesOn) {
+    for (var i = 0; i < motes.length; i++) {
+      var m = motes[i];
+      if (m.life >= m.maxLife) m.reset();
+      m.update();
+      m.draw();
+    }
+  }
+  requestAnimationFrame(animateMotes);
+}
+resizeCanvas();
+animateMotes();
+
+/* ── Toggles ── */
+function toggleParticles(btn) {
+  particlesOn = !particlesOn;
+  if (!particlesOn) ctx.clearRect(0, 0, canvas.width, canvas.height);
+  btn.textContent = 'Particles: ' + (particlesOn ? 'On' : 'Off');
+  btn.classList.toggle('active', particlesOn);
+}
+function toggleNav(btn) {
+  var el = document.getElementById('nav-bar');
+  var on = el.style.display !== 'none';
+  el.style.display = on ? 'none' : 'flex';
+  btn.textContent = 'Nav: ' + (on ? 'Off' : 'On');
+  btn.classList.toggle('active', !on);
+}
+</script>
+</body>
+</html>

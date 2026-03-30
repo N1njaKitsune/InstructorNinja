@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nendō — Mushin Line Flow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050508;
+            color: #F5F0E8;
+            font-family: 'Crimson Pro', serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .title {
+            font-family: 'Cinzel', serif;
+            font-size: 20px;
+            font-weight: 600;
+            color: #F5F0E8;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            align-items: center;
+        }
+
+        .btn-control {
+            padding: 8px 16px;
+            background: rgba(122,184,154,0.2);
+            color: #F5F0E8;
+            border: 1px solid rgba(122,184,154,0.5);
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Crimson Pro', serif;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-control:hover {
+            background: rgba(122,184,154,0.3);
+            box-shadow: 0 0 10px rgba(122,184,154,0.3);
+        }
+
+        .device-toggle {
+            display: flex;
+            gap: 8px;
+        }
+
+        .device-toggle button {
+            padding: 8px 14px;
+            background: rgba(122,184,154,0.15);
+            color: #F5F0E8;
+            border: 1px solid rgba(122,184,154,0.3);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .device-toggle button.active {
+            background: rgba(122,184,154,0.4);
+            border-color: rgba(122,184,154,0.8);
+        }
+
+        .device-frame {
+            position: relative;
+            background: linear-gradient(135deg, #0a0a12 0%, #12121e 50%, #0a0a12 100%);
+            border: 8px solid #1a1a24;
+            border-radius: 32px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            transition: all 0.4s ease;
+        }
+
+        .device-frame.phone {
+            width: 844px;
+            height: 390px;
+        }
+
+        .device-frame.tablet {
+            width: 1194px;
+            height: 834px;
+        }
+
+        .viewport {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: #050508;
+            overflow: hidden;
+        }
+
+        .layer {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+        }
+
+        .env-hero {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            background-size: cover;
+            background-position: center;
+            background-image: url('../Assets/backgrounds/bg-breath-home.webp');
+            filter: brightness(0.4) saturate(0.7);
+            transition: filter 0.5s ease, background-image 0.5s ease;
+        }
+
+        .env-warmth {
+            position: absolute;
+            inset: 0;
+            z-index: 2;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 50% 85%, rgba(200,140,50,0.04) 0%, transparent 60%);
+        }
+
+        .env-texture {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            pointer-events: none;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%23f5f0e8' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+
+        .env-vignette {
+            position: absolute;
+            inset: 0;
+            z-index: 4;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(6,6,10,0.6) 100%);
+        }
+
+        canvas#envParticles {
+            position: absolute;
+            inset: 0;
+            z-index: 5;
+            pointer-events: none;
+        }
+
+        .base-layer {
+            display: none;
+        }
+
+        .warmth-layer {
+            display: none;
+        }
+
+        .texture-layer {
+            display: none;
+        }
+
+        .vignette-layer {
+            display: none;
+        }
+
+        .content-layer {
+            position: absolute;
+            z-index: 10;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 30px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            inset: 0;
+        }
+
+        .canvas-layer {
+            display: none;
+        }
+
+        .screen {
+            display: none;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.35s cubic-bezier(0.22, 0.61, 0.36, 1), transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+            width: 100%;
+        }
+
+        .screen.active {
+            display: flex;
+            opacity: 1;
+            transform: translateY(0);
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            min-height: 40px;
+        }
+
+        .back-btn {
+            background: rgba(122,184,154,0.2);
+            color: #F5F0E8;
+            border: 1px solid rgba(122,184,154,0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            background: rgba(122,184,154,0.3);
+            box-shadow: 0 0 8px rgba(122,184,154,0.3);
+        }
+
+        .breadcrumb {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: rgba(245,240,232,0.6);
+            letter-spacing: 1px;
+            flex: 1;
+            text-align: center;
+        }
+
+        .spacer {
+            width: 40px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #F5F0E8;
+            letter-spacing: 0.5px;
+        }
+
+        .element-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 15px;
+            width: 100%;
+            max-width: 280px;
+            height: 280px;
+            margin: 0 auto;
+            flex-shrink: 0;
+        }
+
+        .element-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(245,240,232,0.1);
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .element-card:hover {
+            transform: scale(1.05);
+            border-color: rgba(245,240,232,0.2);
+        }
+
+        .kaze-card {
+            grid-column: 2;
+            grid-row: 1;
+            background: rgba(180,210,240,0.15);
+            color: rgba(180,210,240,0.9);
+        }
+
+        .kaze-card:hover {
+            box-shadow: 0 0 15px rgba(180,210,240,0.4), inset 0 0 15px rgba(180,210,240,0.1);
+        }
+
+        .chi-card {
+            grid-column: 1;
+            grid-row: 2;
+            background: rgba(220,180,100,0.15);
+            color: rgba(220,180,100,0.9);
+        }
+
+        .chi-card:hover {
+            box-shadow: 0 0 15px rgba(220,180,100,0.4), inset 0 0 15px rgba(220,180,100,0.1);
+        }
+
+        .mizu-card {
+            grid-column: 2;
+            grid-row: 3;
+            background: rgba(100,180,200,0.15);
+            color: rgba(100,180,200,0.9);
+        }
+
+        .mizu-card:hover {
+            box-shadow: 0 0 15px rgba(100,180,200,0.4), inset 0 0 15px rgba(100,180,200,0.1);
+        }
+
+        .hi-card {
+            grid-column: 3;
+            grid-row: 2;
+            background: rgba(240,160,80,0.15);
+            color: rgba(240,160,80,0.9);
+        }
+
+        .hi-card:hover {
+            box-shadow: 0 0 15px rgba(240,160,80,0.4), inset 0 0 15px rgba(240,160,80,0.1);
+        }
+
+        .shiho-card {
+            grid-column: 2;
+            grid-row: 2;
+            background: rgba(122,184,154,0.2);
+            color: rgba(122,184,154,0.95);
+            font-size: 16px;
+            border: 1.5px solid rgba(122,184,154,0.4);
+        }
+
+        .shiho-card:hover {
+            box-shadow: 0 0 20px rgba(122,184,154,0.5), inset 0 0 15px rgba(122,184,154,0.15);
+            border-color: rgba(122,184,154,0.7);
+        }
+
+        .begin-session-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(122,184,154,0.25);
+            color: #F5F0E8;
+            border: 1.5px solid rgba(122,184,154,0.5);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .begin-session-btn:hover {
+            background: rgba(122,184,154,0.35);
+            box-shadow: 0 0 15px rgba(122,184,154,0.4);
+            border-color: rgba(122,184,154,0.7);
+        }
+
+        .technique-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .technique-card {
+            background: rgba(122,184,154,0.1);
+            border: 0.5px solid rgba(245,240,232,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(14px);
+        }
+
+        .technique-card:hover {
+            background: rgba(122,184,154,0.15);
+            border-color: rgba(245,240,232,0.15);
+            transform: translateX(4px);
+        }
+
+        .technique-name {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .technique-desc {
+            font-size: 13px;
+            color: rgba(245,240,232,0.7);
+            margin-bottom: 8px;
+        }
+
+        .technique-time {
+            font-size: 12px;
+            color: rgba(122,184,154,0.8);
+            font-family: 'Cinzel', serif;
+        }
+
+        .detail-section {
+            background: rgba(122,184,154,0.1);
+            border: 0.5px solid rgba(245,240,232,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 16px;
+            backdrop-filter: blur(14px);
+        }
+
+        .detail-label {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: rgba(245,240,232,0.5);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #F5F0E8;
+            margin-bottom: 10px;
+        }
+
+        .practice-now-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(122,184,154,0.3);
+            color: #F5F0E8;
+            border: 1.5px solid rgba(122,184,154,0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: auto;
+            transition: all 0.3s ease;
+        }
+
+        .practice-now-btn:hover {
+            background: rgba(122,184,154,0.4);
+            box-shadow: 0 0 15px rgba(122,184,154,0.4);
+            border-color: rgba(122,184,154,0.8);
+        }
+
+        .shiho-open-text {
+            font-size: 16px;
+            color: rgba(245,240,232,0.8);
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .shiho-box {
+            width: 180px;
+            height: 180px;
+            border: 2px solid rgba(122,184,154,0.6);
+            border-radius: 8px;
+            margin: 30px auto;
+            position: relative;
+            background: rgba(122,184,154,0.05);
+        }
+
+        .shiho-corner {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: rgba(122,184,154,0.8);
+            border-radius: 2px;
+            box-shadow: 0 0 12px rgba(122,184,154,0.6);
+        }
+
+        .corner-tl {
+            top: -6px;
+            left: -6px;
+        }
+
+        .corner-tr {
+            top: -6px;
+            right: -6px;
+        }
+
+        .corner-bl {
+            bottom: -6px;
+            left: -6px;
+        }
+
+        .corner-br {
+            bottom: -6px;
+            right: -6px;
+        }
+
+        .shiho-label {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: rgba(122,184,154,0.7);
+            text-align: center;
+            width: 100%;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        .shiho-box {
+            animation: shimmer 2s ease-in-out infinite;
+        }
+
+        .timeline {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid rgba(245,240,232,0.1);
+        }
+
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(245,240,232,0.2);
+            border: 1px solid rgba(245,240,232,0.3);
+            transition: all 0.4s ease;
+        }
+
+        .timeline-dot.active {
+            background: rgba(122,184,154,0.8);
+            box-shadow: 0 0 8px rgba(122,184,154,0.6);
+            border-color: rgba(122,184,154,0.8);
+            width: 10px;
+            height: 10px;
+        }
+
+        .timeline-label {
+            font-size: 10px;
+            color: rgba(245,240,232,0.4);
+            margin-top: 6px;
+            text-align: center;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .mood-cards {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .mood-card {
+            flex: 1;
+            background: rgba(122,184,154,0.1);
+            border: 1px solid rgba(245,240,232,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(14px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mood-card:hover {
+            background: rgba(122,184,154,0.15);
+            border-color: rgba(245,240,232,0.15);
+            transform: translateY(-2px);
+        }
+
+        .mood-card.selected {
+            background: rgba(122,184,154,0.25);
+            border-color: rgba(122,184,154,0.6);
+            box-shadow: 0 0 12px rgba(122,184,154,0.4);
+            opacity: 1;
+        }
+
+        .mood-card.dim {
+            opacity: 0.4;
+        }
+
+        .mood-icon {
+            font-size: 28px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .mood-label {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: #F5F0E8;
+        }
+
+        .continue-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(122,184,154,0.3);
+            color: #F5F0E8;
+            border: 1.5px solid rgba(122,184,154,0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .continue-btn:hover {
+            background: rgba(122,184,154,0.4);
+            box-shadow: 0 0 15px rgba(122,184,154,0.4);
+            border-color: rgba(122,184,154,0.8);
+        }
+
+        .continue-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .sequence-info {
+            background: rgba(122,184,154,0.1);
+            border: 0.5px solid rgba(245,240,232,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(14px);
+        }
+
+        .breathing-pattern {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            color: rgba(245,240,232,0.7);
+            margin-top: 10px;
+            letter-spacing: 1px;
+        }
+
+        .runner-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            gap: 20px;
+        }
+
+        .breathing-canvas {
+            width: 100%;
+            height: 100%;
+            max-width: 250px;
+            max-height: 250px;
+        }
+
+        .runner-message {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            color: rgba(122,184,154,0.9);
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .summary-aura {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(122,184,154,0.3) 0%, rgba(122,184,154,0.05) 70%);
+            border: 2px solid rgba(122,184,154,0.4);
+            margin: 30px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: rgba(122,184,154,0.8);
+            animation: pulse-aura 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-aura {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(122,184,154,0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(122,184,154,0.5);
+            }
+        }
+
+        .summary-stats {
+            background: rgba(122,184,154,0.1);
+            border: 0.5px solid rgba(245,240,232,0.08);
+            border-radius: 10px;
+            padding: 16px;
+            text-align: center;
+            margin-bottom: 20px;
+            backdrop-filter: blur(14px);
+            width: 100%;
+        }
+
+        .stat-line {
+            font-size: 14px;
+            color: #F5F0E8;
+            margin-bottom: 8px;
+        }
+
+        .return-btn {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(122,184,154,0.3);
+            color: #F5F0E8;
+            border: 1.5px solid rgba(122,184,154,0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            transition: all 0.3s ease;
+        }
+
+        .return-btn:hover {
+            background: rgba(122,184,154,0.4);
+            box-shadow: 0 0 15px rgba(122,184,154,0.4);
+            border-color: rgba(122,184,154,0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="title">Nendō — Mushin Line Flow</div>
+
+        <div class="controls">
+            <div class="device-toggle">
+                <button class="active" data-device="phone">Phone</button>
+                <button data-device="tablet">Tablet</button>
+            </div>
+            <button class="btn-control" id="resetBtn">Reset</button>
+        </div>
+
+        <div class="device-frame phone" id="deviceFrame">
+            <div class="viewport">
+                <!-- Environment layers -->
+                <div class="env-hero" id="envHero"></div>
+                <div class="env-warmth" id="envWarmth"></div>
+                <div class="env-texture"></div>
+                <div class="env-vignette" id="envVignette"></div>
+                <canvas id="envParticles"></canvas>
+
+                <!-- Legacy layers (hidden) -->
+                <div class="layer base-layer"></div>
+                <div class="layer warmth-layer"></div>
+                <div class="layer texture-layer"></div>
+                <div class="layer vignette-layer"></div>
+                <canvas class="canvas-layer" id="particleCanvas"></canvas>
+
+                <div class="content-layer">
+                    <!-- Screen 1: BreathHome -->
+                    <div class="screen active" data-screen="breathhome">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Mushin · The Still Mind</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1>Elements of Breath</h1>
+                            <div class="element-grid">
+                                <div class="element-card kaze-card" data-element="kaze">Kaze<br/>Wind</div>
+                                <div class="element-card chi-card" data-element="chi">Chi<br/>Earth</div>
+                                <div class="element-card shiho-card">Shiho<br/>四方</div>
+                                <div class="element-card mizu-card" data-element="mizu">Mizu<br/>Water</div>
+                                <div class="element-card hi-card" data-element="hi">Hi<br/>Fire</div>
+                            </div>
+                            <button class="begin-session-btn">BEGIN SESSION</button>
+                        </div>
+                    </div>
+
+                    <!-- Screen 2: ElementList -->
+                    <div class="screen" data-screen="elementlist">
+                        <div class="header">
+                            <button class="back-btn">← Back</button>
+                            <div class="breadcrumb" id="elementBreadcrumb">Kaze Techniques</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1 id="elementTitle">Kaze Techniques</h1>
+                            <div class="technique-list" id="techniqueList">
+                                <!-- Populated by JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Screen 3: Technique Detail -->
+                    <div class="screen" data-screen="detail">
+                        <div class="header">
+                            <button class="back-btn">← Back</button>
+                            <div class="breadcrumb">Technique Detail</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1 id="detailTitle">Gentle Breeze</h1>
+                            <div class="detail-section">
+                                <div class="detail-label">Duration</div>
+                                <div class="detail-value" id="detailDuration">2 minutes</div>
+                                <div class="detail-label">Pace</div>
+                                <div class="detail-value" id="detailPace">Calm</div>
+                                <div class="detail-label">Best When</div>
+                                <div class="detail-value" id="detailBestWhen">Starting your day</div>
+                                <div class="detail-label">Level</div>
+                                <div class="detail-value" id="detailLevel">Beginner</div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-label">Description</div>
+                                <div class="detail-value" id="detailDescription">A gentle, flowing breath practice...</div>
+                            </div>
+                            <button class="practice-now-btn">PRACTICE NOW</button>
+                        </div>
+                    </div>
+
+                    <!-- Screen 4: Shiho Open -->
+                    <div class="screen" data-screen="shiho-open">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Shiho Opens</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1>Shiho Opens the Session</h1>
+                            <p class="shiho-open-text">Take a moment to sit comfortably. Find a quiet space. When you're ready, we'll begin.</p>
+                            <div class="shiho-box">
+                                <div class="shiho-corner corner-tl"></div>
+                                <div class="shiho-corner corner-tr"></div>
+                                <div class="shiho-corner corner-bl"></div>
+                                <div class="shiho-corner corner-br"></div>
+                                <div class="shiho-label">四方<br/>Breath Space</div>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot active"></div>
+                                <div class="timeline-label">Open</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Check-In</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Sequence</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Runner</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Close</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Summary</div>
+                            </div>
+                        </div>
+                        <button class="continue-btn">Continue →</button>
+                    </div>
+
+                    <!-- Screen 5: Check-In -->
+                    <div class="screen" data-screen="checkin">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Check-In</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1>How do you feel right now?</h1>
+                            <div class="mood-cards">
+                                <div class="mood-card" data-mood="calm">
+                                    <div class="mood-icon">🧘</div>
+                                    <div class="mood-label">Calm</div>
+                                </div>
+                                <div class="mood-card" data-mood="busy">
+                                    <div class="mood-icon">⚡</div>
+                                    <div class="mood-label">Busy</div>
+                                </div>
+                                <div class="mood-card" data-mood="upset">
+                                    <div class="mood-icon">🌊</div>
+                                    <div class="mood-label">Upset</div>
+                                </div>
+                                <div class="mood-card" data-mood="energised">
+                                    <div class="mood-icon">🔥</div>
+                                    <div class="mood-label">Energised</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Open</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot active"></div>
+                                <div class="timeline-label">Check-In</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Sequence</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Runner</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Close</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Summary</div>
+                            </div>
+                        </div>
+                        <button class="continue-btn" id="checkInContinue" disabled>Continue →</button>
+                    </div>
+
+                    <!-- Screen 6: Sequence -->
+                    <div class="screen" data-screen="sequence">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Build Your Session</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1>Build Your Session</h1>
+                            <div class="sequence-info">
+                                <div class="detail-label">Selected Technique</div>
+                                <div class="detail-value" id="sequenceTechnique">Gentle Breeze</div>
+                                <div class="breathing-pattern">Pattern: 4 sec in · 4 sec hold · 4 sec out · 4 sec hold</div>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Open</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Check-In</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot active"></div>
+                                <div class="timeline-label">Sequence</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Runner</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Close</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Summary</div>
+                            </div>
+                        </div>
+                        <button class="continue-btn">Begin Practice →</button>
+                    </div>
+
+                    <!-- Screen 7: Runner -->
+                    <div class="screen" data-screen="runner">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Practice in Progress</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="runner-container">
+                            <canvas id="breathingCanvas" class="breathing-canvas"></canvas>
+                            <div class="runner-message" id="runnerMessage">Breathing...</div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Open</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Check-In</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Sequence</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot active"></div>
+                                <div class="timeline-label">Runner</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Close</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Summary</div>
+                            </div>
+                        </div>
+                        <button class="continue-btn" id="runnerContinue" style="display:none;">Continue →</button>
+                    </div>
+
+                    <!-- Screen 8: Summary -->
+                    <div class="screen" data-screen="summary">
+                        <div class="header">
+                            <div class="spacer"></div>
+                            <div class="breadcrumb">Session Complete</div>
+                            <div class="spacer"></div>
+                        </div>
+                        <div class="content">
+                            <h1>Well done, Kai</h1>
+                            <div class="summary-aura">✨</div>
+                            <div class="summary-stats">
+                                <div class="stat-line" id="summaryStats">2 rounds · 32 seconds · Gentle Breeze</div>
+                            </div>
+                        </div>
+                        <div class="timeline">
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Open</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Check-In</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Sequence</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Runner</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-label">Close</div>
+                            </div>
+                            <div class="timeline-step">
+                                <div class="timeline-dot active"></div>
+                                <div class="timeline-label">Summary</div>
+                            </div>
+                        </div>
+                        <button class="return-btn">Return to Mushin</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State management
+        const state = {
+            currentScreen: 'breathhome',
+            currentElement: null,
+            currentTechnique: null,
+            selectedMood: null,
+            sessionTechnique: null,
+            deviceMode: 'phone'
+        };
+
+        const techniques = {
+            kaze: [
+                { name: 'Gentle Breeze', desc: 'A calm, flowing breath practice', time: '2 min', pace: 'Calm', bestWhen: 'Starting your day', level: 'Beginner' },
+                { name: 'Mountain Wind', desc: 'A steady, foundational technique', time: '5 min', pace: 'Steady', bestWhen: 'Building focus', level: 'Intermediate' },
+                { name: 'Storm Eye', desc: 'A focused, alert practice', time: '3 min', pace: 'Focused', bestWhen: 'During challenges', level: 'Advanced' }
+            ],
+            chi: [
+                { name: 'Deep Roots', desc: 'A grounding breath practice', time: '3 min', pace: 'Grounding', bestWhen: 'Feeling scattered', level: 'Beginner' },
+                { name: 'Earthen Still', desc: 'A steady, stabilizing technique', time: '4 min', pace: 'Steady', bestWhen: 'Building stability', level: 'Intermediate' },
+                { name: 'Mountain Core', desc: 'A strong, powerful practice', time: '5 min', pace: 'Strong', bestWhen: 'Gaining strength', level: 'Advanced' }
+            ],
+            mizu: [
+                { name: 'Calm Pool', desc: 'A still, peaceful practice', time: '2 min', pace: 'Still', bestWhen: 'Finding peace', level: 'Beginner' },
+                { name: 'River Flow', desc: 'A continuous, flowing technique', time: '4 min', pace: 'Continuous', bestWhen: 'Moving forward', level: 'Intermediate' },
+                { name: 'Ocean Depth', desc: 'A deep, profound practice', time: '6 min', pace: 'Deep', bestWhen: 'Going inward', level: 'Advanced' }
+            ],
+            hi: [
+                { name: 'Candle Flame', desc: 'A focused, delicate practice', time: '2 min', pace: 'Focused', bestWhen: 'Sharpening awareness', level: 'Beginner' },
+                { name: 'Hearth Glow', desc: 'A warming, nurturing technique', time: '3 min', pace: 'Warming', bestWhen: 'Building warmth', level: 'Intermediate' },
+                { name: 'Forge Breath', desc: 'An intense, powerful practice', time: '4 min', pace: 'Intense', bestWhen: 'Building power', level: 'Advanced' }
+            ]
+        };
+
+        // Background configuration mapping
+        const screenBackgrounds = {
+            'breathhome': { img: 'bg-breath-home.webp', brightness: 0.4, saturate: 0.7 },
+            'elementlist': { img: 'bg-breath-home.webp', brightness: 0.35, saturate: 0.65 },
+            'detail': { img: 'bg-breath-home.webp', brightness: 0.3, saturate: 0.6 },
+            'shiho-open': { img: 'bg-shiho.webp', brightness: 0.4, saturate: 0.7 },
+            'checkin': { img: 'bg-session-shell.webp', brightness: 0.35, saturate: 0.65 },
+            'sequence': { img: 'bg-session-shell.webp', brightness: 0.4, saturate: 0.7 },
+            'runner': { img: 'bg-runner-kaze.webp', brightness: 0.45, saturate: 0.75 },
+            'summary': { img: 'bg-session-complete.webp', brightness: 0.45, saturate: 0.7 }
+        };
+
+        function updateBackground(screenId) {
+            const bg = screenBackgrounds[screenId] || screenBackgrounds['breathhome'];
+            const hero = document.getElementById('envHero');
+            hero.style.backgroundImage = `url('../Assets/backgrounds/${bg.img}')`;
+            hero.style.filter = `brightness(${bg.brightness}) saturate(${bg.saturate})`;
+        }
+
+        // Navigation
+        function showScreen(screenName) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.querySelector(`[data-screen="${screenName}"]`).classList.add('active');
+            state.currentScreen = screenName;
+            updateBackground(screenName);
+        }
+
+        function goBack() {
+            const flow = ['breathhome', 'elementlist', 'detail', 'shiho-open', 'checkin', 'sequence', 'runner', 'summary'];
+            const currentIndex = flow.indexOf(state.currentScreen);
+            if (currentIndex > 0) {
+                showScreen(flow[currentIndex - 1]);
+            }
+        }
+
+        // Element selection
+        document.querySelectorAll('[data-element]').forEach(card => {
+            card.addEventListener('click', () => {
+                state.currentElement = card.dataset.element;
+                populateTechniqueList();
+                showScreen('elementlist');
+            });
+        });
+
+        // Populate technique list
+        function populateTechniqueList() {
+            const element = state.currentElement;
+            const elementNames = { kaze: 'Kaze (Wind)', chi: 'Chi (Earth)', mizu: 'Mizu (Water)', hi: 'Hi (Fire)' };
+            document.getElementById('elementTitle').textContent = elementNames[element] + ' Techniques';
+            document.getElementById('elementBreadcrumb').textContent = elementNames[element] + ' Techniques';
+
+            const list = document.getElementById('techniqueList');
+            list.innerHTML = '';
+            techniques[element].forEach((tech, idx) => {
+                const card = document.createElement('div');
+                card.className = 'technique-card';
+                card.innerHTML = `<div class="technique-name">${tech.name}</div><div class="technique-desc">${tech.desc}</div><div class="technique-time">${tech.time}</div>`;
+                card.addEventListener('click', () => {
+                    state.currentTechnique = idx;
+                    showTechniqueDetail();
+                });
+                list.appendChild(card);
+            });
+        }
+
+        function showTechniqueDetail() {
+            const element = state.currentElement;
+            const tech = techniques[element][state.currentTechnique];
+            document.getElementById('detailTitle').textContent = tech.name;
+            document.getElementById('detailDuration').textContent = tech.time;
+            document.getElementById('detailPace').textContent = tech.pace;
+            document.getElementById('detailBestWhen').textContent = tech.bestWhen;
+            document.getElementById('detailLevel').textContent = tech.level;
+            document.getElementById('detailDescription').textContent = 'A carefully designed breathing technique to help you find balance and clarity.';
+            showScreen('detail');
+        }
+
+        // Session flow
+        document.querySelector('.begin-session-btn').addEventListener('click', () => showScreen('shiho-open'));
+        document.querySelector('[data-screen="detail"] .practice-now-btn').addEventListener('click', () => {
+            state.sessionTechnique = { element: state.currentElement, techniqueIdx: state.currentTechnique };
+            showScreen('shiho-open');
+        });
+
+        document.querySelector('[data-screen="shiho-open"] .continue-btn').addEventListener('click', () => showScreen('checkin'));
+
+        // Mood selection
+        document.querySelectorAll('[data-mood]').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('[data-mood]').forEach(c => c.classList.remove('selected', 'dim'));
+                document.querySelectorAll('[data-mood]').forEach(c => {
+                    if (c !== card) c.classList.add('dim');
+                });
+                card.classList.add('selected');
+                state.selectedMood = card.dataset.mood;
+                document.getElementById('checkInContinue').disabled = false;
+            });
+        });
+
+        document.getElementById('checkInContinue').addEventListener('click', () => showScreen('sequence'));
+
+        // Sequence
+        document.querySelector('[data-screen="sequence"] .continue-btn').addEventListener('click', () => {
+            startBreathingSession();
+        });
+
+        function startBreathingSession() {
+            showScreen('runner');
+            runBreathingAnimation();
+        }
+
+        // Breathing animation
+        function runBreathingAnimation() {
+            const canvas = document.getElementById('breathingCanvas');
+            const ctx = canvas.getContext('2d');
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.height;
+
+            const phases = ['breathe in', 'hold', 'breathe out', 'hold'];
+            const phaseDuration = 4000; // 4 seconds each
+            const totalCycleDuration = phaseDuration * 4; // 16 seconds per cycle
+            const numRounds = 2;
+            const totalDuration = totalCycleDuration * numRounds;
+
+            let startTime = Date.now();
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseSize = 60;
+
+            function drawBox(scale) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                const size = baseSize * scale;
+                const x = centerX - size / 2;
+                const y = centerY - size / 2;
+
+                ctx.strokeStyle = `rgba(122, 184, 154, 0.6)`;
+                ctx.lineWidth = 2;
+                ctx.shadowColor = `rgba(122, 184, 154, 0.6)`;
+                ctx.shadowBlur = 10;
+
+                ctx.strokeRect(x, y, size, size);
+                ctx.shadowColor = 'transparent';
+
+                const elapsed = Date.now() - startTime;
+                const cycleElapsed = elapsed % totalCycleDuration;
+                const phaseIndex = Math.floor(cycleElapsed / phaseDuration);
+                const phaseElapsed = cycleElapsed % phaseDuration;
+                const countdown = Math.ceil((phaseDuration - phaseElapsed) / 1000);
+
+                ctx.fillStyle = `rgba(122, 184, 154, 0.8)`;
+                ctx.font = 'bold 14px Cinzel';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(phases[phaseIndex], centerX, centerY - 20);
+                ctx.fillText(Math.max(countdown, 0), centerX, centerY + 10);
+
+                if (elapsed < totalDuration) {
+                    const scale = 1 + (phaseElapsed / phaseDuration) * 0.3 * (phaseIndex % 2 === 0 ? 1 : -1);
+                    requestAnimationFrame(() => drawBox(Math.max(0.7, Math.min(1.3, scale))));
+                } else {
+                    document.getElementById('runnerMessage').textContent = 'Session complete — Continue →';
+                    document.getElementById('runnerContinue').style.display = 'block';
+                }
+            }
+
+            drawBox(1);
+        }
+
+        document.getElementById('runnerContinue').addEventListener('click', () => {
+            const element = state.currentElement;
+            const tech = techniques[element][state.currentTechnique];
+            document.getElementById('summaryStats').textContent = `2 rounds · 32 seconds · ${tech.name}`;
+            showScreen('summary');
+        });
+
+        // Return to home
+        document.querySelector('.return-btn').addEventListener('click', () => {
+            state.currentElement = null;
+            state.currentTechnique = null;
+            state.selectedMood = null;
+            showScreen('breathhome');
+        });
+
+        // Back buttons
+        document.querySelectorAll('.back-btn').forEach(btn => {
+            btn.addEventListener('click', goBack);
+        });
+
+        // Device toggle
+        document.querySelectorAll('.device-toggle button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.device-toggle button').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                const device = btn.dataset.device;
+                const frame = document.getElementById('deviceFrame');
+                frame.classList.remove('phone', 'tablet');
+                frame.classList.add(device);
+                state.deviceMode = device;
+            });
+        });
+
+        // Reset
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            state.currentElement = null;
+            state.currentTechnique = null;
+            state.selectedMood = null;
+            document.querySelectorAll('[data-mood]').forEach(c => c.classList.remove('selected', 'dim'));
+            document.getElementById('checkInContinue').disabled = true;
+            document.getElementById('runnerContinue').style.display = 'none';
+            showScreen('breathhome');
+        });
+
+        // Particle animation
+        const particleCanvas = document.getElementById('particleCanvas');
+        const pctx = particleCanvas.getContext('2d');
+        const viewport = particleCanvas.parentElement;
+        particleCanvas.width = viewport.clientWidth;
+        particleCanvas.height = viewport.clientHeight;
+
+        const particles = [];
+        for (let i = 0; i < 20; i++) {
+            particles.push({
+                x: Math.random() * particleCanvas.width,
+                y: Math.random() * particleCanvas.height,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                r: Math.random() * 2 + 1,
+                alpha: Math.random() * 0.3 + 0.1
+            });
+        }
+
+        function animateParticles() {
+            pctx.clearRect(0, 0, particleCanvas.width, particleCanvas.height);
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                if (p.x < 0) p.x = particleCanvas.width;
+                if (p.x > particleCanvas.width) p.x = 0;
+                if (p.y < 0) p.y = particleCanvas.height;
+                if (p.y > particleCanvas.height) p.y = 0;
+
+                pctx.fillStyle = `rgba(200, 140, 50, ${p.alpha})`;
+                pctx.beginPath();
+                pctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                pctx.fill();
+            });
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        // Sequence display
+        const element = state.currentElement;
+        if (element && state.currentTechnique !== null) {
+            const tech = techniques[element][state.currentTechnique];
+            document.getElementById('sequenceTechnique').textContent = tech.name;
+        }
+    </script>
+</body>
+</html>

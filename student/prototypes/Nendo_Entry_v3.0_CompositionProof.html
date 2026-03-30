@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Nendō · Entry v3.0 — Composition Proof</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+
+body{
+  background:#0A0A12;color:#F5F0E8;
+  font-family:'Crimson Pro',serif;
+  overflow:hidden;width:100vw;height:100vh;
+}
+
+/* ══════════════════════════════════════════════════ */
+/* ENVIRONMENT LAYERS — back to front                */
+/* z-index: 0=sky, 1=mountains, 2=village,           */
+/* 3=dojo-structure, 4=floor, 5=lantern-light,       */
+/* 6=texture, 7=particles, 8=breath-overlay          */
+/* 10+=UI layers                                     */
+/* ══════════════════════════════════════════════════ */
+
+/* ── L0: Night sky ── */
+.env-sky{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:linear-gradient(180deg,
+    #080810 0%,
+    #0C0C1A 25%,
+    #10101F 50%,
+    #151522 70%,
+    #1A1520 100%
+  );
+}
+
+/* ── L1: Distant mountains / treeline ── */
+.env-mountains{
+  position:fixed;bottom:38%;left:0;right:0;z-index:1;pointer-events:none;
+  height:22%;
+}
+
+/* ── L2: Village silhouette ── */
+.env-village{
+  position:fixed;bottom:35%;left:0;right:0;z-index:2;pointer-events:none;
+  height:18%;
+}
+
+/* ── L3: Dojo structure — walls, beams, shoji screens ── */
+.env-dojo{
+  position:fixed;inset:0;z-index:3;pointer-events:none;
+}
+
+/* ── L4: Wooden floor ── */
+.env-floor{
+  position:fixed;bottom:0;left:0;right:0;z-index:4;pointer-events:none;
+  height:35%;
+}
+
+/* ── L5: Lantern light / warm glow ── */
+.env-lanterns{
+  position:fixed;inset:0;z-index:5;pointer-events:none;
+}
+
+/* ── L6: Paper texture ── */
+.env-texture{
+  position:fixed;inset:0;z-index:6;pointer-events:none;opacity:0.018;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='256' height='256' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size:200px 200px;
+}
+
+/* ── L7: Particles ── */
+canvas#particles{position:fixed;inset:0;z-index:7;pointer-events:none}
+
+/* ── L8: Breath overlay ── */
+.env-breath{
+  position:fixed;inset:0;z-index:8;pointer-events:none;
+  background:rgba(245,240,232,0);transition:background 0.3s linear;
+}
+
+/* ══════════════════════════════════════════════════ */
+/* PROTOTYPE CONTROLS                                */
+/* ══════════════════════════════════════════════════ */
+
+.proto-label{position:fixed;top:12px;left:12px;z-index:300;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.2em;color:rgba(245,240,232,0.15);text-transform:uppercase}
+.layer-toggle{
+  position:fixed;bottom:12px;left:12px;z-index:300;
+  display:flex;flex-direction:column;gap:3px;
+  background:rgba(8,8,14,0.92);border:0.5px solid rgba(245,240,232,0.08);
+  border-radius:8px;padding:6px 8px;
+}
+.layer-toggle label{
+  font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.1em;
+  color:rgba(245,240,232,0.35);display:flex;align-items:center;gap:5px;cursor:pointer;
+}
+.layer-toggle input{width:10px;height:10px;accent-color:#7AB89A}
+.restart-btn{position:fixed;bottom:12px;right:12px;z-index:300;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;padding:6px 14px;border-radius:6px;border:0.5px solid rgba(245,240,232,0.12);background:rgba(245,240,232,0.03);color:rgba(245,240,232,0.3);cursor:pointer}
+
+/* ══════════════════════════════════════════════════ */
+/* UI LAYERS                                         */
+/* ══════════════════════════════════════════════════ */
+
+.layer{
+  position:absolute;inset:0;z-index:10;
+  display:flex;align-items:center;justify-content:center;flex-direction:column;
+  transition:opacity 0.6s cubic-bezier(0.22,0.61,0.36,1);
+}
+.layer.hidden{opacity:0;pointer-events:none}
+
+/* ── Profile ── */
+.profile-layer{z-index:30;background:rgba(10,10,18,0.55)}
+.profile-card{
+  display:flex;flex-direction:row;align-items:center;gap:24px;
+  padding:22px 36px;border-radius:16px;
+  border:0.5px solid rgba(245,240,232,0.08);
+  background:rgba(10,10,18,0.6);
+  backdrop-filter:blur(24px);
+  max-width:560px;
+  animation:cardFloat 4s cubic-bezier(0.37,0,0.63,1) infinite;
+}
+@keyframes cardFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.profile-avatar{
+  width:56px;height:56px;border-radius:50%;
+  background:rgba(122,184,154,0.06);border:1px solid rgba(122,184,154,0.2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;
+}
+.profile-avatar::before{
+  content:'';position:absolute;inset:-6px;border-radius:50%;
+  background:radial-gradient(circle,rgba(250,246,238,0.06) 0%,transparent 70%);
+  animation:auraPulse 4s cubic-bezier(0.37,0,0.63,1) infinite;
+}
+@keyframes auraPulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+.profile-avatar svg{width:24px;height:24px}
+.profile-info{flex:1}
+.profile-name{font-family:'Cinzel',serif;font-size:14px;letter-spacing:0.06em;margin-bottom:3px}
+.profile-rank{font-size:11px;font-style:italic;color:rgba(245,240,232,0.35)}
+.enter-btn{
+  font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.18em;
+  padding:10px 24px;border-radius:10px;
+  border:0.5px solid rgba(141,184,212,0.3);background:rgba(141,184,212,0.04);
+  color:rgba(141,184,212,0.75);cursor:pointer;
+  transition:all 0.35s cubic-bezier(0.22,0.61,0.36,1);
+  display:inline-flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap;
+}
+.enter-btn:hover{border-color:rgba(141,184,212,0.5);background:rgba(141,184,212,0.08);color:rgba(141,184,212,0.95)}
+
+/* ── Entry ritual ── */
+.entry-layer{background:rgba(8,8,14,0.92);z-index:40}
+.entry-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;position:relative}
+.kanji{font-size:72px;font-weight:300;line-height:1;color:rgba(245,240,232,0);letter-spacing:0.15em;transition:all 1.2s cubic-bezier(0.16,1,0.3,1)}
+.kanji.visible{color:rgba(245,240,232,0.12)}
+.kanji.bright{color:rgba(245,240,232,0.3);text-shadow:0 0 40px rgba(250,246,238,0.08),0 0 80px rgba(200,149,26,0.04)}
+.gate-line{width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,240,232,0.18),transparent);transition:width 1.2s cubic-bezier(0.16,1,0.3,1);margin:16px 0}
+.gate-line.open{width:260px}
+.entry-text{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:rgba(245,240,232,0);transition:all 0.8s cubic-bezier(0.22,0.61,0.36,1);text-transform:uppercase}
+.entry-text.visible{color:rgba(245,240,232,0.3)}
+.breath-ring{position:absolute;width:120px;height:120px;border-radius:50%;border:0.5px solid rgba(245,240,232,0);transition:all 1.8s cubic-bezier(0.16,1,0.3,1)}
+.breath-ring.pulse{border-color:rgba(245,240,232,0.06);width:180px;height:180px;box-shadow:0 0 60px rgba(250,246,238,0.02)}
+.breath-ring.dissolve{border-color:rgba(245,240,232,0);width:320px;height:320px}
+
+/* ── Home hub ── */
+.home-layer{z-index:20}
+.home-content{width:100%;height:100%;display:flex;flex-direction:column}
+.home-topbar{
+  height:44px;display:flex;align-items:center;padding:0 20px;
+  border-bottom:0.5px solid rgba(245,240,232,0.05);
+  background:rgba(10,10,18,0.45);backdrop-filter:blur(14px);flex-shrink:0;
+}
+.home-back{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:rgba(245,240,232,0.32);background:none;border:none;cursor:pointer;padding:0;width:80px;text-align:left}
+.home-title{flex:1;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:rgba(245,240,232,0.25)}
+.home-body{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;overflow:hidden}
+
+.doors{display:flex;gap:24px;align-items:center}
+.door{
+  width:164px;height:228px;border-radius:14px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  cursor:pointer;position:relative;overflow:hidden;
+  transition:all 0.4s cubic-bezier(0.22,0.61,0.36,1);
+  backdrop-filter:blur(12px);
+  background:rgba(10,10,18,0.45);
+}
+.door:hover{transform:translateY(-4px)}
+.door::before{content:'';position:absolute;inset:0;border-radius:14px;opacity:0;transition:opacity 0.5s;pointer-events:none}
+.door:hover::before{opacity:1}
+
+.door-metsuke{border:0.5px solid rgba(141,184,212,0.12)}
+.door-metsuke:hover{border-color:rgba(141,184,212,0.3);box-shadow:0 8px 40px rgba(141,184,212,0.04),inset 0 0 30px rgba(141,184,212,0.02)}
+.door-metsuke::before{background:radial-gradient(ellipse at 50% 80%,rgba(141,184,212,0.04),transparent 70%)}
+.door-tachi{border:0.5px solid rgba(212,130,106,0.12)}
+.door-tachi:hover{border-color:rgba(212,130,106,0.3);box-shadow:0 8px 40px rgba(212,130,106,0.04),inset 0 0 30px rgba(212,130,106,0.02)}
+.door-tachi::before{background:radial-gradient(ellipse at 50% 80%,rgba(212,130,106,0.04),transparent 70%)}
+.door-mushin{border:0.5px solid rgba(122,184,154,0.12)}
+.door-mushin:hover{border-color:rgba(122,184,154,0.3);box-shadow:0 8px 40px rgba(122,184,154,0.04),inset 0 0 30px rgba(122,184,154,0.02)}
+.door-mushin::before{background:radial-gradient(ellipse at 50% 80%,rgba(122,184,154,0.04),transparent 70%)}
+
+.door-icon{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:14px;transition:all 0.4s;position:relative}
+.door-icon::after{content:'';position:absolute;inset:-4px;border-radius:50%;opacity:0;transition:opacity 0.5s}
+.door:hover .door-icon::after{opacity:1}
+.door-metsuke .door-icon{background:rgba(141,184,212,0.05);border:0.5px solid rgba(141,184,212,0.18)}
+.door-metsuke .door-icon::after{background:radial-gradient(circle,rgba(141,184,212,0.12),transparent 70%)}
+.door-tachi .door-icon{background:rgba(212,130,106,0.05);border:0.5px solid rgba(212,130,106,0.18)}
+.door-tachi .door-icon::after{background:radial-gradient(circle,rgba(212,130,106,0.12),transparent 70%)}
+.door-mushin .door-icon{background:rgba(122,184,154,0.05);border:0.5px solid rgba(122,184,154,0.18)}
+.door-mushin .door-icon::after{background:radial-gradient(circle,rgba(122,184,154,0.12),transparent 70%)}
+
+.door-name{font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.1em;margin-bottom:5px;transition:color 0.3s}
+.door-metsuke .door-name{color:rgba(141,184,212,0.7)}.door-metsuke:hover .door-name{color:rgba(141,184,212,0.9)}
+.door-tachi .door-name{color:rgba(212,130,106,0.7)}.door-tachi:hover .door-name{color:rgba(212,130,106,0.9)}
+.door-mushin .door-name{color:rgba(122,184,154,0.7)}.door-mushin:hover .door-name{color:rgba(122,184,154,0.9)}
+.door-sub{font-size:10px;font-style:italic;color:rgba(245,240,232,0.25);text-align:center;padding:0 14px;line-height:1.35;transition:color 0.3s}
+.door:hover .door-sub{color:rgba(245,240,232,0.38)}
+.door-kanji{position:absolute;bottom:14px;font-size:22px;color:rgba(245,240,232,0.04);letter-spacing:0.1em;transition:all 0.5s}
+.door:hover .door-kanji{color:rgba(245,240,232,0.08);transform:scale(1.05)}
+
+.aura-centre{position:absolute;display:flex;flex-direction:column;align-items:center}
+.aura-orb{width:48px;height:48px;border-radius:50%;position:relative;animation:orbBreathe 4s cubic-bezier(0.37,0,0.63,1) infinite}
+@keyframes orbBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.aura-orb-inner{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(250,246,238,0.28) 0%,rgba(200,164,106,0.1) 50%,transparent 100%);border:0.5px solid rgba(250,246,238,0.18)}
+.aura-orb-glow{position:absolute;inset:-12px;border-radius:50%;background:radial-gradient(circle,rgba(250,246,238,0.06) 0%,rgba(200,149,26,0.02) 40%,transparent 70%);animation:glowPulse 4s cubic-bezier(0.37,0,0.63,1) infinite}
+@keyframes glowPulse{0%,100%{opacity:0.5;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+.aura-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.15em;color:rgba(245,240,232,0.2);margin-top:8px}
+.aura-stage{font-family:'Cinzel',serif;font-size:9px;color:rgba(250,246,238,0.45);margin-top:2px}
+.home-mantra{position:absolute;bottom:16px;font-family:'Crimson Pro',serif;font-size:10.5px;font-style:italic;color:rgba(245,240,232,0.08);animation:mantraBreath 4s cubic-bezier(0.37,0,0.63,1) infinite}
+@keyframes mantraBreath{0%,100%{opacity:0.08}50%{opacity:0.14}}
+
+/* Stagger arrive */
+.home-layer.arriving .door{opacity:0;transform:translateY(8px)}
+.home-layer.arriving .door-metsuke{animation:doorArrive 0.6s cubic-bezier(0.16,1,0.3,1) 0.1s forwards}
+.home-layer.arriving .door-tachi{animation:doorArrive 0.6s cubic-bezier(0.16,1,0.3,1) 0.25s forwards}
+.home-layer.arriving .door-mushin{animation:doorArrive 0.6s cubic-bezier(0.16,1,0.3,1) 0.4s forwards}
+.home-layer.arriving .aura-centre{opacity:0;animation:doorArrive 0.5s cubic-bezier(0.16,1,0.3,1) 0.55s forwards}
+@keyframes doorArrive{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+.entry-layer.overlay-mode{background:rgba(8,8,14,0.92)}
+
+/* Portrait */
+.rotate-msg{display:none}
+@media (orientation:portrait) and (max-width:600px){
+  .rotate-msg{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;position:fixed;inset:0;z-index:999;background:#0A0A12;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:rgba(245,240,232,0.3)}
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- ENVIRONMENT LAYERS                                -->
+<!-- ══════════════════════════════════════════════════ -->
+
+<!-- L0: Night sky -->
+<div class="env-sky"></div>
+
+<!-- L1: Distant mountains -->
+<div class="env-mountains">
+  <svg width="100%" height="100%" viewBox="0 0 1200 200" preserveAspectRatio="none" style="display:block">
+    <path d="M0 200 L0 140 Q60 90 120 120 Q180 60 260 100 Q320 40 400 80 Q460 30 540 70 Q600 20 680 60 Q740 10 820 50 Q880 30 960 65 Q1020 15 1100 55 Q1140 40 1200 70 L1200 200Z"
+      fill="rgba(18,16,28,0.9)"/>
+    <path d="M0 200 L0 160 Q80 120 160 145 Q240 100 340 130 Q420 80 520 115 Q600 70 700 105 Q780 60 880 95 Q960 50 1060 85 Q1120 65 1200 90 L1200 200Z"
+      fill="rgba(22,20,32,0.85)"/>
+  </svg>
+</div>
+
+<!-- L2: Village silhouette -->
+<div class="env-village">
+  <svg width="100%" height="100%" viewBox="0 0 1200 160" preserveAspectRatio="none" style="display:block">
+    <!-- Distant buildings — pagoda rooftops, small houses -->
+    <g fill="rgba(25,22,35,0.8)" stroke="none">
+      <!-- Left cluster -->
+      <rect x="80" y="80" width="30" height="80"/>
+      <polygon points="65,80 110,80 95,55 80,55"/>
+      <rect x="120" y="95" width="20" height="65"/>
+      <polygon points="110,95 150,95 140,78 120,78"/>
+      <!-- Pagoda centre-left -->
+      <rect x="240" y="60" width="40" height="100"/>
+      <polygon points="225,60 295,60 280,42 240,42"/>
+      <polygon points="232,42 288,42 275,28 245,28"/>
+      <polygon points="245,28 275,28 268,18 252,18"/>
+      <!-- Centre buildings -->
+      <rect x="420" y="90" width="25" height="70"/>
+      <rect x="455" y="75" width="35" height="85"/>
+      <polygon points="445,75 500,75 490,58 455,58"/>
+      <rect x="500" y="95" width="20" height="65"/>
+      <!-- Right pagoda -->
+      <rect x="720" y="55" width="45" height="105"/>
+      <polygon points="705,55 780,55 765,35 720,35"/>
+      <polygon points="715,35 770,35 758,20 727,20"/>
+      <!-- Right cluster -->
+      <rect x="900" y="85" width="28" height="75"/>
+      <polygon points="888,85 940,85 930,68 898,68"/>
+      <rect x="940" y="95" width="22" height="65"/>
+      <rect x="1020" y="90" width="30" height="70"/>
+      <polygon points="1010,90 1060,90 1050,72 1020,72"/>
+    </g>
+    <!-- Tiny warm windows — signs of life -->
+    <g fill="rgba(200,149,26,0.12)">
+      <rect x="90" y="105" width="3" height="4" rx="0.5"/>
+      <rect x="100" y="110" width="3" height="4" rx="0.5"/>
+      <rect x="255" y="80" width="3" height="4" rx="0.5"/>
+      <rect x="262" y="80" width="3" height="4" rx="0.5"/>
+      <rect x="465" y="90" width="3" height="4" rx="0.5"/>
+      <rect x="475" y="95" width="3" height="4" rx="0.5"/>
+      <rect x="735" y="75" width="3" height="4" rx="0.5"/>
+      <rect x="745" y="75" width="3" height="4" rx="0.5"/>
+      <rect x="910" y="100" width="3" height="4" rx="0.5"/>
+      <rect x="1030" y="105" width="3" height="4" rx="0.5"/>
+    </g>
+    <!-- Ground -->
+    <rect x="0" y="140" width="1200" height="20" fill="rgba(20,18,30,0.9)"/>
+  </svg>
+</div>
+
+<!-- L3: Dojo structure -->
+<div class="env-dojo">
+  <svg width="100%" height="100%" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="display:block;position:absolute;inset:0">
+    <defs>
+      <!-- Wood colour -->
+      <linearGradient id="wood-v" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(60,35,18,0.9)"/>
+        <stop offset="100%" stop-color="rgba(40,22,10,0.95)"/>
+      </linearGradient>
+      <linearGradient id="wood-h" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0%" stop-color="rgba(55,32,16,0.85)"/>
+        <stop offset="100%" stop-color="rgba(45,25,12,0.9)"/>
+      </linearGradient>
+      <!-- Shoji paper -->
+      <linearGradient id="shoji" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(245,240,232,0.03)"/>
+        <stop offset="50%" stop-color="rgba(245,240,232,0.02)"/>
+        <stop offset="100%" stop-color="rgba(245,240,232,0.015)"/>
+      </linearGradient>
+    </defs>
+
+    <!-- Left pillar -->
+    <rect x="0" y="0" width="55" height="700" fill="url(#wood-v)"/>
+    <rect x="55" y="0" width="2" height="700" fill="rgba(30,16,6,0.7)"/>
+
+    <!-- Right pillar -->
+    <rect x="1145" y="0" width="55" height="700" fill="url(#wood-v)"/>
+    <rect x="1143" y="0" width="2" height="700" fill="rgba(30,16,6,0.7)"/>
+
+    <!-- Top beam -->
+    <rect x="0" y="0" width="1200" height="30" fill="url(#wood-h)"/>
+    <rect x="0" y="30" width="1200" height="2" fill="rgba(30,16,6,0.6)"/>
+
+    <!-- Secondary inner pillars -->
+    <rect x="180" y="30" width="14" height="420" fill="rgba(50,30,15,0.5)"/>
+    <rect x="1006" y="30" width="14" height="420" fill="rgba(50,30,15,0.5)"/>
+
+    <!-- Shoji screen panels — left -->
+    <rect x="57" y="32" width="123" height="418" fill="url(#shoji)"/>
+    <!-- Shoji grid lines — left -->
+    <line x1="57" y1="240" x2="180" y2="240" stroke="rgba(60,35,18,0.3)" stroke-width="1.5"/>
+    <line x1="118" y1="32" x2="118" y2="450" stroke="rgba(60,35,18,0.3)" stroke-width="1.5"/>
+    <line x1="57" y1="140" x2="180" y2="140" stroke="rgba(60,35,18,0.25)" stroke-width="1"/>
+    <line x1="57" y1="340" x2="180" y2="340" stroke="rgba(60,35,18,0.25)" stroke-width="1"/>
+    <line x1="87" y1="32" x2="87" y2="450" stroke="rgba(60,35,18,0.2)" stroke-width="0.8"/>
+    <line x1="149" y1="32" x2="149" y2="450" stroke="rgba(60,35,18,0.2)" stroke-width="0.8"/>
+
+    <!-- Shoji screen panels — right -->
+    <rect x="1020" y="32" width="123" height="418" fill="url(#shoji)"/>
+    <line x1="1020" y1="240" x2="1143" y2="240" stroke="rgba(60,35,18,0.3)" stroke-width="1.5"/>
+    <line x1="1081" y1="32" x2="1081" y2="450" stroke="rgba(60,35,18,0.3)" stroke-width="1.5"/>
+    <line x1="1020" y1="140" x2="1143" y2="140" stroke="rgba(60,35,18,0.25)" stroke-width="1"/>
+    <line x1="1020" y1="340" x2="1143" y2="340" stroke="rgba(60,35,18,0.25)" stroke-width="1"/>
+    <line x1="1051" y1="32" x2="1051" y2="450" stroke="rgba(60,35,18,0.2)" stroke-width="0.8"/>
+    <line x1="1112" y1="32" x2="1112" y2="450" stroke="rgba(60,35,18,0.2)" stroke-width="0.8"/>
+
+    <!-- Open centre — this is where the sky/village shows through -->
+    <!-- Threshold beam at bottom of opening -->
+    <rect x="194" y="448" width="812" height="6" fill="rgba(55,32,16,0.7)"/>
+
+    <!-- Bottom beam / engawa edge -->
+    <rect x="0" y="450" width="1200" height="8" fill="rgba(50,28,14,0.8)"/>
+  </svg>
+</div>
+
+<!-- L4: Wooden floor -->
+<div class="env-floor">
+  <svg width="100%" height="100%" viewBox="0 0 1200 300" preserveAspectRatio="none" style="display:block">
+    <defs>
+      <linearGradient id="floor-depth" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="rgba(45,28,14,0.95)"/>
+        <stop offset="30%" stop-color="rgba(35,20,10,0.97)"/>
+        <stop offset="100%" stop-color="rgba(20,12,6,0.99)"/>
+      </linearGradient>
+    </defs>
+    <rect width="1200" height="300" fill="url(#floor-depth)"/>
+    <!-- Plank lines — perspective convergence hint -->
+    <line x1="0" y1="0" x2="0" y2="300" stroke="rgba(70,42,20,0.12)" stroke-width="0.5"/>
+    <line x1="100" y1="0" x2="80" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="200" y1="0" x2="190" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="320" y1="0" x2="310" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="440" y1="0" x2="435" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="560" y1="0" x2="558" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="680" y1="0" x2="682" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="800" y1="0" x2="805" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="920" y1="0" x2="930" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="1060" y1="0" x2="1080" y2="300" stroke="rgba(70,42,20,0.1)" stroke-width="0.5"/>
+    <line x1="1200" y1="0" x2="1200" y2="300" stroke="rgba(70,42,20,0.12)" stroke-width="0.5"/>
+    <!-- Cross planks -->
+    <line x1="0" y1="60" x2="1200" y2="60" stroke="rgba(70,42,20,0.06)" stroke-width="0.5"/>
+    <line x1="0" y1="140" x2="1200" y2="140" stroke="rgba(70,42,20,0.05)" stroke-width="0.5"/>
+    <line x1="0" y1="220" x2="1200" y2="220" stroke="rgba(70,42,20,0.04)" stroke-width="0.5"/>
+  </svg>
+</div>
+
+<!-- L5: Lantern light -->
+<div class="env-lanterns">
+  <svg width="100%" height="100%" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" style="display:block;position:absolute;inset:0">
+    <defs>
+      <radialGradient id="lantern-glow-l" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0%" stop-color="rgba(200,140,50,0.06)"/>
+        <stop offset="40%" stop-color="rgba(200,140,50,0.03)"/>
+        <stop offset="100%" stop-color="rgba(200,140,50,0)"/>
+      </radialGradient>
+      <radialGradient id="lantern-glow-r" cx="0.5" cy="0.5" r="0.5">
+        <stop offset="0%" stop-color="rgba(200,140,50,0.06)"/>
+        <stop offset="40%" stop-color="rgba(200,140,50,0.03)"/>
+        <stop offset="100%" stop-color="rgba(200,140,50,0)"/>
+      </radialGradient>
+    </defs>
+
+    <!-- Left lantern -->
+    <g class="lantern-left" style="animation:lanternFlicker 5s ease-in-out infinite">
+      <!-- Glow -->
+      <ellipse cx="118" cy="180" rx="120" ry="140" fill="url(#lantern-glow-l)"/>
+      <!-- Lantern body -->
+      <rect x="110" y="100" width="16" height="28" rx="3" fill="rgba(200,140,50,0.12)" stroke="rgba(200,140,50,0.2)" stroke-width="0.5"/>
+      <line x1="118" y1="85" x2="118" y2="100" stroke="rgba(60,35,18,0.4)" stroke-width="1"/>
+      <!-- Warm light on nearby surfaces -->
+      <rect x="57" y="100" width="123" height="200" fill="rgba(200,140,50,0.015)"/>
+    </g>
+
+    <!-- Right lantern -->
+    <g class="lantern-right" style="animation:lanternFlicker 5s ease-in-out infinite;animation-delay:-2.3s">
+      <ellipse cx="1082" cy="180" rx="120" ry="140" fill="url(#lantern-glow-r)"/>
+      <rect x="1074" y="100" width="16" height="28" rx="3" fill="rgba(200,140,50,0.12)" stroke="rgba(200,140,50,0.2)" stroke-width="0.5"/>
+      <line x1="1082" y1="85" x2="1082" y2="100" stroke="rgba(60,35,18,0.4)" stroke-width="1"/>
+      <rect x="1020" y="100" width="123" height="200" fill="rgba(200,140,50,0.015)"/>
+    </g>
+
+    <!-- Ambient warm wash on floor from lanterns -->
+    <ellipse cx="600" cy="550" rx="500" ry="120" fill="rgba(200,140,50,0.012)"/>
+  </svg>
+  <style>
+    @keyframes lanternFlicker{
+      0%,100%{opacity:0.85}
+      30%{opacity:1}
+      60%{opacity:0.9}
+      80%{opacity:1}
+    }
+  </style>
+</div>
+
+<!-- L6: Texture -->
+<div class="env-texture"></div>
+
+<!-- L7: Particles -->
+<canvas id="particles"></canvas>
+
+<!-- L8: Breath overlay -->
+<div class="env-breath" id="env-breath"></div>
+
+<!-- Landscape message -->
+<div class="rotate-msg"><span>Rotate to landscape</span></div>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- PROTOTYPE CONTROLS                                -->
+<!-- ══════════════════════════════════════════════════ -->
+
+<div class="proto-label">Nendō · Entry v3.0 · Composition Proof</div>
+<div class="layer-toggle">
+  <label><input type="checkbox" checked onchange="toggleLayer('env-sky',this.checked)"> L0 Sky</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-mountains',this.checked)"> L1 Mountains</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-village',this.checked)"> L2 Village</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-dojo',this.checked)"> L3 Dojo</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-floor',this.checked)"> L4 Floor</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-lanterns',this.checked)"> L5 Lanterns</label>
+  <label><input type="checkbox" checked onchange="toggleLayer('env-texture',this.checked)"> L6 Texture</label>
+  <label><input type="checkbox" checked onchange="document.getElementById('particles').style.display=this.checked?'block':'none'"> L7 Particles</label>
+</div>
+<button class="restart-btn" onclick="restart()">&#8635; Restart</button>
+
+<!-- ══════════════════════════════════════════════════ -->
+<!-- UI LAYERS                                         -->
+<!-- ══════════════════════════════════════════════════ -->
+
+<div class="layer profile-layer" id="profile-layer">
+  <div class="profile-card">
+    <div class="profile-avatar">
+      <svg viewBox="0 0 28 28" fill="none"><circle cx="14" cy="10" r="5" stroke="rgba(122,184,154,0.5)" stroke-width="0.85"/><path d="M6 24c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="rgba(122,184,154,0.5)" stroke-width="0.85" fill="none"/></svg>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">Kai Tanaka</div>
+      <div class="profile-rank">Green Belt · Age 8</div>
+    </div>
+    <button class="enter-btn" onclick="enterDojo()">
+      <svg viewBox="0 0 14 14" fill="none"><path d="M1 7 Q4 3 7 3 Q10 3 13 7 Q10 11 7 11 Q4 11 1 7Z" stroke="rgba(141,184,212,0.6)" stroke-width="0.75" fill="none"/><circle cx="7" cy="7" r="2" fill="rgba(141,184,212,0.4)"/></svg>
+      Enter Nendō
+    </button>
+  </div>
+</div>
+
+<div class="layer entry-layer hidden" id="entry-layer">
+  <div class="entry-content">
+    <div class="breath-ring" id="breath-ring"></div>
+    <div class="kanji" id="entry-kanji">念</div>
+    <div class="gate-line" id="gate-line"></div>
+    <div class="entry-text" id="entry-text">Train the mind</div>
+  </div>
+</div>
+
+<div class="layer home-layer hidden" id="home-layer">
+  <div class="home-content">
+    <div class="home-topbar">
+      <button class="home-back" onclick="restart()">&#8592; Profile</button>
+      <div class="home-title">Nendō</div>
+      <div style="width:80px;text-align:right;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:rgba(245,240,232,0.12)">念</div>
+    </div>
+    <div class="home-body">
+      <div class="doors">
+        <div class="door door-metsuke">
+          <div class="door-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><path d="M2 10 Q6 5 10 5 Q14 5 18 10 Q14 15 10 15 Q6 15 2 10Z" stroke="rgba(141,184,212,0.6)" stroke-width="0.85" fill="none"/><circle cx="10" cy="10" r="3" fill="rgba(141,184,212,0.12)" stroke="rgba(141,184,212,0.5)" stroke-width="0.7"/><circle cx="10" cy="10" r="1" fill="rgba(141,184,212,0.5)"/></svg></div>
+          <div class="door-name">Metsuke</div><div class="door-sub">The Reading Mind</div><div class="door-kanji">目付</div>
+        </div>
+        <div class="aura-centre">
+          <div class="aura-orb"><div class="aura-orb-glow"></div><div class="aura-orb-inner"></div></div>
+          <div class="aura-label">AURA</div><div class="aura-stage">Hikari</div>
+        </div>
+        <div class="door door-tachi">
+          <div class="door-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><line x1="10" y1="3" x2="10" y2="14" stroke="rgba(212,130,106,0.6)" stroke-width="0.85" stroke-linecap="round"/><line x1="7" y1="14" x2="13" y2="14" stroke="rgba(212,130,106,0.6)" stroke-width="0.85" stroke-linecap="round"/><circle cx="10" cy="17" r="1" fill="rgba(212,130,106,0.4)"/></svg></div>
+          <div class="door-name">Tachi</div><div class="door-sub">The Striking Mind</div><div class="door-kanji">太刀</div>
+        </div>
+        <div class="door door-mushin">
+          <div class="door-icon"><svg width="20" height="20" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="7" stroke="rgba(122,184,154,0.5)" stroke-width="0.75" fill="none"/><circle cx="10" cy="10" r="4" stroke="rgba(122,184,154,0.35)" stroke-width="0.5" fill="none"/><circle cx="10" cy="10" r="1.5" fill="rgba(122,184,154,0.4)"/></svg></div>
+          <div class="door-name">Mushin</div><div class="door-sub">The Still Mind</div><div class="door-kanji">無心</div>
+        </div>
+      </div>
+      <div class="home-mantra">A ninja without both is only half complete.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════ */
+/* LAYER TOGGLE (prototype-only)             */
+/* ══════════════════════════════════════════ */
+function toggleLayer(cls, show){
+  document.querySelectorAll('.'+cls).forEach(el => el.style.display = show ? '' : 'none');
+}
+
+/* ══════════════════════════════════════════ */
+/* PARTICLES                                 */
+/* ══════════════════════════════════════════ */
+const canvas = document.getElementById('particles');
+const ctx = canvas.getContext('2d');
+let particles = [];
+
+function resizeCanvas(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+resizeCanvas(); window.addEventListener('resize',resizeCanvas);
+
+class Particle{
+  constructor(){this.reset()}
+  reset(){
+    this.x=Math.random()*canvas.width;
+    this.y=canvas.height+10;
+    this.size=Math.random()*1.5+0.4;
+    this.speedY=-(Math.random()*0.22+0.06);
+    this.speedX=(Math.random()-0.5)*0.1;
+    this.opacity=Math.random()*0.18+0.04;
+    this.maxOpacity=this.opacity;
+    this.life=0;this.maxLife=Math.random()*650+300;
+    this.phase=Math.random()*Math.PI*2;
+    this.drift=Math.random()*0.25+0.08;
+    const w=Math.random();
+    if(w<0.5){this.r=250;this.g=240;this.b=230}
+    else if(w<0.8){this.r=200;this.g=140;this.b=50}
+    else{this.r=180;this.g=100;this.b=50}
+  }
+  update(){
+    this.life++;
+    this.x+=this.speedX+Math.sin(this.life*0.007+this.phase)*this.drift*0.1;
+    this.y+=this.speedY;
+    const lr=this.life/this.maxLife;
+    if(lr<0.15)this.opacity=this.maxOpacity*(lr/0.15);
+    else if(lr>0.8)this.opacity=this.maxOpacity*(1-(lr-0.8)/0.2);
+    if(this.life>=this.maxLife||this.y<-10)this.reset();
+  }
+  draw(){
+    ctx.beginPath();ctx.arc(this.x,this.y,this.size,0,Math.PI*2);
+    ctx.fillStyle=`rgba(${this.r},${this.g},${this.b},${this.opacity})`;ctx.fill();
+    if(this.size>1){
+      ctx.beginPath();ctx.arc(this.x,this.y,this.size*3,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${this.r},${this.g},${this.b},${this.opacity*0.12})`;ctx.fill();
+    }
+  }
+}
+for(let i=0;i<30;i++){const p=new Particle();p.y=Math.random()*canvas.height;p.life=Math.random()*p.maxLife;particles.push(p)}
+(function anim(){ctx.clearRect(0,0,canvas.width,canvas.height);particles.forEach(p=>{p.update();p.draw()});requestAnimationFrame(anim)})();
+
+/* ══════════════════════════════════════════ */
+/* SCREEN FLOW                               */
+/* ══════════════════════════════════════════ */
+let running=false;
+
+function restart(){
+  running=false;
+  const p=document.getElementById('profile-layer'),e=document.getElementById('entry-layer'),h=document.getElementById('home-layer');
+  const k=document.getElementById('entry-kanji'),g=document.getElementById('gate-line'),t=document.getElementById('entry-text'),r=document.getElementById('breath-ring');
+  p.classList.remove('hidden');e.classList.add('hidden');h.classList.add('hidden');h.classList.remove('arriving');
+  k.className='kanji';g.className='gate-line';t.className='entry-text';r.className='breath-ring';
+  e.classList.remove('overlay-mode');e.style.transition='';e.style.opacity='';p.style.opacity='';p.style.transition='';
+}
+
+function enterDojo(){
+  if(running)return;running=true;
+  const p=document.getElementById('profile-layer'),e=document.getElementById('entry-layer'),h=document.getElementById('home-layer');
+  const k=document.getElementById('entry-kanji'),g=document.getElementById('gate-line'),t=document.getElementById('entry-text'),r=document.getElementById('breath-ring');
+
+  p.style.transition='opacity 0.5s cubic-bezier(0.22,0.61,0.36,1)';p.style.opacity='0';
+  setTimeout(()=>{
+    p.classList.add('hidden');p.style.opacity='';p.style.transition='';
+    e.classList.remove('hidden');
+    setTimeout(()=>r.classList.add('pulse'),150);
+    setTimeout(()=>k.classList.add('visible'),300);
+    setTimeout(()=>{k.classList.remove('visible');k.classList.add('bright')},1200);
+    setTimeout(()=>g.classList.add('open'),1000);
+    setTimeout(()=>t.classList.add('visible'),1600);
+    setTimeout(()=>{
+      r.classList.remove('pulse');r.classList.add('dissolve');
+      e.style.transition='opacity 0.8s cubic-bezier(0.22,0.61,0.36,1)';e.style.opacity='0';
+    },3000);
+    setTimeout(()=>{
+      e.classList.add('hidden');e.style.opacity='';e.style.transition='';
+      h.classList.add('arriving');h.classList.remove('hidden');
+      h.style.opacity='0';h.style.transition='opacity 0.5s cubic-bezier(0.22,0.61,0.36,1)';
+      requestAnimationFrame(()=>{h.style.opacity='1'});
+    },3800);
+  },500);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nendō — Screen Template v1.0</title>
+
+  <!-- Google Fonts: Cinzel & Crimson Pro -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ============================================================================
+       DESIGN SYSTEM & THEMING
+       ============================================================================ */
+
+    :root {
+      /* Core palette */
+      --color-bg-deep: #050508;
+      --color-frame-bg: #0A0A12;
+      --color-text-primary: #F5F0E8;
+
+      /* Discipline colors */
+      --color-mushin-green: rgba(122, 184, 154, 1);
+      --color-metsuke-blue: rgba(141, 184, 212, 1);
+      --color-tachi-red: rgba(212, 130, 106, 1);
+
+      /* Layer tuning — customize per screen */
+      --bg-brightness: 0.55;
+      --bg-saturate: 0.8;
+      --vignette-opacity: 0.6;
+      --warmth-color: rgba(200, 140, 50, 0.04);
+      --warmth-position: 50% 85%;
+      --texture-opacity: 0.015;
+      --breath-opacity: 0;
+
+      /* Fonts */
+      --font-heading: 'Cinzel', serif;
+      --font-body: 'Crimson Pro', serif;
+
+      /* Spacing & sizing */
+      --frame-width-phone: 844px;
+      --frame-height-phone: 390px;
+      --frame-width-tablet: 1194px;
+      --frame-height-tablet: 834px;
+    }
+
+    /* ============================================================================
+       RESET & BASE
+       ============================================================================ */
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--color-bg-deep);
+      color: var(--color-text-primary);
+      font-family: var(--font-body);
+      overflow: hidden;
+    }
+
+    /* ============================================================================
+       DEVICE FRAME & RESPONSIVE WRAPPER
+       ============================================================================ */
+
+    .device-frame {
+      position: relative;
+      width: var(--frame-width-phone);
+      height: var(--frame-height-phone);
+      margin: auto;
+      background: var(--color-frame-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0, 0, 0, 0.8);
+      border-radius: 12px;
+    }
+
+    /* Toggle between phone (844x390) and tablet (1194x834) */
+    body.tablet-mode .device-frame {
+      --frame-width-phone: var(--frame-width-tablet);
+      --frame-height-phone: var(--frame-height-tablet);
+    }
+
+    /* Vertically center the device frame on the viewport */
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ============================================================================
+       CANVAS CONTAINER: holds all layers
+       ============================================================================ */
+
+    .canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    /* ============================================================================
+       LAYER 0: Sky / Background Image
+       z-index: 0
+       Purpose: Faded background layer, often a dimmed version of hero or sky texture.
+       Customize: Swap image path, adjust --bg-brightness and --bg-saturate.
+       ============================================================================ */
+
+    .env-sky {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a24;
+      background-size: cover;
+      background-position: center;
+      filter: brightness(0.3) saturate(0.5);
+      z-index: 0;
+      /*
+         TO CUSTOMIZE:
+         1. Replace background-color with your sky/base image URL:
+            background-image: url('path/to/sky-layer.jpg');
+         2. Adjust filter values for your image:
+            filter: brightness(var(--bg-brightness)) saturate(var(--bg-saturate));
+      */
+    }
+
+    /* ============================================================================
+       LAYER 3: Main Hero Environment / JPEG
+       z-index: 3
+       Purpose: Primary environmental image (landscape, dojo, temple, forest, etc.).
+       Customize: Swap image path, tune brightness/saturation per screen.
+       ============================================================================ */
+
+    .env-dojo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #1a1a24; /* Placeholder grey */
+      background-size: cover;
+      background-position: center;
+      filter: brightness(var(--bg-brightness)) saturate(var(--bg-saturate));
+      z-index: 3;
+      /*
+         TO CUSTOMIZE:
+         1. Swap placeholder with your hero JPEG:
+            background-image: url('path/to/hero-dojo.jpg');
+         2. Per-screen tuning via CSS custom properties:
+            --bg-brightness: 0.45;  // for brighter scenes
+            --bg-saturate: 1.0;     // for more vibrant colors
+      */
+    }
+
+    /* ============================================================================
+       LAYER 4: Warm Ambient Glow
+       z-index: 4
+       Purpose: Radial gradient from bottom centre, warm orange glow for calmness.
+       Customize: Adjust --warmth-color and --warmth-position for different screens.
+       ============================================================================ */
+
+    .env-warmth {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        ellipse at var(--warmth-position),
+        var(--warmth-color) 0%,
+        transparent 60%
+      );
+      z-index: 4;
+      pointer-events: none;
+      /*
+         TO CUSTOMIZE:
+         Adjust --warmth-color and --warmth-position for different scenes:
+         - For cooler scenes: --warmth-color: rgba(141, 184, 212, 0.02);
+         - Move glow: --warmth-position: 30% 70%;
+      */
+    }
+
+    /* ============================================================================
+       LAYER 6a: Paper Noise Texture Overlay
+       z-index: 6
+       Purpose: Subtle SVG feTurbulence noise for tactile, paper-like feel.
+       Opacity: 0.015 (very subtle).
+       ============================================================================ */
+
+    .env-texture {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: var(--texture-opacity);
+      z-index: 6;
+      pointer-events: none;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><defs><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" result="noise" /></filter></defs><rect width="200" height="200" fill="%23f5f0e8" filter="url(%23noise)"/></svg>');
+      background-repeat: repeat;
+    }
+
+    /* ============================================================================
+       LAYER 6b: Vignette Overlay
+       z-index: 6
+       Purpose: Radial vignette, transparent at centre → dark at edges.
+       Creates depth and focus.
+       Opacity customizable via --vignette-opacity.
+       ============================================================================ */
+
+    .env-vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(
+        ellipse at center,
+        transparent 30%,
+        rgba(6, 6, 10, var(--vignette-opacity)) 100%
+      );
+      z-index: 6;
+      pointer-events: none;
+    }
+
+    /* ============================================================================
+       LAYER 7: Particle Canvas
+       z-index: 7
+       Purpose: Animated warm motes, drifting particles.
+       Managed via JavaScript; Canvas is renderered here.
+       ============================================================================ */
+
+    canvas#particles {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 7;
+      pointer-events: none;
+    }
+
+    /* ============================================================================
+       LAYER 8: Breath Overlay
+       z-index: 8
+       Purpose: Subtle animated breathing effect. Opacity transitions gently.
+       Customize: Adjust --breath-opacity for on/off, tweak color for warmth.
+       ============================================================================ */
+
+    .env-breath {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(245, 240, 232, var(--breath-opacity));
+      z-index: 8;
+      pointer-events: none;
+      animation: breathing 6s ease-in-out infinite;
+    }
+
+    @keyframes breathing {
+      0% { opacity: var(--breath-opacity); }
+      50% { opacity: calc(var(--breath-opacity) + 0.01); }
+      100% { opacity: var(--breath-opacity); }
+    }
+
+    /* ============================================================================
+       LAYER 10+: UI Content Layers
+       z-index: 10-40
+       Purpose: All interactive UI floats above the environment.
+       Add your screen-specific UI here.
+       ============================================================================ */
+
+    .ui-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none; /* Allow child elements to receive events */
+      overflow: hidden;
+    }
+
+    .ui-content > * {
+      pointer-events: auto;
+    }
+
+    /* ============================================================================
+       UTILITY: Panel / Card styles for UI elements
+       ============================================================================ */
+
+    .panel {
+      background: rgba(10, 10, 18, 0.35);
+      backdrop-filter: blur(16px);
+      border: 0.5px solid rgba(245, 240, 232, 0.10);
+      border-radius: 6px;
+      padding: 12px;
+    }
+
+    .panel-dark {
+      background: rgba(10, 10, 18, 0.45);
+      backdrop-filter: blur(20px);
+      border: 0.5px solid rgba(245, 240, 232, 0.12);
+    }
+
+    /* ============================================================================
+       TYPOGRAPHY
+       ============================================================================ */
+
+    .heading {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .body-text {
+      font-family: var(--font-body);
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .label {
+      font-family: var(--font-heading);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.32;
+    }
+
+    /* ============================================================================
+       DEVICE FRAME TOGGLE (Demo / Development)
+       ============================================================================ */
+
+    .frame-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      padding: 8px 12px;
+      background: rgba(10, 10, 18, 0.6);
+      border: 0.5px solid rgba(245, 240, 232, 0.2);
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 11px;
+      font-family: var(--font-heading);
+      color: rgba(245, 240, 232, 0.6);
+      letter-spacing: 0.08em;
+      z-index: 100;
+      user-select: none;
+    }
+
+    .frame-toggle:hover {
+      background: rgba(10, 10, 18, 0.8);
+      color: rgba(245, 240, 232, 0.9);
+    }
+
+    /* ============================================================================
+       PLACEHOLDER CONTENT (for demo)
+       ============================================================================ */
+
+    .placeholder-info {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      font-family: var(--font-body);
+      font-size: 11px;
+      color: rgba(245, 240, 232, 0.3);
+      line-height: 1.4;
+      z-index: 20;
+    }
+
+    .placeholder-info code {
+      display: block;
+      margin-top: 4px;
+      color: rgba(245, 240, 232, 0.2);
+      font-size: 9px;
+      letter-spacing: 0.05em;
+    }
+
+  </style>
+</head>
+<body>
+  <!-- Device Frame -->
+  <div class="device-frame">
+    <!-- Canvas: All environmental layers -->
+    <div class="canvas">
+      <!-- L0: Sky / Background Image -->
+      <div class="env-sky" data-bg="bg-sky"></div>
+
+      <!-- L3: Main Hero Environment / JPEG -->
+      <div class="env-dojo" data-bg="bg-dojo"></div>
+
+      <!-- L4: Warm Ambient Glow -->
+      <div class="env-warmth"></div>
+
+      <!-- L6a: Paper Noise Texture Overlay -->
+      <div class="env-texture"></div>
+
+      <!-- L6b: Vignette Overlay -->
+      <div class="env-vignette"></div>
+
+      <!-- L7: Particle Canvas -->
+      <canvas id="particles"></canvas>
+
+      <!-- L8: Breath Overlay -->
+      <div class="env-breath"></div>
+    </div>
+
+    <!-- L10+: UI Content Layers -->
+    <div class="ui-content">
+      <!-- Screen-specific UI goes here -->
+      <div class="placeholder-info">
+        <strong>Screen Template v1.0</strong><br>
+        All 7 layers ready for your content.<br>
+        <code>data-bg="bg-dojo" on env-dojo</code>
+        <code>Swap image path when ready</code>
+      </div>
+    </div>
+  </div>
+
+  <!-- Frame Toggle Button (dev only) -->
+  <div class="frame-toggle" onclick="toggleFrame()">
+    📱 Toggle Frame
+  </div>
+
+  <script>
+    /* ========================================================================
+       PARTICLE SYSTEM
+       A simple warm-mote particle effect using Canvas.
+       Customize particle count, velocity, color, etc. per screen.
+       ======================================================================== */
+
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+
+    // Match canvas size to device frame
+    function resizeCanvas() {
+      const rect = document.querySelector('.device-frame').getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+
+    // Particle class
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 1) * 0.3; // Drift upwards
+        this.radius = Math.random() * 1.5 + 0.5;
+        this.opacity = Math.random() * 0.3 + 0.1;
+        this.life = 1.0;
+      }
+
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.opacity *= 0.99; // Fade
+        this.life -= 0.01;
+
+        // Wrap around edges
+        if (this.x < 0) this.x = canvas.width;
+        if (this.x > canvas.width) this.x = 0;
+        if (this.y < 0) this.y = canvas.height;
+        if (this.y > canvas.height) this.y = 0;
+      }
+
+      draw() {
+        ctx.fillStyle = `rgba(200, 140, 50, ${this.opacity * this.life})`;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Particle array
+    const particles = [];
+    const maxParticles = 30;
+
+    // Animation loop
+    function animate() {
+      // Clear canvas each frame
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Spawn new particles if under limit
+      if (particles.length < maxParticles && Math.random() > 0.7) {
+        particles.push(new Particle());
+      }
+
+      // Update and draw particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update();
+        particles[i].draw();
+
+        // Remove dead particles
+        if (particles[i].life <= 0) {
+          particles.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    /* ========================================================================
+       DEVICE FRAME TOGGLE
+       Switch between phone (844x390) and tablet (1194x834) layouts.
+       ======================================================================== */
+
+    function toggleFrame() {
+      document.body.classList.toggle('tablet-mode');
+      resizeCanvas();
+      const btn = document.querySelector('.frame-toggle');
+      btn.textContent = document.body.classList.contains('tablet-mode')
+        ? '📱 Phone Mode'
+        : '📱 Tablet Mode';
+    }
+
+    /* ========================================================================
+       PER-SCREEN CUSTOMIZATION EXAMPLE
+       Use this pattern to set screen-specific CSS variables.
+       ======================================================================== */
+
+    // Example: setScreenTheme('home-hub')
+    function setScreenTheme(screenName) {
+      const themes = {
+        'home-hub': {
+          '--bg-brightness': '0.55',
+          '--bg-saturate': '0.8',
+          '--vignette-opacity': '0.6',
+          '--warmth-color': 'rgba(200, 140, 50, 0.04)',
+          '--warmth-position': '50% 85%',
+        },
+        'breathing-calm': {
+          '--bg-brightness': '0.65',
+          '--bg-saturate': '0.9',
+          '--vignette-opacity': '0.4',
+          '--warmth-color': 'rgba(141, 184, 212, 0.03)',
+          '--warmth-position': '50% 50%',
+        },
+        'metsuke-ocean': {
+          '--bg-brightness': '0.50',
+          '--bg-saturate': '1.0',
+          '--vignette-opacity': '0.7',
+          '--warmth-color': 'rgba(141, 184, 212, 0.05)',
+          '--warmth-position': '50% 70%',
+        },
+      };
+
+      const theme = themes[screenName] || themes['home-hub'];
+      const root = document.documentElement;
+      Object.keys(theme).forEach(key => {
+        root.style.setProperty(key, theme[key]);
+      });
+    }
+
+    // Apply default theme
+    setScreenTheme('home-hub');
+
+  </script>
+</body>
+</html>

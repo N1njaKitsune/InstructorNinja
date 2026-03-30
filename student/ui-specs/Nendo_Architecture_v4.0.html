@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nendō · UI Architecture Map v4.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0E0E16;color:#F0EBE0;font-family:'Crimson Pro',serif;overflow-x:hidden}
+::selection{background:rgba(122,184,154,0.35)}
+
+.page{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+.page-title{font-family:'Cinzel',serif;font-size:14px;letter-spacing:0.25em;color:rgba(240,235,224,0.55);text-transform:uppercase;text-align:center;margin-bottom:6px}
+.page-sub{font-size:14px;font-style:italic;color:rgba(240,235,224,0.45);text-align:center;margin-bottom:12px}
+.page-url{font-family:monospace;font-size:11px;color:rgba(240,235,224,0.3);text-align:center;margin-bottom:36px}
+.page-url a{color:rgba(170,140,210,0.6);text-decoration:none}
+
+/* Legend */
+.legend{display:flex;gap:18px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:7px;font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.1em;color:rgba(240,235,224,0.55)}
+.legend-dot{width:11px;height:11px;border-radius:50%;border:1px solid rgba(240,235,224,0.2)}
+.legend-dot.live{background:rgba(122,184,154,0.7);border-color:rgba(122,184,154,0.5)}
+.legend-dot.art-only{background:rgba(210,175,110,0.6);border-color:rgba(210,175,110,0.5)}
+.legend-dot.missing{background:rgba(212,130,106,0.6);border-color:rgba(212,130,106,0.5)}
+.legend-dot.decision{background:rgba(170,140,210,0.6);border-color:rgba(170,140,210,0.5)}
+
+/* Summary stats */
+.stats{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap}
+.stat{flex:1;min-width:120px;padding:12px 14px;border-radius:10px;border:0.5px solid rgba(240,235,224,0.1);background:rgba(240,235,224,0.03);text-align:center}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;line-height:1}
+.stat-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;color:rgba(240,235,224,0.45);margin-top:4px}
+
+/* Architecture sections */
+.section{margin-bottom:40px}
+.section-title{font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:rgba(240,235,224,0.4);text-transform:uppercase;margin-bottom:14px;padding-left:4px;border-left:2px solid rgba(240,235,224,0.12);padding:4px 0 4px 12px}
+
+/* Flow container */
+.flow{display:flex;flex-direction:column;gap:12px}
+.flow-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.flow-label{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:rgba(240,235,224,0.35);width:100px;flex-shrink:0;text-align:right;padding-right:8px}
+
+/* Screen nodes */
+.node{position:relative;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all 0.2s;min-width:120px;text-align:center}
+.node:hover{transform:translateY(-2px)}
+.node.live{border:0.5px solid rgba(122,184,154,0.35);background:rgba(122,184,154,0.06)}
+.node.live:hover{border-color:rgba(122,184,154,0.6);background:rgba(122,184,154,0.12)}
+.node.art-only{border:0.5px solid rgba(210,175,110,0.35);background:rgba(210,175,110,0.06)}
+.node.art-only:hover{border-color:rgba(210,175,110,0.6);background:rgba(210,175,110,0.12)}
+.node.missing{border:0.5px solid rgba(212,130,106,0.35);background:rgba(212,130,106,0.06)}
+.node.missing:hover{border-color:rgba(212,130,106,0.6);background:rgba(212,130,106,0.12)}
+.node.decision{border:0.5px solid rgba(170,140,210,0.35);background:rgba(170,140,210,0.06)}
+.node.decision:hover{border-color:rgba(170,140,210,0.6);background:rgba(170,140,210,0.12)}
+
+.node-name{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;margin-bottom:3px}
+.node.live .node-name{color:rgba(122,184,154,0.9)}
+.node.art-only .node-name{color:rgba(210,175,110,0.9)}
+.node.missing .node-name{color:rgba(212,130,106,0.9)}
+.node.decision .node-name{color:rgba(170,140,210,0.9)}
+.node-desc{font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);line-height:1.3}
+.node-tag{position:absolute;top:-6px;right:8px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.12em;padding:1px 6px;border-radius:3px}
+.node.live .node-tag{background:rgba(122,184,154,0.2);color:rgba(122,184,154,0.8)}
+.node.art-only .node-tag{background:rgba(210,175,110,0.2);color:rgba(210,175,110,0.8)}
+.node.missing .node-tag{background:rgba(212,130,106,0.2);color:rgba(212,130,106,0.8)}
+.node.decision .node-tag{background:rgba(170,140,210,0.2);color:rgba(170,140,210,0.8)}
+
+/* Arrows */
+.arrow{display:flex;align-items:center;color:rgba(240,235,224,0.25);font-size:14px;flex-shrink:0}
+.arrow-down{text-align:center;color:rgba(240,235,224,0.2);font-size:14px;padding:4px 0}
+
+/* Gap callout */
+.gap-callout{margin:16px 0;padding:14px 18px;border-radius:10px;border:1px dashed rgba(212,130,106,0.35);background:rgba(212,130,106,0.04)}
+.gap-callout-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.15em;color:rgba(212,130,106,0.8);margin-bottom:6px}
+.gap-callout-text{font-size:12px;color:rgba(240,235,224,0.6);line-height:1.5}
+
+/* Discipline cards */
+.disc-row{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.disc-card{flex:1;min-width:240px;padding:16px 18px;border-radius:12px;transition:all 0.2s}
+.disc-card.metsuke{border:0.5px solid rgba(141,184,212,0.3);background:rgba(141,184,212,0.04)}
+.disc-card.tachi{border:0.5px solid rgba(212,130,106,0.3);background:rgba(212,130,106,0.04)}
+.disc-card.mushin{border:0.5px solid rgba(122,184,154,0.3);background:rgba(122,184,154,0.04)}
+.disc-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.08em;margin-bottom:3px}
+.disc-card.metsuke .disc-title{color:rgba(141,184,212,0.9)}
+.disc-card.tachi .disc-title{color:rgba(212,130,106,0.9)}
+.disc-card.mushin .disc-title{color:rgba(122,184,154,0.9)}
+.disc-sub{font-size:11px;font-style:italic;color:rgba(240,235,224,0.5);margin-bottom:6px}
+.disc-status{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;padding:3px 8px;border-radius:4px;display:inline-block}
+.status-live{background:rgba(122,184,154,0.15);color:rgba(122,184,154,0.75)}
+.status-missing{background:rgba(212,130,106,0.15);color:rgba(212,130,106,0.75)}
+
+/* Rules strip */
+.rules{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rule{padding:5px 10px;border-radius:6px;border:0.5px solid rgba(240,235,224,0.12);font-size:10px;color:rgba(240,235,224,0.5);background:rgba(240,235,224,0.03)}
+
+/* Pending decisions */
+.pending{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pending-item{padding:10px 14px;border-radius:8px;border:0.5px solid rgba(170,140,210,0.25);background:rgba(170,140,210,0.04);display:flex;align-items:flex-start;gap:10px}
+.pending-num{font-family:'Cinzel',serif;font-size:10px;color:rgba(170,140,210,0.65);flex-shrink:0;min-width:16px}
+.pending-text{font-size:12px;color:rgba(240,235,224,0.6);line-height:1.4}
+.pending-blocker{font-size:10px;color:rgba(170,140,210,0.55);font-style:italic;margin-top:2px}
+
+/* Dividers */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(240,235,224,0.1),transparent);margin:32px 0}
+
+/* Info box */
+.info-box{padding:12px 16px;border-radius:10px;border:0.5px solid rgba(240,235,224,0.1);background:rgba(240,235,224,0.03);margin-top:12px}
+.info-box-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:rgba(240,235,224,0.45);margin-bottom:8px}
+.info-box-text{font-size:11px;color:rgba(240,235,224,0.6);line-height:1.6}
+
+/* HTML prototype ref */
+.proto-ref{display:inline-block;font-family:monospace;font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(170,140,210,0.1);color:rgba(170,140,210,0.6);margin-left:6px}
+</style>
+</head>
+<body>
+
+<div class="page">
+  <div class="page-title">Nendō · UI Architecture Map</div>
+  <div class="page-sub">What exists today vs. what needs building — v4.0 · March 2026</div>
+  <div class="page-url">Live prototype: <a href="https://n1njakitsune.github.io/Nendo/" target="_blank">n1njakitsune.github.io/Nendo</a></div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot live"></div>Live with UI</div>
+    <div class="legend-item"><div class="legend-dot art-only"></div>Art only — no UI</div>
+    <div class="legend-item"><div class="legend-dot missing"></div>Does not exist yet</div>
+    <div class="legend-item"><div class="legend-dot decision"></div>Pending decision</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(122,184,154,0.9)">6</div>
+      <div class="stat-label">Screens with working UI</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(210,175,110,0.9)">2</div>
+      <div class="stat-label">Art only — needs UI</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(212,130,106,0.9)">14</div>
+      <div class="stat-label">Screens missing entirely</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(170,140,210,0.9)">7</div>
+      <div class="stat-label">Pending decisions</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 1: WHAT EXISTS TODAY           -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">What Exists Today — The Live Prototype (8 screens)</div>
+
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Entry</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Student Profile</div>
+          <div class="node-desc">"Welcome back Hazza" · Enter Nendō button</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Element Hub</div>
+          <div class="node-desc">"Choose Your Path" · 4 element doors</div>
+        </div>
+      </div>
+
+      <div class="flow-row">
+        <div class="flow-label">Elements</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Kaze</div>
+          <div class="node-desc">Air · 3 techniques listed</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Chi</div>
+          <div class="node-desc">Earth · 3 techniques listed</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Mizu</div>
+          <div class="node-desc">Water · techniques listed</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Hi</div>
+          <div class="node-desc">Fire · techniques listed</div>
+        </div>
+      </div>
+
+      <div class="flow-row">
+        <div class="flow-label">Session</div>
+        <div class="node art-only">
+          <span class="node-tag">ART ONLY</span>
+          <div class="node-name">Shiho</div>
+          <div class="node-desc">Painted scene · no breathing UI</div>
+        </div>
+        <div class="node art-only">
+          <span class="node-tag">ART ONLY</span>
+          <div class="node-name">Session Complete</div>
+          <div class="node-desc">Painted scene · no stats/XP UI</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-top:16px">
+      <div class="info-box-title">IMPORTANT — WHAT THIS FLOW IS</div>
+      <div class="info-box-text">
+        Everything on the live site currently lives inside <strong>Mushin</strong> (the breathing discipline). The "Hub" is an element selector (Kaze/Chi/Mizu/Hi), not a discipline selector. There is no screen where students choose between Metsuke, Mushin, and Tachi. The entire prototype is one discipline deep.
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 2: THE GAP                     -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">The Gap — What the Architecture Requires but Does Not Exist</div>
+
+    <div class="gap-callout">
+      <div class="gap-callout-title">Missing Layer: Nendō Home</div>
+      <div class="gap-callout-text">
+        The architecture calls for a <strong>Nendō Home</strong> screen — the hub where students see three doors: Metsuke (blue), Mushin (green), Tachi (red). This is the top-level navigation layer that sits between the Student Profile entry and each discipline's content. It does not exist on the live site. Without it, students cannot reach Metsuke or Tachi at all.
+        <br><br>
+        HTML prototypes exist: <span class="proto-ref">Nendo_Home_v1.0.html</span> <span class="proto-ref">v2.0_Painted.html</span> — but these show 3 disciplines, not the 4 elements currently on the live Hub.
+      </div>
+    </div>
+
+    <div class="gap-callout" style="margin-top:12px">
+      <div class="gap-callout-title">Missing: Metsuke Hub</div>
+      <div class="gap-callout-text">
+        No Metsuke screen exists on the live site. HTML prototypes exist: <span class="proto-ref">MetsukeHub_v1.0.html</span> <span class="proto-ref">v2.0.html</span> — but nothing has been implemented.
+      </div>
+    </div>
+
+    <div class="gap-callout" style="margin-top:12px">
+      <div class="gap-callout-title">Missing: Tachi Hub</div>
+      <div class="gap-callout-text">
+        No Tachi screen exists on the live site. HTML prototype exists: <span class="proto-ref">TachiHub_v1.0.html</span> — earliest stage of the three disciplines.
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 3: FULL TARGET ARCHITECTURE    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Full Target Architecture — The Complete Screen Map</div>
+
+    <div class="flow">
+      <!-- Layer 0: Entry -->
+      <div class="flow-row">
+        <div class="flow-label">Entry</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Student Profile</div>
+          <div class="node-desc">Painted dojo · Enter button</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Nendō Home</div>
+          <div class="node-desc">3 discipline doors · top-level hub</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="arrow-down">↓ &nbsp;&nbsp;&nbsp; ↓ &nbsp;&nbsp;&nbsp; ↓</div>
+
+    <!-- Three Disciplines -->
+    <div class="disc-row">
+      <div class="disc-card metsuke">
+        <div class="disc-title">Metsuke · The Reading Mind</div>
+        <div class="disc-sub">Perception, comprehension, intake quality</div>
+        <div class="disc-status status-missing">NOT STARTED</div>
+      </div>
+      <div class="disc-card mushin">
+        <div class="disc-title">Mushin · The Still Mind</div>
+        <div class="disc-sub">Breath, focus, regulation</div>
+        <div class="disc-status status-live">PARTIALLY LIVE</div>
+      </div>
+      <div class="disc-card tachi">
+        <div class="disc-title">Tachi · The Striking Mind</div>
+        <div class="disc-sub">Strategy, speed, output quality</div>
+        <div class="disc-status status-missing">NOT STARTED</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- MUSHIN DETAIL -->
+    <div class="section-title">Mushin Flow — What exists vs. what's needed</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Hub</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Element Hub</div>
+          <div class="node-desc">4 element doors · "Choose Your Path"</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Elements</div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Kaze</div>
+          <div class="node-desc">3 techniques</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Chi</div>
+          <div class="node-desc">3 techniques</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Mizu</div>
+          <div class="node-desc">Techniques</div>
+        </div>
+        <div class="node live">
+          <span class="node-tag">LIVE</span>
+          <div class="node-name">Hi</div>
+          <div class="node-desc">Techniques</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Session</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Check-In</div>
+          <div class="node-desc">Mental state selector</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Sequence</div>
+          <div class="node-desc">Build your session</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node art-only">
+          <span class="node-tag">ART ONLY</span>
+          <div class="node-name">Shiho</div>
+          <div class="node-desc">Has painting · no breathing UI</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Runner</div>
+          <div class="node-desc">Live breathing with canvas</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node art-only">
+          <span class="node-tag">ART ONLY</span>
+          <div class="node-name">Complete</div>
+          <div class="node-desc">Has painting · no stats/XP</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-box" style="margin-top:16px">
+      <div class="info-box-title">MUSHIN HTML PROTOTYPES (separate from live site)</div>
+      <div class="info-box-text">
+        BreathHome v2.0 · CheckIn v2.0 + v3.0 Painted · Sequence v2.0 · MushinPractice v1.0 · Entry v4.0 Painted Layers
+        <br>These prototypes contain design work not yet on the live site.
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- METSUKE DETAIL -->
+    <div class="section-title">Metsuke Flow — All screens needed</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Hub</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Metsuke Hub</div>
+          <div class="node-desc">Challenge categories</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Select</div>
+          <div class="node-desc">Pick a challenge</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Play</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Intro</div>
+          <div class="node-desc">Brief + instructions</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Runner</div>
+          <div class="node-desc">Active gameplay</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Result</div>
+          <div class="node-desc">Score · XP · progress</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;border:0.5px solid rgba(141,184,212,0.2);background:rgba(141,184,212,0.04)">
+      <div style="font-size:11px;color:rgba(141,184,212,0.7);line-height:1.5">
+        <strong style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em">HTML prototypes:</strong>
+        MetsukeHub v1.0 + v2.0 exist in Prototypes folder. No challenge screens prototyped yet.
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- TACHI DETAIL -->
+    <div class="section-title">Tachi Flow — All screens needed</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Hub</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Tachi Hub</div>
+          <div class="node-desc">Challenge categories</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Select</div>
+          <div class="node-desc">Pick a challenge</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Play</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Intro</div>
+          <div class="node-desc">Brief + instructions</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Runner</div>
+          <div class="node-desc">Active gameplay</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Challenge Result</div>
+          <div class="node-desc">Score · XP · progress</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;border:0.5px solid rgba(212,130,106,0.2);background:rgba(212,130,106,0.04)">
+      <div style="font-size:11px;color:rgba(212,130,106,0.7);line-height:1.5">
+        <strong style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em">HTML prototypes:</strong>
+        TachiHub v1.0 exists. Earliest stage of the three disciplines. No challenge screens prototyped.
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 4: CROSS-CUTTING               -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Cross-Cutting Components — Shared systems not yet built</div>
+    <div class="flow">
+      <div class="flow-row" style="flex-wrap:wrap;gap:10px">
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Navigation Shell</div>
+          <div class="node-desc">Shared nav bar component</div>
+        </div>
+        <div class="node missing">
+          <span class="node-tag">MISSING</span>
+          <div class="node-name">Aura Display</div>
+          <div class="node-desc">Profile integration</div>
+        </div>
+        <div class="node decision">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">Progress Stages</div>
+          <div class="node-desc">5 stages per discipline</div>
+        </div>
+        <div class="node decision">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">XP / Points</div>
+          <div class="node-desc">How challenges earn progression</div>
+        </div>
+        <div class="node decision">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">Hybrid Aura Formula</div>
+          <div class="node-desc">Weighting of disciplines</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 5: HTML PROTOTYPE INVENTORY    -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">HTML Prototype Inventory — Design work in Prototypes folder</div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px">
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(122,184,154,0.85);margin-bottom:2px">Entry Screen</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v1.0 → v2.0 → v3.0 Composition → v4.0 Painted</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Most refined. 4 iterations. Painted layers.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(122,184,154,0.85);margin-bottom:2px">Nendō Home</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v1.0 → v2.0 Painted</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">3-discipline hub. Not on live site.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(122,184,154,0.85);margin-bottom:2px">BreathHome</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v2.0</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Element diamond layout update.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(122,184,154,0.85);margin-bottom:2px">Check-In</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v2.0 → v3.0 Painted</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Painted mental state cards. 13 MB artwork.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(122,184,154,0.85);margin-bottom:2px">Sequence</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v2.0</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Session builder with technique cards.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(141,184,212,0.2);background:rgba(141,184,212,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(141,184,212,0.85);margin-bottom:2px">Metsuke Hub</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v1.0 → v2.0</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Challenge category layout. Blue theme.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(212,130,106,0.2);background:rgba(212,130,106,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(212,130,106,0.85);margin-bottom:2px">Tachi Hub</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v1.0</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">Initial layout. Earliest of the three.</div>
+      </div>
+      <div style="padding:10px 14px;border-radius:8px;border:0.5px solid rgba(210,175,110,0.2);background:rgba(210,175,110,0.03)">
+        <div style="font-family:'Cinzel',serif;font-size:10px;color:rgba(210,175,110,0.85);margin-bottom:2px">Aura Progression</div>
+        <div style="font-size:9px;color:rgba(240,235,224,0.4)">v1.0</div>
+        <div style="font-size:10px;font-style:italic;color:rgba(240,235,224,0.45);margin-top:3px">13 stages visual reference.</div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;border:0.5px solid rgba(240,235,224,0.08);background:rgba(240,235,224,0.02)">
+      <div style="font-size:11px;color:rgba(240,235,224,0.45);line-height:1.5">
+        <strong style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em">Also in folder:</strong>
+        6 component prototypes (AuraOrb, CheckInMood, NavShell, ParticleSystem, ScreenTemplate, ShihoBreathing) + 3 exploration threads (StudentProfile, MushinLine, Components) + PaintingExploration
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 6: PENDING DECISIONS           -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Pending Decisions</div>
+    <div class="pending">
+      <div class="pending-item">
+        <div class="pending-num">#1</div>
+        <div>
+          <div class="pending-text">Stage 13 — named or deliberately unnamed?</div>
+          <div class="pending-blocker">Blocks: Aura system · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#2</div>
+        <div>
+          <div class="pending-text">Japanese kanji accuracy — Metsuke, Tachi, Mushin</div>
+          <div class="pending-blocker">Blocks: All discipline screens · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#3</div>
+        <div>
+          <div class="pending-text">Five progress stages per discipline — names and unlock criteria</div>
+          <div class="pending-blocker">Blocks: Progress system · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#4</div>
+        <div>
+          <div class="pending-text">Hybrid aura formula — exact weighting of each discipline</div>
+          <div class="pending-blocker">Blocks: Aura display · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#5</div>
+        <div>
+          <div class="pending-text">XP or points system — how challenges earn aura progression</div>
+          <div class="pending-blocker">Blocks: Challenge build · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#6</div>
+        <div>
+          <div class="pending-text">Content volume — minimum challenge bank per discipline</div>
+          <div class="pending-blocker">Blocks: Content production · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item">
+        <div class="pending-num">#7</div>
+        <div>
+          <div class="pending-text">Avatar placeholder — how aura colour displays on profile</div>
+          <div class="pending-blocker">Blocks: Profile integration · Owner: Us</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 7: NON-NEGOTIABLE RULES        -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Non-Negotiable UI Rules</div>
+    <div class="rules">
+      <div class="rule">Landscape only — no portrait scroll</div>
+      <div class="rule">No belt language — auras only</div>
+      <div class="rule">TEN, REN reserved for physical dojo</div>
+      <div class="rule">All content for 7-9 year olds</div>
+      <div class="rule">Mushin must feel active, never passive</div>
+      <div class="rule">Full-screen takeover within student profile</div>
+      <div class="rule">Must work on phone landscape + tablet landscape</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!-- SECTION 8: TECH CONTEXT                -->
+  <!-- ═══════════════════════════════════════ -->
+  <div class="section">
+    <div class="section-title">Implementation Context</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div class="info-box" style="flex:1;min-width:240px">
+        <div class="info-box-title">TECH STACK</div>
+        <div class="info-box-text">
+          React 18.2 · react-dom 18.2 · react-scripts 5.0.1<br>
+          Canvas API for breath circles · SVG for layouts<br>
+          Cinzel + Crimson Pro fonts · Dark theme (#0A0A12 base)<br>
+          Deployed via GitHub Pages (static build)
+        </div>
+      </div>
+      <div class="info-box" style="flex:1;min-width:240px">
+        <div class="info-box-title">WORKFLOW</div>
+        <div class="info-box-text">
+          1. Design and refine as HTML prototypes<br>
+          2. Get full prototype chain to quality<br>
+          3. Port to React and push to live site<br>
+          Repo: github.com/N1njaKitsune/Nendo
+        </div>
+      </div>
+      <div class="info-box" style="flex:1;min-width:240px">
+        <div class="info-box-title">DEBUG NAV (live site)</div>
+        <div class="info-box-text">
+          Bottom bar: Profile · Hub · Kaze · Chi · Mizu · Hi · Shiho · Complete<br>
+          Toggles: Raw · Layers: All · UI: On · Nav: On<br>
+          Used for development testing on mobile devices
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

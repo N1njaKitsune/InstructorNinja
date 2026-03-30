@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nendō — Check-In Mood Selector</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050508;
+            font-family: 'Crimson Pro', serif;
+            color: #F5F0E8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Device frame */
+        .device-frame {
+            position: relative;
+            width: 844px;
+            height: 390px;
+            background: #0A0A12;
+            border-radius: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            border: 12px solid #0A0A12;
+        }
+
+        /* 7-layer background */
+        .screen {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* Layer 1: Hero gradient base */
+        .bg-hero {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a24 0%, #0F0F1A 100%);
+            z-index: 1;
+        }
+
+        /* Layer 2: Vignette */
+        .bg-vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.4) 100%);
+            z-index: 2;
+        }
+
+        /* Layer 3: Warmth glow */
+        .bg-warmth {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 150, 80, 0.08) 0%, transparent 70%);
+            z-index: 3;
+            animation: warmthShift 20s ease-in-out infinite;
+        }
+
+        @keyframes warmthShift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(20px, 20px); }
+        }
+
+        /* Layer 4: Paper texture */
+        .bg-texture {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" result="noise" /></filter><rect width="100" height="100" fill="%23F5F0E8" opacity="0.02" filter="url(%23noise)"/></svg>');
+            z-index: 4;
+            opacity: 0.3;
+        }
+
+        /* Layer 5: Ambient particles */
+        .bg-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+        }
+
+        .particle {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: rgba(255, 200, 120, 0.3);
+            border-radius: 50%;
+            animation: particleFloat 8s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0% { opacity: 0; }
+            20% { opacity: 0.6; }
+            80% { opacity: 0.6; }
+            100% { opacity: 0; transform: translateY(-60px) translateX(var(--tx)); }
+        }
+
+        /* Layer 6: Content layer */
+        .content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 40px 0;
+            z-index: 6;
+        }
+
+        /* Prompt */
+        .prompt {
+            text-align: center;
+            font-family: 'Crimson Pro', serif;
+            font-size: 16px;
+            font-style: italic;
+            font-weight: 300;
+            color: rgba(245, 240, 232, 0.5);
+            letter-spacing: 0.3px;
+        }
+
+        /* Mood cards container */
+        .mood-cards-container {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            padding: 0 40px;
+        }
+
+        /* Mood card */
+        .mood-card {
+            position: relative;
+            width: 130px;
+            height: 160px;
+            background: rgba(10, 10, 18, 0.35);
+            backdrop-filter: blur(16px);
+            border: 0.5px solid rgba(245, 240, 232, 0.08);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+            animation: cardFloat 4s ease-in-out infinite;
+            transform-origin: center;
+        }
+
+        @keyframes cardFloat {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+
+        /* Hover state */
+        .mood-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(245, 240, 232, 0.3);
+            box-shadow: 0 0 20px rgba(245, 240, 232, 0.1);
+        }
+
+        /* Individual mood colors on hover */
+        .mood-card.calm:hover {
+            box-shadow: 0 0 20px rgba(122, 184, 154, 0.3),
+                        0 0 40px rgba(122, 184, 154, 0.15);
+            border-color: rgba(122, 184, 154, 0.3);
+        }
+
+        .mood-card.busy:hover {
+            box-shadow: 0 0 20px rgba(220, 180, 100, 0.3),
+                        0 0 40px rgba(220, 180, 100, 0.15);
+            border-color: rgba(220, 180, 100, 0.3);
+        }
+
+        .mood-card.upset:hover {
+            box-shadow: 0 0 20px rgba(141, 164, 192, 0.3),
+                        0 0 40px rgba(141, 164, 192, 0.15);
+            border-color: rgba(141, 164, 192, 0.3);
+        }
+
+        .mood-card.energised:hover {
+            box-shadow: 0 0 20px rgba(212, 140, 120, 0.3),
+                        0 0 40px rgba(212, 140, 120, 0.15);
+            border-color: rgba(212, 140, 120, 0.3);
+        }
+
+        /* Selected state */
+        .mood-card.selected {
+            animation: cardFloat 4s ease-in-out infinite, cardPulse 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+            transform: scale(1.05);
+        }
+
+        .mood-card.calm.selected {
+            border-color: rgba(122, 184, 154, 0.4);
+            box-shadow: 0 0 30px rgba(122, 184, 154, 0.5),
+                        inset 0 0 20px rgba(122, 184, 154, 0.1);
+        }
+
+        .mood-card.busy.selected {
+            border-color: rgba(220, 180, 100, 0.4);
+            box-shadow: 0 0 30px rgba(220, 180, 100, 0.5),
+                        inset 0 0 20px rgba(220, 180, 100, 0.1);
+        }
+
+        .mood-card.upset.selected {
+            border-color: rgba(141, 164, 192, 0.4);
+            box-shadow: 0 0 30px rgba(141, 164, 192, 0.5),
+                        inset 0 0 20px rgba(141, 164, 192, 0.1);
+        }
+
+        .mood-card.energised.selected {
+            border-color: rgba(212, 140, 120, 0.4);
+            box-shadow: 0 0 30px rgba(212, 140, 120, 0.5),
+                        inset 0 0 20px rgba(212, 140, 120, 0.1);
+        }
+
+        @keyframes cardPulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1.05); }
+        }
+
+        /* Pulse ripple on selection */
+        .pulse-ripple {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: pulse-expand 0.8s ease-out;
+            pointer-events: none;
+        }
+
+        @keyframes pulse-expand {
+            0% {
+                width: 0;
+                height: 0;
+                opacity: 1;
+            }
+            100% {
+                width: 200px;
+                height: 200px;
+                opacity: 0;
+            }
+        }
+
+        /* Dimmed non-selected cards */
+        .mood-card.dimmed {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        /* Card content */
+        .card-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-state {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            text-transform: capitalize;
+        }
+
+        .card-feeling {
+            font-family: 'Crimson Pro', serif;
+            font-size: 10px;
+            font-style: italic;
+            font-weight: 300;
+            color: rgba(245, 240, 232, 0.7);
+            text-align: center;
+            line-height: 1.2;
+            padding: 0 8px;
+        }
+
+        /* Change button (appears after selection) */
+        .change-button {
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: transparent;
+            border: 0.5px solid rgba(245, 240, 232, 0.3);
+            color: rgba(245, 240, 232, 0.6);
+            font-family: 'Crimson Pro', serif;
+            font-size: 10px;
+            font-style: italic;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mood-card.selected .change-button {
+            opacity: 1;
+            pointer-events: all;
+            bottom: -35px;
+        }
+
+        .change-button:hover {
+            border-color: rgba(245, 240, 232, 0.6);
+            color: rgba(245, 240, 232, 0.9);
+        }
+
+        /* Message area */
+        .message-area {
+            text-align: center;
+            min-height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .begin-message {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(245, 240, 232, 0.8);
+            letter-spacing: 0.5px;
+            opacity: 0;
+            animation: fadeInMessage 1s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+            animation-delay: 0.2s;
+        }
+
+        @keyframes fadeInMessage {
+            0% { opacity: 0; transform: translateY(10px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        /* iPad landscape support (1194x834) */
+        @media (min-width: 1000px) {
+            .device-frame {
+                width: 1194px;
+                height: 834px;
+            }
+
+            .mood-card {
+                width: 160px;
+                height: 200px;
+            }
+
+            .mood-cards-container {
+                gap: 24px;
+                padding: 0 60px;
+            }
+
+            .card-icon {
+                width: 65px;
+                height: 65px;
+            }
+
+            .card-state {
+                font-size: 14px;
+            }
+
+            .card-feeling {
+                font-size: 12px;
+            }
+
+            .prompt {
+                font-size: 20px;
+            }
+
+            .begin-message {
+                font-size: 18px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="device-frame">
+        <div class="screen">
+            <!-- Layer 1: Hero gradient -->
+            <div class="bg-hero"></div>
+
+            <!-- Layer 2: Vignette -->
+            <div class="bg-vignette"></div>
+
+            <!-- Layer 3: Warmth glow -->
+            <div class="bg-warmth"></div>
+
+            <!-- Layer 4: Paper texture -->
+            <div class="bg-texture"></div>
+
+            <!-- Layer 5: Ambient particles -->
+            <div class="bg-particles" id="particleContainer"></div>
+
+            <!-- Layer 6: Content -->
+            <div class="content">
+                <div class="prompt">How do you feel right now?</div>
+
+                <div class="mood-cards-container">
+                    <!-- Calm card -->
+                    <div class="mood-card calm" data-mood="calm">
+                        <div class="card-icon">
+                            <canvas id="icon-calm" width="50" height="50"></canvas>
+                        </div>
+                        <div class="card-state">Calm</div>
+                        <div class="card-feeling">I feel still</div>
+                        <button class="change-button">Change</button>
+                    </div>
+
+                    <!-- Busy card -->
+                    <div class="mood-card busy" data-mood="busy">
+                        <div class="card-icon">
+                            <canvas id="icon-busy" width="50" height="50"></canvas>
+                        </div>
+                        <div class="card-state">Busy</div>
+                        <div class="card-feeling">My mind is busy</div>
+                        <button class="change-button">Change</button>
+                    </div>
+
+                    <!-- Upset card -->
+                    <div class="mood-card upset" data-mood="upset">
+                        <div class="card-icon">
+                            <canvas id="icon-upset" width="50" height="50"></canvas>
+                        </div>
+                        <div class="card-state">Upset</div>
+                        <div class="card-feeling">I feel upset</div>
+                        <button class="change-button">Change</button>
+                    </div>
+
+                    <!-- Energised card -->
+                    <div class="mood-card energised" data-mood="energised">
+                        <div class="card-icon">
+                            <canvas id="icon-energised" width="50" height="50"></canvas>
+                        </div>
+                        <div class="card-state">Energised</div>
+                        <div class="card-feeling">I feel bouncy</div>
+                        <button class="change-button">Change</button>
+                    </div>
+                </div>
+
+                <div class="message-area" id="messageArea"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Canvas icon animations
+        function drawCalmIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const time = (Date.now() % 3000) / 3000; // 3-second cycle
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = 'rgba(122, 184, 154, 0.8)';
+
+            // Draw 3 rippling circles
+            for (let i = 0; i < 3; i++) {
+                const delay = i * 0.3;
+                const progress = (time + delay) % 1;
+                const radius = 5 + progress * 15;
+                const opacity = Math.max(0, 1 - progress);
+
+                ctx.globalAlpha = opacity;
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(122, 184, 154, 0.6)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawBusyIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const time = Date.now() / 1000;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(220, 180, 100, 0.8)';
+
+            // Draw 6 orbiting dots
+            const dotCount = 6;
+            for (let i = 0; i < dotCount; i++) {
+                const angle = (time * 2 + (i / dotCount) * Math.PI * 2) % (Math.PI * 2);
+                const radius = 12 - (i % 2) * 4; // Varying orbit radii
+                const x = centerX + Math.cos(angle) * radius;
+                const y = centerY + Math.sin(angle) * radius;
+
+                const size = 2 + (i % 2) * 1;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Center dot
+            ctx.fillStyle = 'rgba(220, 180, 100, 0.6)';
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawUpsetIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const time = (Date.now() % 4000) / 4000; // 4-second cycle
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(141, 164, 192, 0.8)';
+
+            // Draw 5 falling raindrops
+            const dropCount = 5;
+            const startY = -10;
+            const endY = canvas.height + 5;
+
+            for (let i = 0; i < dropCount; i++) {
+                const xOffset = (i - 2) * 12;
+                const delay = (i / dropCount) * 0.5;
+                const progress = (time + delay) % 1;
+                const y = startY + (endY - startY) * progress;
+                const opacity = Math.max(0, 1 - progress);
+
+                ctx.globalAlpha = opacity;
+                ctx.beginPath();
+                ctx.arc(centerX + xOffset, y, 2, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            ctx.globalAlpha = 1;
+        }
+
+        function drawEnergisedIcon(canvas) {
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const time = Date.now() / 1000;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw rising sparks
+            const sparkCount = 8;
+            for (let i = 0; i < sparkCount; i++) {
+                const angle = (Math.PI * 2 / sparkCount) * i;
+                const waveTime = (time + i * 0.1) % 2;
+                const progress = waveTime < 1 ? waveTime : 2 - waveTime;
+
+                const distance = 8 + progress * 16;
+                const wobble = Math.sin(waveTime * Math.PI * 2) * 2;
+
+                const x = centerX + Math.cos(angle + wobble * 0.3) * distance;
+                const y = centerY - progress * 20;
+                const opacity = 1 - progress * 0.7;
+
+                ctx.fillStyle = `rgba(212, 140, 120, ${opacity})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 1.5 + progress, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        // Animation loop for canvas
+        function animateCanvases() {
+            drawCalmIcon(document.getElementById('icon-calm'));
+            drawBusyIcon(document.getElementById('icon-busy'));
+            drawUpsetIcon(document.getElementById('icon-upset'));
+            drawEnergisedIcon(document.getElementById('icon-energised'));
+            requestAnimationFrame(animateCanvases);
+        }
+
+        // Create ambient particles
+        function createAmbientParticles() {
+            const container = document.getElementById('particleContainer');
+            const particleCount = 12;
+
+            for (let i = 0; i < particleCount; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                const duration = 6 + Math.random() * 4;
+                const tx = (Math.random() - 0.5) * 40;
+
+                particle.style.left = x + '%';
+                particle.style.top = y + '%';
+                particle.style.setProperty('--tx', tx + 'px');
+                particle.style.animationDuration = duration + 's';
+                particle.style.animationDelay = Math.random() * 2 + 's';
+
+                container.appendChild(particle);
+            }
+        }
+
+        // Selection logic
+        let selectedMood = null;
+        let isSelecting = false;
+
+        document.querySelectorAll('.mood-card').forEach(card => {
+            card.addEventListener('click', handleCardClick);
+        });
+
+        function handleCardClick(e) {
+            if (isSelecting) return;
+
+            const card = e.currentTarget;
+            const mood = card.dataset.mood;
+
+            // Ignore if already selected
+            if (selectedMood === mood) {
+                // Reset for re-selection
+                resetSelection();
+                return;
+            }
+
+            isSelecting = true;
+            selectedMood = mood;
+
+            // Create pulse ripple
+            const rect = card.getBoundingClientRect();
+            const ripple = document.createElement('div');
+            ripple.className = 'pulse-ripple';
+
+            const colors = {
+                calm: 'rgba(122, 184, 154, 0.6)',
+                busy: 'rgba(220, 180, 100, 0.6)',
+                upset: 'rgba(141, 164, 192, 0.6)',
+                energised: 'rgba(212, 140, 120, 0.6)'
+            };
+
+            ripple.style.borderColor = colors[mood];
+            ripple.style.left = card.offsetWidth / 2 + 'px';
+            ripple.style.top = card.offsetHeight / 2 + 'px';
+            ripple.style.marginLeft = '-100px';
+            ripple.style.marginTop = '-100px';
+
+            card.appendChild(ripple);
+
+            // Update card states
+            document.querySelectorAll('.mood-card').forEach(c => {
+                if (c === card) {
+                    c.classList.add('selected');
+                } else {
+                    c.classList.add('dimmed');
+                }
+            });
+
+            // Show "Let's begin" message after delay
+            setTimeout(() => {
+                const messageArea = document.getElementById('messageArea');
+                messageArea.innerHTML = '<div class="begin-message">Let\'s begin</div>';
+                isSelecting = false;
+            }, 1500);
+        }
+
+        function resetSelection() {
+            document.querySelectorAll('.mood-card').forEach(card => {
+                card.classList.remove('selected', 'dimmed');
+                card.querySelector('.pulse-ripple')?.remove();
+            });
+
+            const messageArea = document.getElementById('messageArea');
+            messageArea.innerHTML = '';
+            selectedMood = null;
+        }
+
+        // Handle Change button clicks
+        document.querySelectorAll('.change-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                resetSelection();
+            });
+        });
+
+        // Initialize
+        createAmbientParticles();
+        animateCanvases();
+    </script>
+</body>
+</html>

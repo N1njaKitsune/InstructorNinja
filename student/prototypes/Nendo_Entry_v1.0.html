@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nendō · Entry Prototype v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A0A12;color:#F5F0E8;font-family:'Crimson Pro',serif;overflow:hidden;width:100vw;height:100vh}
+
+/* ── Landscape note: designs are landscape-optimised ── */
+.rotate-msg{display:none}
+
+/* ── Mode switcher (prototype-only UI) ── */
+.switcher{position:fixed;top:12px;right:12px;z-index:200;display:flex;gap:6px;background:rgba(8,8,14,0.9);border:0.5px solid rgba(245,240,232,0.1);border-radius:8px;padding:4px}
+.switcher button{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;padding:5px 12px;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s;background:transparent;color:rgba(245,240,232,0.35)}
+.switcher button.active{background:rgba(122,184,154,0.15);color:rgba(122,184,154,0.8);border:0.5px solid rgba(122,184,154,0.3)}
+.switcher button:hover:not(.active){color:rgba(245,240,232,0.55)}
+.proto-label{position:fixed;top:12px;left:12px;z-index:200;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.2em;color:rgba(245,240,232,0.15);text-transform:uppercase}
+.restart-btn{position:fixed;bottom:12px;right:12px;z-index:200;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;padding:6px 14px;border-radius:6px;border:0.5px solid rgba(245,240,232,0.12);background:rgba(245,240,232,0.03);color:rgba(245,240,232,0.3);cursor:pointer}
+.restart-btn:hover{border-color:rgba(245,240,232,0.25);color:rgba(245,240,232,0.5)}
+
+/* ── Full-screen layers ── */
+.layer{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity 0.6s ease}
+.layer.hidden{opacity:0;pointer-events:none}
+
+/* ── Profile card (starting state) — landscape row layout ── */
+.profile-layer{background:#121218;z-index:10}
+.profile-card{display:flex;flex-direction:row;align-items:center;gap:24px;padding:20px 32px;border-radius:14px;border:0.5px solid rgba(245,240,232,0.08);background:rgba(245,240,232,0.02);max-width:560px}
+.profile-avatar{width:56px;height:56px;border-radius:50%;background:rgba(122,184,154,0.1);border:1px solid rgba(122,184,154,0.2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.profile-avatar svg{width:24px;height:24px}
+.profile-info{flex:1}
+.profile-name{font-family:'Cinzel',serif;font-size:14px;letter-spacing:0.06em;margin-bottom:3px}
+.profile-rank{font-size:11px;font-style:italic;color:rgba(245,240,232,0.35)}
+.profile-divider{display:none}
+.enter-btn{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.18em;padding:10px 24px;border-radius:10px;border:0.5px solid rgba(141,184,212,0.3);background:rgba(141,184,212,0.06);color:rgba(141,184,212,0.75);cursor:pointer;transition:all 0.25s;display:inline-flex;align-items:center;gap:8px;flex-shrink:0;white-space:nowrap}
+.enter-btn:hover{border-color:rgba(141,184,212,0.5);background:rgba(141,184,212,0.1);color:rgba(141,184,212,0.9)}
+.enter-btn svg{width:14px;height:14px}
+
+/* ── Entry ritual layer ── */
+.entry-layer{background:#08080E;z-index:20}
+.entry-content{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+
+/* Kanji reveal */
+.kanji{font-size:72px;font-weight:300;color:rgba(245,240,232,0);letter-spacing:0.15em;transition:color 1.2s ease;line-height:1}
+.kanji.visible{color:rgba(245,240,232,0.12)}
+.kanji.bright{color:rgba(245,240,232,0.25)}
+
+/* Gate line */
+.gate-line{width:0;height:1px;background:linear-gradient(90deg,transparent,rgba(245,240,232,0.15),transparent);transition:width 1s ease;margin:16px 0}
+.gate-line.open{width:240px}
+
+/* Subtitle text */
+.entry-text{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.25em;color:rgba(245,240,232,0);transition:color 0.8s ease;text-transform:uppercase}
+.entry-text.visible{color:rgba(245,240,232,0.3)}
+
+/* Breath pulse — subtle circle behind kanji */
+.breath-ring{position:absolute;width:120px;height:120px;border-radius:50%;border:0.5px solid rgba(245,240,232,0);transition:all 1.5s ease}
+.breath-ring.pulse{border-color:rgba(245,240,232,0.06);width:180px;height:180px}
+.breath-ring.dissolve{border-color:rgba(245,240,232,0);width:300px;height:300px}
+
+/* ── Home layer (Nendō Hub) ── */
+.home-layer{background:#0A0A12;z-index:5}
+
+/* Approach A: home fades in after entry screen exits */
+/* Approach B: home is always there, entry overlays and reveals */
+
+.home-content{width:100%;height:100%;display:flex;flex-direction:column}
+.home-topbar{height:44px;display:flex;align-items:center;padding:0 20px;border-bottom:0.5px solid rgba(245,240,232,0.07);flex-shrink:0}
+.home-back{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:rgba(245,240,232,0.35);background:none;border:none;cursor:pointer;padding:0;width:80px;text-align:left}
+.home-title{flex:1;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:rgba(245,240,232,0.28)}
+.home-body{flex:1;display:flex;align-items:center;justify-content:center;padding:8px;position:relative;overflow:hidden}
+
+/* Three discipline doors */
+.doors{display:flex;gap:24px;align-items:center}
+.door{width:160px;height:220px;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
+.door:hover{transform:translateY(-3px)}
+
+.door-metsuke{border:0.5px solid rgba(141,184,212,0.15);background:rgba(141,184,212,0.02)}
+.door-metsuke:hover{border-color:rgba(141,184,212,0.35);background:rgba(141,184,212,0.05)}
+.door-tachi{border:0.5px solid rgba(212,130,106,0.15);background:rgba(212,130,106,0.02)}
+.door-tachi:hover{border-color:rgba(212,130,106,0.35);background:rgba(212,130,106,0.05)}
+.door-mushin{border:0.5px solid rgba(122,184,154,0.15);background:rgba(122,184,154,0.02)}
+.door-mushin:hover{border-color:rgba(122,184,154,0.35);background:rgba(122,184,154,0.05)}
+
+.door-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:12px}
+.door-metsuke .door-icon{background:rgba(141,184,212,0.06);border:0.5px solid rgba(141,184,212,0.2)}
+.door-tachi .door-icon{background:rgba(212,130,106,0.06);border:0.5px solid rgba(212,130,106,0.2)}
+.door-mushin .door-icon{background:rgba(122,184,154,0.06);border:0.5px solid rgba(122,184,154,0.2)}
+
+.door-name{font-family:'Cinzel',serif;font-size:12px;letter-spacing:0.1em;margin-bottom:4px}
+.door-metsuke .door-name{color:rgba(141,184,212,0.75)}
+.door-tachi .door-name{color:rgba(212,130,106,0.75)}
+.door-mushin .door-name{color:rgba(122,184,154,0.75)}
+
+.door-sub{font-size:10px;font-style:italic;color:rgba(245,240,232,0.28);text-align:center;padding:0 12px;line-height:1.35}
+
+.door-kanji{position:absolute;bottom:12px;font-size:11px;color:rgba(245,240,232,0.08);letter-spacing:0.1em}
+
+/* Centre aura orb between doors */
+.aura-centre{position:absolute;display:flex;flex-direction:column;align-items:center}
+.aura-orb{width:44px;height:44px;border-radius:50%;position:relative}
+.aura-orb-inner{position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(250,246,238,0.25) 0%,rgba(200,164,106,0.08) 60%,transparent 100%);border:0.5px solid rgba(250,246,238,0.15)}
+.aura-orb-glow{position:absolute;inset:-8px;border-radius:50%;background:radial-gradient(circle,rgba(250,246,238,0.04) 0%,transparent 70%)}
+.aura-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.15em;color:rgba(245,240,232,0.2);margin-top:6px}
+.aura-stage{font-family:'Cinzel',serif;font-size:9px;color:rgba(250,246,238,0.45);margin-top:2px}
+
+/* Home mantra */
+.home-mantra{position:absolute;bottom:12px;font-family:'Crimson Pro',serif;font-size:10px;font-style:italic;color:rgba(245,240,232,0.1)}
+
+/* ── Approach B overlay modifier ── */
+.entry-layer.overlay-mode{background:rgba(8,8,14,0.96)}
+
+/* ── Approach B: reveal wipe ── */
+.reveal-wipe{position:absolute;inset:0;background:#08080E;z-index:15;transition:clip-path 0.8s ease-in-out;clip-path:circle(0% at 50% 50%)}
+.reveal-wipe.open{clip-path:circle(150% at 50% 50%)}
+
+</style>
+</head>
+<body>
+
+<!-- Landscape enforcement message -->
+<div class="rotate-msg">
+  <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="32" height="20" rx="3" stroke="rgba(245,240,232,0.3)" stroke-width="1.5"/><path d="M24 38v4M20 42h8" stroke="rgba(245,240,232,0.2)" stroke-width="1.2" stroke-linecap="round"/><path d="M36 8l4 4-4 4" stroke="rgba(245,240,232,0.25)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Rotate to landscape</span>
+</div>
+
+<!-- Prototype controls -->
+<div class="proto-label">Nendō · Entry Prototype v1.0</div>
+<div class="switcher">
+  <button id="btn-a" class="active" onclick="setMode('a')">A · Standalone</button>
+  <button id="btn-b" onclick="setMode('b')">B · Built into Home</button>
+</div>
+<button class="restart-btn" onclick="restart()">↻ Restart</button>
+
+<!-- ════════════════════════════════════ -->
+<!-- PROFILE LAYER — starting state      -->
+<!-- ════════════════════════════════════ -->
+<div class="layer profile-layer" id="profile-layer">
+  <div class="profile-card">
+    <div class="profile-avatar">
+      <svg viewBox="0 0 28 28" fill="none">
+        <circle cx="14" cy="10" r="5" stroke="rgba(122,184,154,0.5)" stroke-width="0.85"/>
+        <path d="M6 24c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="rgba(122,184,154,0.5)" stroke-width="0.85" fill="none"/>
+      </svg>
+    </div>
+    <div class="profile-info">
+      <div class="profile-name">Kai Tanaka</div>
+      <div class="profile-rank">Green Belt · Age 8</div>
+    </div>
+    <button class="enter-btn" onclick="enterDojo()">
+      <svg viewBox="0 0 14 14" fill="none">
+        <path d="M1 7 Q4 3 7 3 Q10 3 13 7 Q10 11 7 11 Q4 11 1 7Z" stroke="rgba(141,184,212,0.6)" stroke-width="0.75" fill="none"/>
+        <circle cx="7" cy="7" r="2" fill="rgba(141,184,212,0.4)"/>
+      </svg>
+      Enter Nendō
+    </button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- ENTRY LAYER — the ritual moment     -->
+<!-- ════════════════════════════════════ -->
+<div class="layer entry-layer hidden" id="entry-layer">
+  <div class="entry-content">
+    <div class="breath-ring" id="breath-ring"></div>
+    <div class="kanji" id="entry-kanji">念</div>
+    <div class="gate-line" id="gate-line"></div>
+    <div class="entry-text" id="entry-text">Train the mind</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════ -->
+<!-- HOME LAYER — Nendō Hub        -->
+<!-- ════════════════════════════════════ -->
+<div class="layer home-layer hidden" id="home-layer">
+  <div class="home-content">
+    <div class="home-topbar">
+      <button class="home-back" onclick="restart()">← Profile</button>
+      <div class="home-title">Nendō</div>
+      <div style="width:80px;text-align:right;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:rgba(245,240,232,0.15)">念</div>
+    </div>
+    <div class="home-body">
+      <div class="doors">
+
+        <!-- Metsuke door -->
+        <div class="door door-metsuke">
+          <div class="door-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <path d="M2 10 Q6 5 10 5 Q14 5 18 10 Q14 15 10 15 Q6 15 2 10Z" stroke="rgba(141,184,212,0.6)" stroke-width="0.85" fill="none"/>
+              <circle cx="10" cy="10" r="3" fill="rgba(141,184,212,0.15)" stroke="rgba(141,184,212,0.5)" stroke-width="0.7"/>
+              <circle cx="10" cy="10" r="1" fill="rgba(141,184,212,0.5)"/>
+            </svg>
+          </div>
+          <div class="door-name">Metsuke</div>
+          <div class="door-sub">The Reading Mind</div>
+          <div class="door-kanji">目付</div>
+        </div>
+
+        <!-- Centre aura -->
+        <div class="aura-centre">
+          <div class="aura-orb">
+            <div class="aura-orb-glow"></div>
+            <div class="aura-orb-inner"></div>
+          </div>
+          <div class="aura-label">AURA</div>
+          <div class="aura-stage">Hikari</div>
+        </div>
+
+        <!-- Tachi door -->
+        <div class="door door-tachi">
+          <div class="door-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <line x1="10" y1="3" x2="10" y2="14" stroke="rgba(212,130,106,0.6)" stroke-width="0.85" stroke-linecap="round"/>
+              <line x1="7" y1="14" x2="13" y2="14" stroke="rgba(212,130,106,0.6)" stroke-width="0.85" stroke-linecap="round"/>
+              <circle cx="10" cy="17" r="1" fill="rgba(212,130,106,0.4)"/>
+            </svg>
+          </div>
+          <div class="door-name">Tachi</div>
+          <div class="door-sub">The Striking Mind</div>
+          <div class="door-kanji">太刀</div>
+        </div>
+
+        <!-- Mushin door -->
+        <div class="door door-mushin">
+          <div class="door-icon">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="7" stroke="rgba(122,184,154,0.5)" stroke-width="0.75" fill="none"/>
+              <circle cx="10" cy="10" r="4" stroke="rgba(122,184,154,0.35)" stroke-width="0.5" fill="none"/>
+              <circle cx="10" cy="10" r="1.5" fill="rgba(122,184,154,0.4)"/>
+            </svg>
+          </div>
+          <div class="door-name">Mushin</div>
+          <div class="door-sub">The Still Mind</div>
+          <div class="door-kanji">無心</div>
+        </div>
+
+      </div>
+
+      <div class="home-mantra">A ninja without both is only half complete.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+let mode = 'a'; // 'a' = standalone, 'b' = built into home
+let running = false;
+
+function setMode(m) {
+  mode = m;
+  document.getElementById('btn-a').classList.toggle('active', m === 'a');
+  document.getElementById('btn-b').classList.toggle('active', m === 'b');
+  restart();
+}
+
+function restart() {
+  running = false;
+  const profile = document.getElementById('profile-layer');
+  const entry = document.getElementById('entry-layer');
+  const home = document.getElementById('home-layer');
+  const kanji = document.getElementById('entry-kanji');
+  const gate = document.getElementById('gate-line');
+  const text = document.getElementById('entry-text');
+  const ring = document.getElementById('breath-ring');
+
+  // Reset all
+  profile.classList.remove('hidden');
+  entry.classList.add('hidden');
+  home.classList.add('hidden');
+  kanji.className = 'kanji';
+  gate.className = 'gate-line';
+  text.className = 'entry-text';
+  ring.className = 'breath-ring';
+  entry.classList.remove('overlay-mode');
+  entry.style.transition = '';
+  entry.style.opacity = '';
+}
+
+function enterDojo() {
+  if (running) return;
+  running = true;
+
+  const profile = document.getElementById('profile-layer');
+  const entry = document.getElementById('entry-layer');
+  const home = document.getElementById('home-layer');
+  const kanji = document.getElementById('entry-kanji');
+  const gate = document.getElementById('gate-line');
+  const text = document.getElementById('entry-text');
+  const ring = document.getElementById('breath-ring');
+
+  if (mode === 'a') {
+    runApproachA(profile, entry, home, kanji, gate, text, ring);
+  } else {
+    runApproachB(profile, entry, home, kanji, gate, text, ring);
+  }
+}
+
+/* ═══════════════════════════════════════════════ */
+/* APPROACH A — Standalone entry screen           */
+/* Profile → Entry Screen → Home                  */
+/* Three separate layers, sequential transitions  */
+/* ═══════════════════════════════════════════════ */
+function runApproachA(profile, entry, home, kanji, gate, text, ring) {
+
+  // Step 1: Fade out profile (0.4s)
+  profile.style.transition = 'opacity 0.4s ease';
+  profile.style.opacity = '0';
+
+  setTimeout(() => {
+    profile.classList.add('hidden');
+    profile.style.opacity = '';
+    profile.style.transition = '';
+
+    // Step 2: Show entry layer
+    entry.classList.remove('hidden');
+
+    // Step 3: Breath ring expands (the "beat of intention")
+    setTimeout(() => ring.classList.add('pulse'), 100);
+
+    // Step 4: Kanji fades in (NEN — 念 — attention + intention)
+    setTimeout(() => kanji.classList.add('visible'), 200);
+
+    // Step 5: Kanji brightens
+    setTimeout(() => {
+      kanji.classList.remove('visible');
+      kanji.classList.add('bright');
+    }, 1000);
+
+    // Step 6: Gate line opens
+    setTimeout(() => gate.classList.add('open'), 800);
+
+    // Step 7: Text appears
+    setTimeout(() => text.classList.add('visible'), 1400);
+
+    // Step 8: Everything dissolves, home appears
+    setTimeout(() => {
+      ring.classList.remove('pulse');
+      ring.classList.add('dissolve');
+      entry.style.transition = 'opacity 0.6s ease';
+      entry.style.opacity = '0';
+    }, 2600);
+
+    setTimeout(() => {
+      entry.classList.add('hidden');
+      entry.style.opacity = '';
+      entry.style.transition = '';
+      home.classList.remove('hidden');
+      // Fade home in
+      home.style.opacity = '0';
+      home.style.transition = 'opacity 0.5s ease';
+      requestAnimationFrame(() => {
+        home.style.opacity = '1';
+      });
+    }, 3200);
+
+  }, 400);
+}
+
+/* ═══════════════════════════════════════════════ */
+/* APPROACH B — Entry built into Home             */
+/* Profile → Home (with entry overlay on top)     */
+/* Home is always mounted, entry is an overlay    */
+/* that dissolves to reveal the hub beneath       */
+/* ═══════════════════════════════════════════════ */
+function runApproachB(profile, entry, home, kanji, gate, text, ring) {
+
+  // Step 1: Fade out profile
+  profile.style.transition = 'opacity 0.4s ease';
+  profile.style.opacity = '0';
+
+  setTimeout(() => {
+    profile.classList.add('hidden');
+    profile.style.opacity = '';
+    profile.style.transition = '';
+
+    // Step 2: Show home underneath AND entry overlay on top
+    home.classList.remove('hidden');
+    home.style.opacity = '1';
+    entry.classList.remove('hidden');
+    entry.classList.add('overlay-mode');
+
+    // Step 3: Same ritual sequence
+    setTimeout(() => ring.classList.add('pulse'), 100);
+    setTimeout(() => kanji.classList.add('visible'), 200);
+    setTimeout(() => {
+      kanji.classList.remove('visible');
+      kanji.classList.add('bright');
+    }, 1000);
+    setTimeout(() => gate.classList.add('open'), 800);
+    setTimeout(() => text.classList.add('visible'), 1400);
+
+    // Step 4: Entry overlay dissolves, revealing home beneath
+    // This creates the "curtain lifting" effect
+    setTimeout(() => {
+      ring.classList.remove('pulse');
+      ring.classList.add('dissolve');
+      // The overlay fades from centre outward
+      entry.style.transition = 'opacity 0.8s ease';
+      entry.style.opacity = '0';
+    }, 2600);
+
+    setTimeout(() => {
+      entry.classList.add('hidden');
+      entry.style.opacity = '';
+      entry.style.transition = '';
+    }, 3400);
+
+  }, 400);
+}
+</script>
+
+</body>
+</html>

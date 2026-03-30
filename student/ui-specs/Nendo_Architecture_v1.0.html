@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nendō · UI Architecture Map v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#08080E;color:#F5F0E8;font-family:'Crimson Pro',serif;overflow-x:hidden}
+::selection{background:rgba(122,184,154,0.3)}
+
+/* ── Landscape note: designs are landscape-optimised ── */
+.rotate-msg{display:none}
+
+.page{max-width:1200px;margin:0 auto;padding:32px 24px 60px}
+.page-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.25em;color:rgba(245,240,232,0.25);text-transform:uppercase;text-align:center;margin-bottom:6px}
+.page-sub{font-size:13px;font-style:italic;color:rgba(245,240,232,0.3);text-align:center;margin-bottom:36px}
+
+/* Legend */
+.legend{display:flex;gap:16px;justify-content:center;margin-bottom:32px;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:6px;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:rgba(245,240,232,0.4)}
+.legend-dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(245,240,232,0.15)}
+.legend-dot.built{background:rgba(122,184,154,0.6);border-color:rgba(122,184,154,0.4)}
+.legend-dot.to-build{background:rgba(212,130,106,0.5);border-color:rgba(212,130,106,0.4)}
+.legend-dot.decision{background:rgba(200,164,106,0.5);border-color:rgba(200,164,106,0.4)}
+.legend-dot.entry{background:rgba(200,216,232,0.5);border-color:rgba(200,216,232,0.4)}
+
+/* Architecture sections */
+.section{margin-bottom:40px}
+.section-title{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.2em;color:rgba(245,240,232,0.2);text-transform:uppercase;margin-bottom:14px;padding-left:4px;border-left:2px solid rgba(245,240,232,0.08);padding:4px 0 4px 12px}
+
+/* Flow container */
+.flow{display:flex;flex-direction:column;gap:12px}
+.flow-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.flow-label{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:rgba(245,240,232,0.22);width:90px;flex-shrink:0;text-align:right;padding-right:8px}
+
+/* Screen nodes */
+.node{position:relative;padding:10px 14px;border-radius:10px;cursor:pointer;transition:all 0.2s;min-width:120px;text-align:center}
+.node:hover{transform:translateY(-2px)}
+.node.built{border:0.5px solid rgba(122,184,154,0.25);background:rgba(122,184,154,0.04)}
+.node.built:hover{border-color:rgba(122,184,154,0.5);background:rgba(122,184,154,0.08)}
+.node.to-build{border:0.5px solid rgba(212,130,106,0.25);background:rgba(212,130,106,0.04)}
+.node.to-build:hover{border-color:rgba(212,130,106,0.5);background:rgba(212,130,106,0.08)}
+.node.decision{border:0.5px solid rgba(200,164,106,0.25);background:rgba(200,164,106,0.04)}
+.node.decision:hover{border-color:rgba(200,164,106,0.5);background:rgba(200,164,106,0.08)}
+.node.entry{border:0.5px solid rgba(200,216,232,0.25);background:rgba(200,216,232,0.04)}
+.node.entry:hover{border-color:rgba(200,216,232,0.5);background:rgba(200,216,232,0.08)}
+
+.node-name{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.08em;margin-bottom:3px}
+.node.built .node-name{color:rgba(122,184,154,0.8)}
+.node.to-build .node-name{color:rgba(212,130,106,0.8)}
+.node.decision .node-name{color:rgba(200,164,106,0.8)}
+.node.entry .node-name{color:rgba(200,216,232,0.8)}
+.node-desc{font-size:10px;font-style:italic;color:rgba(245,240,232,0.3);line-height:1.3}
+.node-tag{position:absolute;top:-6px;right:8px;font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.12em;padding:1px 6px;border-radius:3px}
+.node.built .node-tag{background:rgba(122,184,154,0.15);color:rgba(122,184,154,0.7)}
+.node.to-build .node-tag{background:rgba(212,130,106,0.15);color:rgba(212,130,106,0.7)}
+.node.decision .node-tag{background:rgba(200,164,106,0.15);color:rgba(200,164,106,0.7)}
+
+/* Arrows */
+.arrow{display:flex;align-items:center;color:rgba(245,240,232,0.15);font-size:14px;flex-shrink:0}
+
+/* Detail panel */
+.detail-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(8,8,14,0.85);align-items:center;justify-content:center;padding:24px}
+.detail-overlay.visible{display:flex}
+.detail-card{background:#0E0E18;border:0.5px solid rgba(245,240,232,0.1);border-radius:14px;padding:24px 28px;max-width:560px;width:100%;max-height:80vh;overflow-y:auto;position:relative}
+.detail-close{position:absolute;top:12px;right:16px;font-family:'Cinzel',serif;font-size:18px;color:rgba(245,240,232,0.3);cursor:pointer;background:none;border:none;padding:4px}
+.detail-close:hover{color:rgba(245,240,232,0.6)}
+.detail-name{font-family:'Cinzel',serif;font-size:18px;letter-spacing:0.08em;margin-bottom:4px}
+.detail-file{font-family:monospace;font-size:10px;color:rgba(245,240,232,0.2);margin-bottom:12px}
+.detail-section{margin-bottom:14px}
+.detail-section-title{font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.18em;color:rgba(245,240,232,0.3);text-transform:uppercase;margin-bottom:6px}
+.detail-text{font-size:13px;color:rgba(245,240,232,0.55);line-height:1.6}
+.detail-list{list-style:none;padding:0}
+.detail-list li{font-size:12px;color:rgba(245,240,232,0.45);padding:3px 0 3px 12px;position:relative;line-height:1.4}
+.detail-list li::before{content:'';position:absolute;left:0;top:10px;width:4px;height:4px;border-radius:50%;background:rgba(245,240,232,0.15)}
+.detail-chip{display:inline-block;padding:2px 8px;border-radius:4px;font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.1em;margin-right:4px;margin-bottom:4px}
+.chip-blue{background:rgba(141,184,212,0.12);color:rgba(141,184,212,0.7);border:0.5px solid rgba(141,184,212,0.2)}
+.chip-red{background:rgba(212,130,106,0.12);color:rgba(212,130,106,0.7);border:0.5px solid rgba(212,130,106,0.2)}
+.chip-green{background:rgba(122,184,154,0.12);color:rgba(122,184,154,0.7);border:0.5px solid rgba(122,184,154,0.2)}
+.chip-amber{background:rgba(200,164,106,0.12);color:rgba(200,164,106,0.7);border:0.5px solid rgba(200,164,106,0.2)}
+
+/* Discipline cards */
+.disc-row{display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap}
+.disc-card{flex:1;min-width:260px;padding:16px 18px;border-radius:12px;cursor:pointer;transition:all 0.2s}
+.disc-card:hover{transform:translateY(-2px)}
+.disc-card.metsuke{border:0.5px solid rgba(141,184,212,0.2);background:rgba(141,184,212,0.03)}
+.disc-card.metsuke:hover{border-color:rgba(141,184,212,0.4);background:rgba(141,184,212,0.06)}
+.disc-card.tachi{border:0.5px solid rgba(212,130,106,0.2);background:rgba(212,130,106,0.03)}
+.disc-card.tachi:hover{border-color:rgba(212,130,106,0.4);background:rgba(212,130,106,0.06)}
+.disc-card.mushin{border:0.5px solid rgba(122,184,154,0.2);background:rgba(122,184,154,0.03)}
+.disc-card.mushin:hover{border-color:rgba(122,184,154,0.4);background:rgba(122,184,154,0.06)}
+.disc-title{font-family:'Cinzel',serif;font-size:13px;letter-spacing:0.08em;margin-bottom:3px}
+.disc-card.metsuke .disc-title{color:rgba(141,184,212,0.8)}
+.disc-card.tachi .disc-title{color:rgba(212,130,106,0.8)}
+.disc-card.mushin .disc-title{color:rgba(122,184,154,0.8)}
+.disc-sub{font-size:11px;font-style:italic;color:rgba(245,240,232,0.35);margin-bottom:8px}
+.disc-status{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;padding:3px 8px;border-radius:4px;display:inline-block}
+.status-built{background:rgba(122,184,154,0.12);color:rgba(122,184,154,0.65)}
+.status-to-build{background:rgba(212,130,106,0.12);color:rgba(212,130,106,0.65)}
+
+/* Rules strip */
+.rules{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.rule{padding:5px 10px;border-radius:6px;border:0.5px solid rgba(245,240,232,0.08);font-size:10px;color:rgba(245,240,232,0.35);background:rgba(245,240,232,0.02)}
+
+/* Pending decisions */
+.pending{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.pending-item{padding:10px 14px;border-radius:8px;border:0.5px solid rgba(200,164,106,0.2);background:rgba(200,164,106,0.03);display:flex;align-items:flex-start;gap:10px;cursor:pointer;transition:all 0.2s}
+.pending-item:hover{border-color:rgba(200,164,106,0.4);background:rgba(200,164,106,0.06)}
+.pending-num{font-family:'Cinzel',serif;font-size:10px;color:rgba(200,164,106,0.5);flex-shrink:0;min-width:16px}
+.pending-text{font-size:12px;color:rgba(245,240,232,0.45);line-height:1.4}
+.pending-blocker{font-size:10px;color:rgba(200,164,106,0.45);font-style:italic;margin-top:2px}
+
+/* Summary stats */
+.stats{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap}
+.stat{flex:1;min-width:130px;padding:12px 14px;border-radius:10px;border:0.5px solid rgba(245,240,232,0.08);background:rgba(245,240,232,0.02);text-align:center}
+.stat-val{font-family:'Cinzel',serif;font-size:22px;font-weight:700;line-height:1}
+.stat-label{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.12em;color:rgba(245,240,232,0.3);margin-top:4px}
+
+/* Dividers */
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(245,240,232,0.06),transparent);margin:32px 0}
+</style>
+</head>
+<body>
+
+<!-- Landscape enforcement message -->
+<div class="rotate-msg">
+  <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="32" height="20" rx="3" stroke="rgba(245,240,232,0.3)" stroke-width="1.5"/><path d="M24 38v4M20 42h8" stroke="rgba(245,240,232,0.2)" stroke-width="1.2" stroke-linecap="round"/><path d="M36 8l4 4-4 4" stroke="rgba(245,240,232,0.25)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Rotate to landscape</span>
+</div>
+
+<div class="page">
+  <div class="page-title">Nendō · UI Architecture Map</div>
+  <div class="page-sub">Screen flows, navigation structure, and component breakdown — v1.0 · March 2026</div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot entry"></div>Entry point</div>
+    <div class="legend-item"><div class="legend-dot built"></div>Built & functional</div>
+    <div class="legend-item"><div class="legend-dot to-build"></div>To build</div>
+    <div class="legend-item"><div class="legend-dot decision"></div>Pending decision</div>
+  </div>
+
+  <!-- Summary Stats -->
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(122,184,154,0.8)">8</div>
+      <div class="stat-label">Screens built</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(212,130,106,0.8)">12</div>
+      <div class="stat-label">Screens to build</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(200,164,106,0.8)">7</div>
+      <div class="stat-label">Pending decisions</div>
+    </div>
+    <div class="stat">
+      <div class="stat-val" style="color:rgba(200,216,232,0.8)">3</div>
+      <div class="stat-label">Disciplines</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 1: Entry Flow -->
+  <div class="section">
+    <div class="section-title">Entry Flow — How students reach the Nendō</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Stage 1</div>
+        <div class="node entry" onclick="showDetail('student-profile')">
+          <div class="node-name">Student Profile</div>
+          <div class="node-desc">Stage 1 · main app</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('md-entry')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Nendō Entry</div>
+          <div class="node-desc">Full-screen landscape takeover</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('md-home')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Nendō Home</div>
+          <div class="node-desc">The hub — 3 discipline doors</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 2: Three Disciplines -->
+  <div class="section">
+    <div class="section-title">The Three Disciplines — Core Navigation Structure</div>
+    <div class="disc-row">
+      <div class="disc-card metsuke" onclick="showDetail('metsuke-hub')">
+        <div class="disc-title">Metsuke · The Reading Mind</div>
+        <div class="disc-sub">Perception, comprehension, intake quality</div>
+        <div class="disc-status status-to-build">TO BUILD</div>
+      </div>
+      <div class="disc-card tachi" onclick="showDetail('tachi-hub')">
+        <div class="disc-title">Tachi · The Striking Mind</div>
+        <div class="disc-sub">Strategy, speed, output quality</div>
+        <div class="disc-status status-to-build">TO BUILD</div>
+      </div>
+      <div class="disc-card mushin" onclick="showDetail('mushin-hub')">
+        <div class="disc-title">Mushin · The Still Mind</div>
+        <div class="disc-sub">Focus, regulation, state management</div>
+        <div class="disc-status status-built">BUILT</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 3: Mushin Flow (Built) -->
+  <div class="section">
+    <div class="section-title">Mushin Flow — Breathing Practice (Built)</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Navigation</div>
+        <div class="node built" onclick="showDetail('mushin-hub')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">MushinHub</div>
+          <div class="node-desc">Router component</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('breath-home')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">BreathHome</div>
+          <div class="node-desc">Diamond layout · 4 elements + Shiho</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Explore</div>
+        <div class="node built" onclick="showDetail('element-list')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">ElementList</div>
+          <div class="node-desc">Techniques within an element</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('technique')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Technique</div>
+          <div class="node-desc">Individual technique detail</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Session</div>
+        <div class="node built" onclick="showDetail('shiho-open')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Shiho Open</div>
+          <div class="node-desc">Opening ritual · 3 rounds</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('checkin')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Check-In</div>
+          <div class="node-desc">4 mental states</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('sequence')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Sequence</div>
+          <div class="node-desc">Build your session</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('runner')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Runner</div>
+          <div class="node-desc">Live breathing with canvas</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('shiho-close')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Shiho Close</div>
+          <div class="node-desc">Closing ritual</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node built" onclick="showDetail('summary')">
+          <span class="node-tag">BUILT</span>
+          <div class="node-name">Summary</div>
+          <div class="node-desc">XP earned · session stats</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 4: Metsuke Flow (To Build) -->
+  <div class="section">
+    <div class="section-title">Metsuke Flow — Challenge Practice (To Build)</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Navigation</div>
+        <div class="node to-build" onclick="showDetail('metsuke-hub')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Metsuke Hub</div>
+          <div class="node-desc">Challenge categories</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-select')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Select</div>
+          <div class="node-desc">Pick a challenge</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Play</div>
+        <div class="node to-build" onclick="showDetail('challenge-intro')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Intro</div>
+          <div class="node-desc">Brief + instructions</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-runner')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Runner</div>
+          <div class="node-desc">Active gameplay</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-result')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Result</div>
+          <div class="node-desc">Score · XP · progress</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;border:0.5px solid rgba(141,184,212,0.15);background:rgba(141,184,212,0.03)">
+      <div style="font-size:11px;color:rgba(141,184,212,0.55);line-height:1.5">
+        <strong style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em">Challenge types:</strong>
+        Pattern recognition, spot the difference, comprehension tasks, hidden detail, reading and finding relevant information, memory sequences
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 5: Tachi Flow (To Build) -->
+  <div class="section">
+    <div class="section-title">Tachi Flow — Challenge Practice (To Build)</div>
+    <div class="flow">
+      <div class="flow-row">
+        <div class="flow-label">Navigation</div>
+        <div class="node to-build" onclick="showDetail('tachi-hub')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Tachi Hub</div>
+          <div class="node-desc">Challenge categories</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-select-t')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Select</div>
+          <div class="node-desc">Pick a challenge</div>
+        </div>
+      </div>
+      <div class="flow-row">
+        <div class="flow-label">Play</div>
+        <div class="node to-build" onclick="showDetail('challenge-intro-t')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Intro</div>
+          <div class="node-desc">Brief + instructions</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-runner-t')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Runner</div>
+          <div class="node-desc">Active gameplay</div>
+        </div>
+        <div class="arrow">→</div>
+        <div class="node to-build" onclick="showDetail('challenge-result-t')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Challenge Result</div>
+          <div class="node-desc">Score · XP · progress</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;border-radius:8px;border:0.5px solid rgba(212,130,106,0.15);background:rgba(212,130,106,0.03)">
+      <div style="font-size:11px;color:rgba(212,130,106,0.55);line-height:1.5">
+        <strong style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em">Challenge types:</strong>
+        Logic puzzles, route-finding, strategy tasks, timed quick-fire responses, decision under pressure, numeracy challenges
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 6: Cross-cutting Components -->
+  <div class="section">
+    <div class="section-title">Cross-Cutting Components — Shared across the Nendō</div>
+    <div class="flow">
+      <div class="flow-row" style="flex-wrap:wrap;gap:10px">
+        <div class="node to-build" onclick="showDetail('aura-display')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Aura Display</div>
+          <div class="node-desc">Student profile integration</div>
+        </div>
+        <div class="node decision" onclick="showDetail('progress-system')">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">Progress Stages</div>
+          <div class="node-desc">5 stages per discipline</div>
+        </div>
+        <div class="node decision" onclick="showDetail('xp-system')">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">XP / Points</div>
+          <div class="node-desc">How challenges earn progression</div>
+        </div>
+        <div class="node decision" onclick="showDetail('aura-formula')">
+          <span class="node-tag">DECISION</span>
+          <div class="node-name">Hybrid Aura Formula</div>
+          <div class="node-desc">Weighting of disciplines</div>
+        </div>
+        <div class="node to-build" onclick="showDetail('md-nav')">
+          <span class="node-tag">TO BUILD</span>
+          <div class="node-name">Navigation Shell</div>
+          <div class="node-desc">Top bar · back · discipline switcher</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 7: Pending Decisions -->
+  <div class="section">
+    <div class="section-title">Pending Decisions — Blocks before UI can be finalised</div>
+    <div class="pending">
+      <div class="pending-item" onclick="showDetail('decision-1')">
+        <div class="pending-num">#1</div>
+        <div>
+          <div class="pending-text">Stage 13 — named or deliberately unnamed?</div>
+          <div class="pending-blocker">Blocks: Aura system finalisation · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-2')">
+        <div class="pending-num">#2</div>
+        <div>
+          <div class="pending-text">Japanese kanji accuracy review — Metsuke, Tachi, Mushin</div>
+          <div class="pending-blocker">Blocks: UI build, all discipline screens · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-3')">
+        <div class="pending-num">#3</div>
+        <div>
+          <div class="pending-text">Five progress stages within each discipline — names and unlock criteria</div>
+          <div class="pending-blocker">Blocks: Progress system build · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-4')">
+        <div class="pending-num">#4</div>
+        <div>
+          <div class="pending-text">Hybrid aura formula — exact weighting of each discipline</div>
+          <div class="pending-blocker">Blocks: Aura display logic · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-5')">
+        <div class="pending-num">#5</div>
+        <div>
+          <div class="pending-text">XP or points system — how challenges earn aura progression</div>
+          <div class="pending-blocker">Blocks: Challenge build · Owner: Us</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-6')">
+        <div class="pending-num">#6</div>
+        <div>
+          <div class="pending-text">Content volume — minimum challenge bank before launch</div>
+          <div class="pending-blocker">Blocks: Content production · Owner: John Gunn</div>
+        </div>
+      </div>
+      <div class="pending-item" onclick="showDetail('decision-7')">
+        <div class="pending-num">#7</div>
+        <div>
+          <div class="pending-text">Avatar placeholder — how aura colour displays on student profile</div>
+          <div class="pending-blocker">Blocks: Profile integration · Owner: Us</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 8: Non-Negotiable Rules -->
+  <div class="section">
+    <div class="section-title">Non-Negotiable UI Rules</div>
+    <div class="rules">
+      <div class="rule">Landscape only — no portrait scroll</div>
+      <div class="rule">No belt language — auras only</div>
+      <div class="rule">TEN, REN reserved for physical dojo</div>
+      <div class="rule">All content for 7-9 year olds</div>
+      <div class="rule">Mushin must feel active, never passive</div>
+      <div class="rule">Full-screen takeover within student profile</div>
+      <div class="rule">Must work on phone landscape + tablet landscape</div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- SECTION 9: Tech Stack -->
+  <div class="section">
+    <div class="section-title">Implementation Context</div>
+    <div style="display:flex;gap:14px;flex-wrap:wrap">
+      <div style="flex:1;min-width:240px;padding:12px 16px;border-radius:10px;border:0.5px solid rgba(245,240,232,0.08);background:rgba(245,240,232,0.02)">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:rgba(245,240,232,0.3);margin-bottom:8px">EXISTING TECH</div>
+        <div style="font-size:11px;color:rgba(245,240,232,0.45);line-height:1.6">
+          React Native (Expo) · JSX components · Inline styles<br>
+          Canvas API for breath circles · SVG for layouts<br>
+          Cinzel + Crimson Pro fonts · Dark theme (#0A0A12 base)
+        </div>
+      </div>
+      <div style="flex:1;min-width:240px;padding:12px 16px;border-radius:10px;border:0.5px solid rgba(245,240,232,0.08);background:rgba(245,240,232,0.02)">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:rgba(245,240,232,0.3);margin-bottom:8px">REPO STRUCTURE</div>
+        <div style="font-size:11px;color:rgba(245,240,232,0.45);line-height:1.6">
+          Stage 2 built in own repo (Nendo)<br>
+          Standalone React app (Create React App)<br>
+          Deployed via GitHub Pages for testing<br>
+          Integrated into main app post-launch
+        </div>
+      </div>
+      <div style="flex:1;min-width:240px;padding:12px 16px;border-radius:10px;border:0.5px solid rgba(245,240,232,0.08);background:rgba(245,240,232,0.02)">
+        <div style="font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.15em;color:rgba(245,240,232,0.3);margin-bottom:8px">EXISTING COMPONENTS</div>
+        <div style="font-size:11px;color:rgba(245,240,232,0.45);line-height:1.6">
+          data.js — 4 elements, 11 techniques, 4 states, Shiho<br>
+          BreathHome.jsx — Diamond SVG layout<br>
+          Session.jsx — 6-view state machine (410 lines)<br>
+          ElementList.jsx + Technique.jsx — browsing
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Detail Overlay -->
+<div class="detail-overlay" id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+  <div class="detail-card">
+    <button class="detail-close" onclick="closeDetail()">&times;</button>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+const details = {
+  'student-profile': {
+    name: 'Student Profile',
+    color: 'rgba(200,216,232,0.8)',
+    file: 'Stage 1 · Main App · screens/',
+    sections: [
+      { title: 'Role', text: 'The student profile is the entry point into the Nendō. Students access it from the main Dojo Portal. The Nendō appears as a full-screen landscape takeover — not a tab or modal.' },
+      { title: 'Integration point', text: 'The aura display component will eventually sit on this profile, showing the student\'s current aura stage alongside their physical belt rank. This is Pending Decision #7.' },
+      { title: 'Key constraint', text: 'The transition from portrait (main app) to landscape (Nendō) needs careful handling. This is the single most important UX moment in the flow.' }
+    ]
+  },
+  'md-entry': {
+    name: 'Nendō Entry',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD · Stage 2',
+    sections: [
+      { title: 'Purpose', text: 'Handles the orientation transition from portrait main app to landscape Nendō. This screen is the gateway — it must feel like stepping into a different space.' },
+      { title: 'Design considerations', list: ['Force landscape orientation lock on entry', 'Transition animation from profile card to full-screen', 'Dark theme takeover (#0A0A12 background)', 'Brief loading state — the dojo "opens"', 'Return button clearly visible to exit back to profile'] },
+      { title: 'Open question', text: 'Should there be an animated "entering the dojo" moment, or should it be instant? The audience is 7-9 year olds — a brief dramatic transition could build anticipation.' }
+    ]
+  },
+  'md-home': {
+    name: 'Nendō Home',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD · Stage 2 · The Hub Screen',
+    sections: [
+      { title: 'Purpose', text: 'The central hub of the Nendō. Three discipline "doors" plus the student\'s aura status. This is the screen students return to between all activities.' },
+      { title: 'Must contain', list: ['Three discipline entry points: Metsuke (blue), Tachi (red), Mushin (green)', 'Current aura display — showing stage name, colour, and phase', 'Overall progress indicator across all three disciplines', 'Quick access to most recent or suggested activity', 'Return to profile button'] },
+      { title: 'Layout approach', text: 'Landscape. Three disciplines arranged as a visual triad. The aura could sit at the centre as the unifying element. Consider the NEN philosophy: the three are one.' },
+      { title: 'Existing reference', text: 'A home screen prototype was delivered in a prior session (Deliverable #1 in the tracker — marked COMPLETE). This should be reviewed before designing the production version.' }
+    ]
+  },
+  'mushin-hub': {
+    name: 'MushinHub',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/screens/Mushin.jsx',
+    sections: [
+      { title: 'Architecture', text: 'Simple router component using useState. Manages four sub-screens: breath-home, element, technique, session. Uses a go() function to switch between screens with optional params.' },
+      { title: 'Sub-screens', list: ['BreathHome — Diamond element layout with Shiho centre', 'ElementList — Techniques within a single element', 'Technique — Individual technique detail view', 'Session — Full guided breathing session (6 internal views)'] },
+      { title: 'Pattern to follow', text: 'Metsuke and Tachi hubs should follow the same router pattern: a hub component with useState managing sub-screens, and a go() function for navigation. This keeps each discipline self-contained.' }
+    ]
+  },
+  'breath-home': {
+    name: 'BreathHome',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/BreathHome.jsx',
+    sections: [
+      { title: 'Layout', text: 'Full SVG diamond layout at 760x420 viewBox. Four elements at cardinal points (Kaze top, Chi left, Hi right, Mizu bottom) with Shiho box-breathing at the centre. BEGIN SESSION button at the bottom.' },
+      { title: 'Visual language', list: ['Concentric circles for each element node (3 layers: outer glow, mid fill, inner core)', 'Element-specific SVG icons (wind waves, triangle mountain, water drop, flame)', 'Dashed connector lines from each element to Shiho centre', 'Hover states with opacity transitions', 'Cinzel serif font throughout · letter-spacing heavy'] },
+      { title: 'Interaction', text: 'Click an element node to browse its techniques (→ ElementList). Click Shiho to see box breathing detail (→ Technique). Click BEGIN SESSION to start a guided practice (→ Session).' }
+    ]
+  },
+  'element-list': {
+    name: 'ElementList',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/ElementList.jsx',
+    sections: [
+      { title: 'Purpose', text: 'Shows all breathing techniques within a single element (e.g., Kaze has Cloud, Raven, Lantern). Students can browse techniques without starting a full session.' },
+      { title: 'Data structure', text: 'Each element in data.js has a techniques[] array of IDs. Some techniques are locked (locked: true) — these are more advanced and unlocked through progression.' }
+    ]
+  },
+  'technique': {
+    name: 'Technique',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Technique.jsx',
+    sections: [
+      { title: 'Purpose', text: 'Detail view for a single breathing technique. Shows the name, real Sanskrit name, element, cue text, best-use description, and timing parameters.' },
+      { title: 'Key data per technique', list: ['name + realName (e.g., "Cloud Breathing" / "Diaphragmatic")', 'Timing: inhale, hold, exhale, endHold durations', 'Type: "cycle" (regular) or "fire" (multi-phase)', 'Cue text — child-friendly instruction', 'Best-use description', 'Locked/unlocked state', 'One-word feeling: "Settled", "Calm", "Rooted", etc.'] }
+    ]
+  },
+  'shiho-open': {
+    name: 'Shiho Open — Opening Ritual',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · ShihoGate component',
+    sections: [
+      { title: 'Purpose', text: 'Every Mushin session opens with Shiho (box breathing). 3 rounds of 4-4-4-4 timing. The student must complete this before proceeding — it\'s a ritual, not optional.' },
+      { title: 'Layout', text: 'Landscape row: left info panel (220px) with ritual name, cue text, and pip progress. Centre: canvas-based breath circle animation. The circle expands on inhale, contracts on exhale.' },
+      { title: 'Tech', text: 'Uses requestAnimationFrame loop, buildFlatPhases() to generate phase sequence, drawBreathCircle() for canvas rendering. 3 cycles of box breathing (inhale 4s, hold 4s, exhale 4s, hold 4s).' }
+    ]
+  },
+  'checkin': {
+    name: 'Check-In — Mental State Selection',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · CheckIn component',
+    sections: [
+      { title: 'Purpose', text: 'After Shiho opens, the student identifies their current mental state. This determines which breathing sequence they\'ll follow. Beautiful UX moment — teaching self-awareness.' },
+      { title: 'Four states', list: ['Stormy (blue) — "Restless, busy, can\'t settle" → leads with Cloud (Air)', 'Flat (red) — "Low energy, heavy, tired" → leads with Phoenix (Fire)', 'Scattered (amber) — "Distracted, unfocused" → leads with Warrior (Earth)', 'Clear (green) — "Calm, ready to go deeper" → leads with Wave (Water)'] },
+      { title: 'Layout', text: 'Landscape row: left panel with prompt "How are you arriving today?" and subtitle. Right side: 2x2 grid of state cards with SVG icons. Selected state highlights with colour border and background fill.' },
+      { title: 'Pattern for Metsuke/Tachi', text: 'This check-in concept could be adapted for challenge disciplines — "What kind of challenge feels right?" or difficulty selection.' }
+    ]
+  },
+  'sequence': {
+    name: 'Sequence — Build Your Session',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · Sequence component',
+    sections: [
+      { title: 'Purpose', text: 'Shows the recommended technique sequence based on the student\'s check-in state. The student can adjust how many techniques they want (1-4). Gives them agency.' },
+      { title: 'Layout', text: 'Landscape row: left info panel with the state\'s message. Right side: horizontal card row of technique cards. +/- buttons to adjust count. BEGIN button to start.' },
+      { title: 'Smart sequencing', text: 'Each state has a pre-defined optimal sequence. E.g., Stormy: Cloud → Warrior → Wave. The system recommends, the student adjusts. Shiho wraps automatically.' }
+    ]
+  },
+  'runner': {
+    name: 'Runner — Live Breathing',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · Runner component',
+    sections: [
+      { title: 'Purpose', text: 'The core breathing experience. Full-screen canvas animation with real-time countdown, phase labels, progress tracking, and technique transitions.' },
+      { title: 'Layout', text: 'Three-column landscape layout: Left (180px): session progress sidebar showing all techniques with done/current/upcoming. Centre: large breath circle canvas (180x180) with countdown. Right (120px): cycle progress pips and overall progress bar.' },
+      { title: 'Tech detail', list: ['requestAnimationFrame loop for smooth 60fps animation', 'drawBreathCircle() renders expanding/contracting circle on canvas', 'buildFlatPhases() converts technique data into step-by-step phase array', 'Dynamic background colours per technique (each has bg.base, bg.a1, bg.a2)', 'Particle-like dots from technique pts[] arrays', '2.5 second transition overlay between techniques'] },
+      { title: 'This is the gold standard', text: 'The Runner component is the most polished piece of UI in the Nendō. Any challenge runner for Metsuke/Tachi should match this level of production quality.' }
+    ]
+  },
+  'shiho-close': {
+    name: 'Shiho Close — Closing Ritual',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · ShihoGate (mode="close")',
+    sections: [
+      { title: 'Purpose', text: 'Mirrors the opening. Every session ends with Shiho. The closing cue is different: "Return to the box. Carry the stillness with you." Reinforces the ritual structure.' },
+      { title: 'Implementation', text: 'Same ShihoGate component with mode="close". Identical animation, different cue text. On completion, transitions to Summary.' }
+    ]
+  },
+  'summary': {
+    name: 'Summary — Session Complete',
+    color: 'rgba(122,184,154,0.8)',
+    file: 'BUILT · src/mushin/Session.jsx · Summary component',
+    sections: [
+      { title: 'Purpose', text: 'Shows session stats after completion. Currently shows time elapsed, techniques completed, elements covered, and XP earned (10 base + 10 per technique).' },
+      { title: 'XP formula', text: 'Current: 10 + (techsDone * 10). This is placeholder. The real XP system is Pending Decision #5 — how challenges and practices earn aura progression.' },
+      { title: 'Missing', text: 'No persistence yet. XP is displayed but not saved anywhere. The backend schema for Nendō progress hasn\'t been designed.' }
+    ]
+  },
+  'metsuke-hub': {
+    name: 'Metsuke Hub',
+    color: 'rgba(141,184,212,0.8)',
+    file: 'TO BUILD · Stage 2',
+    sections: [
+      { title: 'Purpose', text: 'Entry screen for all Metsuke (Reading Mind) challenges. Should mirror MushinHub\'s router pattern — a parent component managing sub-screens.' },
+      { title: 'Challenge categories', list: ['Pattern recognition — spot the match, find the sequence', 'Spot the difference — visual comparison tasks', 'Comprehension tasks — read and understand', 'Hidden detail — find what others miss', 'Memory sequences — remember and repeat'] },
+      { title: 'Design direction', text: 'Blue colour family (Metsuke = #8DB8D4). Should feel perceptive, clear, cool. Visual metaphor: the ninja\'s gaze. Consider an "eye" or "scroll" visual motif.' },
+      { title: 'Key question', text: 'How are challenges categorised on this screen? By type (pattern, comprehension, etc.)? By difficulty? By recency? This needs deciding before layout.' }
+    ]
+  },
+  'tachi-hub': {
+    name: 'Tachi Hub',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD · Stage 2',
+    sections: [
+      { title: 'Purpose', text: 'Entry screen for all Tachi (Striking Mind) challenges. Same router pattern as Mushin and Metsuke.' },
+      { title: 'Challenge categories', list: ['Logic puzzles — reasoning and deduction', 'Route-finding — maze and path challenges', 'Strategy tasks — plan ahead, think moves ahead', 'Timed quick-fire — speed and accuracy under pressure', 'Decision under pressure — choose wisely, fast', 'Numeracy challenges — number-based problem solving'] },
+      { title: 'Design direction', text: 'Red colour family (Tachi = #D4826A). Should feel decisive, warm, intense. Visual metaphor: the sword draw. Consider a "blade" or "target" visual motif.' },
+      { title: 'Key question', text: 'Tachi has both untimed strategy AND timed quick-fire challenges. Should these feel different in the UI, or should the timer be the only difference?' }
+    ]
+  },
+  'challenge-select': {
+    name: 'Challenge Select (Metsuke)',
+    color: 'rgba(141,184,212,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Browse and select a specific challenge within a Metsuke category. Should show difficulty, estimated time, whether it\'s been completed before, and any XP reward.' },
+      { title: 'Needs from content team', text: 'Content bank must be designed first (Deliverable #4). Each challenge needs: title, brief description, difficulty rating, estimated duration, category tag, XP value.' }
+    ]
+  },
+  'challenge-select-t': {
+    name: 'Challenge Select (Tachi)',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Same pattern as Metsuke challenge select but for Tachi challenges. Red colour family.' },
+      { title: 'Shared component opportunity', text: 'Challenge Select could be a shared component that takes a discipline colour and challenge list as props. Avoid building two separate versions.' }
+    ]
+  },
+  'challenge-intro': {
+    name: 'Challenge Intro (Metsuke)',
+    color: 'rgba(141,184,212,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Brief screen before the challenge starts. Shows the challenge name, type, instructions, and a BEGIN button. Gives the student a moment to prepare — mirrors how Shiho opens a Mushin session.' },
+      { title: 'Design parallel', text: 'Consider whether Metsuke/Tachi challenges should also have an opening ritual (shorter than Shiho). The working doc says "Mushin makes all the others possible" — perhaps a brief breath before each challenge?' }
+    ]
+  },
+  'challenge-intro-t': {
+    name: 'Challenge Intro (Tachi)',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Same pattern as Metsuke intro but for Tachi challenges. For timed challenges, this is where the student sees the time limit and can mentally prepare.' }
+    ]
+  },
+  'challenge-runner': {
+    name: 'Challenge Runner (Metsuke)',
+    color: 'rgba(141,184,212,0.8)',
+    file: 'TO BUILD · Most complex new component',
+    sections: [
+      { title: 'Purpose', text: 'The actual challenge gameplay screen. This is the equivalent of the Mushin Runner — the core interactive experience. Each challenge type will need its own renderer.' },
+      { title: 'Challenge renderers needed', list: ['PatternMatch — show grid/sequence, find the match', 'SpotDifference — two images side by side, tap differences', 'Comprehension — read passage, answer questions', 'HiddenDetail — scene with hidden elements to find', 'MemorySequence — show sequence, reproduce it'] },
+      { title: 'Shared runner shell', text: 'All challenge types share: landscape layout, progress indicator, timer (optional), score counter, exit button. The inner content area changes per challenge type.' },
+      { title: 'Quality bar', text: 'Must match the Mushin Runner\'s polish. Smooth animations, clear feedback on right/wrong answers, satisfying micro-interactions.' }
+    ]
+  },
+  'challenge-runner-t': {
+    name: 'Challenge Runner (Tachi)',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Tachi challenge gameplay. Same shared runner shell as Metsuke but with different challenge type renderers.' },
+      { title: 'Challenge renderers needed', list: ['LogicPuzzle — deduction grid or sequence completion', 'RouteFinder — maze or path navigation', 'Strategy — multi-move planning with visual board', 'QuickFire — rapid response under time pressure', 'DecisionPressure — timed choice scenarios', 'Numeracy — number puzzles and calculations'] },
+      { title: 'Timer emphasis', text: 'Tachi challenges lean more heavily on time pressure than Metsuke. The timer should be more prominent and feel more intense (warm colours, urgency cues).' }
+    ]
+  },
+  'challenge-result': {
+    name: 'Challenge Result (Metsuke)',
+    color: 'rgba(141,184,212,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Post-challenge results screen. Shows score, accuracy, time, XP earned, and any progress toward the next Metsuke stage. Equivalent of the Mushin Summary.' },
+      { title: 'Should include', list: ['Challenge score / accuracy percentage', 'Time taken vs par time', 'XP earned for this challenge', 'Progress bar toward next Metsuke stage', 'Option to retry or return to hub', 'Brief encouraging feedback text'] }
+    ]
+  },
+  'challenge-result-t': {
+    name: 'Challenge Result (Tachi)',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD',
+    sections: [
+      { title: 'Purpose', text: 'Same as Metsuke result but for Tachi. Red colour family. For timed challenges, emphasise speed alongside accuracy.' }
+    ]
+  },
+  'aura-display': {
+    name: 'Aura Display Component',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD · Pending Decision #7',
+    sections: [
+      { title: 'Purpose', text: 'Shows the student\'s current aura on their profile. Must display stage name, colour, and phase. This is how the student\'s Nendō progress is visible in the main app.' },
+      { title: 'Existing reference', text: 'The Aura Progression prototype (Nendo_AuraProgression_v1.0.html) shows all 13 stages with colour orbs. The profile component needs to show just the student\'s current stage as a single glowing orb.' },
+      { title: 'Blocked by', text: 'Decision #7 (avatar placeholder format) and Decision #4 (hybrid aura formula). Cannot be finalised until both are resolved.' },
+      { title: 'Design direction', text: '13 stages from warm white (#FAF6EE) through gold, amber, orange, red, crimson, to deep violet (#1A0535). The orb should glow and feel alive. Consider subtle animation (pulse, shimmer).' }
+    ]
+  },
+  'progress-system': {
+    name: 'Progress Stage System',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'PENDING DECISION #3',
+    sections: [
+      { title: 'What needs deciding', text: 'Each discipline has 5 internal progress stages. These need names, visual representations, and unlock criteria. How does a student advance from stage 1 to stage 5 within Metsuke, for example?' },
+      { title: 'Affects', list: ['Challenge select UI (which challenges are available at each stage)', 'Hub screens (progress visualisation)', 'Aura calculation (discipline stages feed into overall aura)', 'Backend schema (progress tracking tables)'] },
+      { title: 'Owner', text: 'Us (Hazza + John). This is a joint design + build decision.' }
+    ]
+  },
+  'xp-system': {
+    name: 'XP / Points System',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'PENDING DECISION #5',
+    sections: [
+      { title: 'What needs deciding', text: 'How do challenges and practices earn aura progression? Current Mushin summary shows placeholder XP (10 + 10 per technique). The real system needs to account for all three disciplines.' },
+      { title: 'Considerations', list: ['Should XP be linear or curve exponentially?', 'Do harder challenges give proportionally more XP?', 'Can XP be lost or only gained?', 'How does practice frequency factor in?', 'Is there a daily/weekly cap?', 'How does Mushin XP compare to Metsuke/Tachi XP?'] },
+      { title: 'Impact on UI', text: 'The XP system determines what numbers, bars, and celebrations appear on result screens, hub screens, and the aura display. It\'s the reward backbone of the entire Nendō.' }
+    ]
+  },
+  'aura-formula': {
+    name: 'Hybrid Aura Formula',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'PENDING DECISION #4',
+    sections: [
+      { title: 'What needs deciding', text: 'The overall aura is influenced by all three disciplines. From Phase 3 onwards, the student\'s balance shifts the hue. But what\'s the exact formula?' },
+      { title: 'Known rules', list: ['Phases 1-2: standard progression for all students', 'Phase 3+: discipline balance shifts the hue', 'Strong Metsuke pulls blue, strong Tachi pulls warm, strong Mushin adds depth', 'By Stage 12: paths converge, differences dissolve', 'Stage 13: identical for every student'] },
+      { title: 'UI impact', text: 'This formula determines the exact colour rendered in the Aura Display component. It needs to be computable client-side for real-time preview, or served from the backend.' }
+    ]
+  },
+  'md-nav': {
+    name: 'Navigation Shell',
+    color: 'rgba(212,130,106,0.8)',
+    file: 'TO BUILD · Shared component',
+    sections: [
+      { title: 'Purpose', text: 'Consistent top navigation bar across all Nendō screens. Currently Mushin has its own ad-hoc top bar — this should become a shared component.' },
+      { title: 'Must include', list: ['Back button (context-sensitive: back to hub, back to discipline, exit dojo)', 'Screen title (current location)', 'Optional right-side content (timer, aura pip, etc.)', 'Consistent 44px height matching existing Mushin topbar', 'Same Cinzel font, letter-spacing, opacity pattern'] },
+      { title: 'Pattern', text: 'Consider a NavShell component that wraps all Nendō screens. Takes title, onBack, and optional rightContent as props.' }
+    ]
+  },
+  'decision-1': {
+    name: 'Decision #1 — Stage 13 Naming',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: John Gunn · Blocks: Aura system finalisation',
+    sections: [
+      { title: 'The question', text: 'Is Stage 13 deliberately unnamed ("those who reach it do not need a name") or should it receive a name? This is philosophical as much as practical.' },
+      { title: 'UI impact', text: 'If unnamed: the aura display shows "—" or a visual-only representation with no text label. If named: needs a Japanese word that carries the weight of being "beyond the system".' },
+      { title: 'Current state', text: 'The Aura Progression prototype currently shows it as "— · —" with the label "Unnamed · Beyond the system".' }
+    ]
+  },
+  'decision-2': {
+    name: 'Decision #2 — Kanji Accuracy',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: John Gunn · Blocks: All discipline screens',
+    sections: [
+      { title: 'The question', text: 'Are the Japanese characters used for Metsuke (目付), Tachi (太刀), and Mushin (無心) accurate and appropriate? A native speaker review is needed.' },
+      { title: 'UI impact', text: 'If the kanji are used in the UI (which they should be — they add authenticity), they must be correct. Wrong kanji in a Japanese-themed product would undermine credibility.' }
+    ]
+  },
+  'decision-3': {
+    name: 'Decision #3 — Progress Stages',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: Us · Blocks: Progress system build',
+    sections: [
+      { title: 'The question', text: 'Each discipline needs 5 internal progress stages. What are they called? What are the unlock criteria? How do they relate to the overall 13-stage aura?' },
+      { title: 'Suggestion to discuss', text: 'Consider naming each discipline\'s 5 stages after aspects of their philosophy. Metsuke stages could relate to perception depth. Tachi stages to decision quality. Mushin stages to stillness depth.' }
+    ]
+  },
+  'decision-4': {
+    name: 'Decision #4 — Aura Formula',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: Us · Blocks: Aura display logic',
+    sections: [
+      { title: 'The question', text: 'What is the exact mathematical formula for calculating the hybrid aura colour from three discipline scores?' },
+      { title: 'Approach options', list: ['Simple weighted average (e.g., 40% highest, 30% middle, 30% lowest)', 'Multiplicative (disciplines multiply rather than add — requires balance)', 'Threshold-based (each discipline must reach minimum level before next phase unlocks)', 'Dominant-shift (base colour from overall level, hue shift from dominant discipline)'] }
+    ]
+  },
+  'decision-5': {
+    name: 'Decision #5 — XP System',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: Us · Blocks: Challenge build',
+    sections: [
+      { title: 'The question', text: 'How do challenges and practices earn aura progression? What\'s the XP model?' },
+      { title: 'Current placeholder', text: 'Mushin Summary currently awards 10 + (techniques * 10) XP. This is temporary.' }
+    ]
+  },
+  'decision-6': {
+    name: 'Decision #6 — Content Volume',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: John Gunn · Blocks: Content production',
+    sections: [
+      { title: 'The question', text: 'What is the minimum number of challenges per discipline before launch? Too few and students hit the end too fast. Too many and production takes too long.' },
+      { title: 'Consideration', text: 'Mushin already has 11 techniques across 4 elements. Metsuke and Tachi need comparable depth. But challenges are more content-heavy than breathing techniques.' }
+    ]
+  },
+  'decision-7': {
+    name: 'Decision #7 — Avatar Placeholder',
+    color: 'rgba(200,164,106,0.8)',
+    file: 'Owner: Us · Blocks: Profile integration',
+    sections: [
+      { title: 'The question', text: 'How does the aura colour display on the student\'s profile? Is it a glowing orb? A ring around their avatar? A background gradient? A badge?' },
+      { title: 'Options to consider', list: ['Glowing orb — matches the Aura Progression prototype style', 'Avatar ring — subtle coloured border around the student\'s photo/avatar', 'Background gradient — the profile card background shifts to match aura', 'Combination — orb on the Nendō side, ring on the main profile'] }
+    ]
+  }
+};
+
+function showDetail(id) {
+  const d = details[id];
+  if (!d) return;
+  const el = document.getElementById('detail-content');
+  let html = `<div class="detail-name" style="color:${d.color}">${d.name}</div>`;
+  html += `<div class="detail-file">${d.file}</div>`;
+  d.sections.forEach(s => {
+    html += `<div class="detail-section">`;
+    html += `<div class="detail-section-title">${s.title}</div>`;
+    if (s.text) html += `<div class="detail-text">${s.text}</div>`;
+    if (s.list) {
+      html += `<ul class="detail-list">`;
+      s.list.forEach(li => html += `<li>${li}</li>`);
+      html += `</ul>`;
+    }
+    html += `</div>`;
+  });
+  el.innerHTML = html;
+  document.getElementById('detail-overlay').classList.add('visible');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('visible');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+</script>
+
+</body>
+</html>

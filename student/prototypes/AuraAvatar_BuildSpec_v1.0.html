@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura & Avatar — Build Spec v1.0</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{
+  background:#0A0A12;
+  font-family:'Crimson Pro',serif;
+  color:rgba(245,240,232,0.85);
+  padding:48px 0 80px;
+  min-height:100vh;
+}
+
+/* ── Page scaffold ── */
+.page{
+  max-width:860px;
+  margin:0 auto;
+  padding:0 32px;
+}
+.doc-title{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.28em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.25);
+  margin-bottom:6px;
+}
+.doc-heading{
+  font-family:'Cinzel',serif;
+  font-size:26px;
+  font-weight:700;
+  letter-spacing:0.06em;
+  color:rgba(245,240,232,0.9);
+  margin-bottom:4px;
+  line-height:1.2;
+}
+.doc-sub{
+  font-size:15px;
+  font-style:italic;
+  color:rgba(245,240,232,0.35);
+  margin-bottom:48px;
+  line-height:1.6;
+}
+
+/* ── Dividers ── */
+.rule{
+  width:100%;
+  height:1px;
+  background:linear-gradient(90deg,transparent,rgba(245,240,232,0.07),transparent);
+  margin:40px 0;
+}
+.rule-short{
+  width:60px;
+  height:1px;
+  background:rgba(245,240,232,0.1);
+  margin:28px 0;
+}
+
+/* ── Section headers ── */
+.part-tag{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.3em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.2);
+  margin-bottom:6px;
+}
+.section-title{
+  font-family:'Cinzel',serif;
+  font-size:17px;
+  font-weight:600;
+  letter-spacing:0.08em;
+  color:rgba(245,240,232,0.88);
+  margin-bottom:16px;
+}
+.subsection-title{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  font-weight:600;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.4);
+  margin-bottom:10px;
+  margin-top:28px;
+}
+
+/* ── Body copy ── */
+p{
+  font-size:14.5px;
+  line-height:1.75;
+  color:rgba(245,240,232,0.65);
+  margin-bottom:16px;
+  max-width:680px;
+}
+p strong{
+  color:rgba(245,240,232,0.88);
+  font-style:normal;
+  font-weight:500;
+}
+p em{
+  color:rgba(245,240,232,0.5);
+}
+
+/* ── Status pills ── */
+.status-row{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-bottom:24px;
+}
+.pill{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:4px;
+}
+.pill-done  { background:rgba(80,180,80,0.08);   border:0.5px solid rgba(80,180,80,0.25);  color:rgba(140,220,140,0.7); }
+.pill-todo  { background:rgba(220,180,60,0.08);  border:0.5px solid rgba(220,180,60,0.25); color:rgba(220,180,100,0.7); }
+.pill-block { background:rgba(200,80,80,0.08);   border:0.5px solid rgba(200,80,80,0.25);  color:rgba(220,140,120,0.7); }
+.pill-info  { background:rgba(100,140,220,0.08); border:0.5px solid rgba(100,140,220,0.25);color:rgba(150,180,240,0.7); }
+
+/* ── Spec tables ── */
+.spec-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-bottom:24px;
+  font-size:13px;
+}
+.spec-table th{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.25);
+  text-align:left;
+  padding:6px 12px;
+  border-bottom:0.5px solid rgba(245,240,232,0.07);
+}
+.spec-table td{
+  padding:8px 12px;
+  border-bottom:0.5px solid rgba(245,240,232,0.04);
+  color:rgba(245,240,232,0.55);
+  vertical-align:top;
+  line-height:1.5;
+}
+.spec-table td:first-child{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.04em;
+  color:rgba(245,240,232,0.75);
+  white-space:nowrap;
+  padding-right:20px;
+}
+.spec-table tr:last-child td{ border-bottom:none; }
+.spec-table .old{ color:rgba(245,150,120,0.6); font-style:italic; }
+.spec-table .new{ color:rgba(150,230,180,0.75); }
+.spec-table .note{ color:rgba(245,240,232,0.35); font-size:11.5px; font-style:italic; }
+
+/* ── Code blocks ── */
+.code-block{
+  background:rgba(245,240,232,0.025);
+  border:0.5px solid rgba(245,240,232,0.06);
+  border-radius:8px;
+  padding:16px 20px;
+  font-family:'Courier New', monospace;
+  font-size:12px;
+  line-height:1.8;
+  color:rgba(245,240,232,0.55);
+  margin-bottom:20px;
+  overflow-x:auto;
+  white-space:pre;
+}
+.code-block .comment{ color:rgba(245,240,232,0.22); }
+.code-block .key   { color:rgba(150,210,255,0.75); }
+.code-block .val   { color:rgba(180,240,160,0.7); }
+.code-block .str   { color:rgba(255,200,120,0.7); }
+
+/* ── Annotation boxes ── */
+.anno{
+  padding:14px 18px;
+  border-radius:8px;
+  margin-bottom:20px;
+  font-size:13.5px;
+  line-height:1.65;
+  max-width:680px;
+}
+.anno-warn{
+  background:rgba(220,160,60,0.06);
+  border-left:2px solid rgba(220,160,60,0.35);
+  color:rgba(230,190,120,0.75);
+}
+.anno-note{
+  background:rgba(100,140,220,0.06);
+  border-left:2px solid rgba(100,140,220,0.35);
+  color:rgba(160,190,240,0.75);
+}
+.anno-ok{
+  background:rgba(80,180,100,0.06);
+  border-left:2px solid rgba(80,180,100,0.35);
+  color:rgba(140,220,160,0.75);
+}
+
+/* ── Swatch row ── */
+.swatch-row{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-bottom:10px;
+}
+.swatch{
+  width:32px;
+  height:32px;
+  border-radius:6px;
+  border:0.5px solid rgba(245,240,232,0.1);
+  flex-shrink:0;
+}
+.swatch-label{
+  font-family:'Cinzel',serif;
+  font-size:10px;
+  letter-spacing:0.08em;
+  color:rgba(245,240,232,0.5);
+}
+.swatch-hex{
+  font-family:'Courier New',monospace;
+  font-size:11px;
+  color:rgba(245,240,232,0.3);
+  margin-top:2px;
+}
+
+/* ── Layer diagram ── */
+.layer-diagram{
+  position:relative;
+  width:220px;
+  height:300px;
+  margin:24px auto;
+}
+.diag-layer{
+  position:absolute;
+  border-radius:50% 50% 35% 35%;
+  left:50%;
+  transform:translateX(-50%);
+  border:1px solid;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.diag-label{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.1em;
+  text-transform:uppercase;
+  opacity:0.7;
+  text-align:center;
+  line-height:1.3;
+}
+.diag-figure{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(245,240,232,0.06);
+  border:0.5px solid rgba(245,240,232,0.12);
+}
+
+/* ── Build order steps ── */
+.build-step{
+  display:flex;
+  gap:16px;
+  margin-bottom:24px;
+  align-items:flex-start;
+}
+.step-num{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  font-weight:700;
+  letter-spacing:0.08em;
+  color:rgba(245,240,232,0.2);
+  background:rgba(245,240,232,0.04);
+  border:0.5px solid rgba(245,240,232,0.08);
+  border-radius:50%;
+  width:30px;
+  height:30px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  margin-top:2px;
+}
+.step-body{}
+.step-title{
+  font-family:'Cinzel',serif;
+  font-size:13px;
+  letter-spacing:0.06em;
+  color:rgba(245,240,232,0.8);
+  margin-bottom:4px;
+}
+.step-desc{
+  font-size:13.5px;
+  color:rgba(245,240,232,0.45);
+  line-height:1.6;
+  max-width:580px;
+}
+
+/* ── Coordinate grid preview ── */
+.svg-preview{
+  background:rgba(245,240,232,0.015);
+  border:0.5px solid rgba(245,240,232,0.06);
+  border-radius:8px;
+  padding:20px;
+  display:flex;
+  gap:32px;
+  align-items:flex-start;
+  margin-bottom:24px;
+  flex-wrap:wrap;
+}
+.svg-caption{
+  font-family:'Cinzel',serif;
+  font-size:8.5px;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.2);
+  margin-top:8px;
+  text-align:center;
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══ HEADER ══ -->
+  <div class="doc-title">Ninja Learning · Nendō</div>
+  <div class="doc-heading">Aura & Avatar Build Spec</div>
+  <div class="doc-sub">Student Profile v3.0 → v4.0 &ensp;·&ensp; Canvas Aura System &ensp;·&ensp; Member-Ready Characters</div>
+
+  <div class="status-row">
+    <span class="pill pill-done">v1.3 Aura Prototype ✓</span>
+    <span class="pill pill-done">v3.0 Profile Layout ✓</span>
+    <span class="pill pill-todo">Avatar SVG Upgrade — Next</span>
+    <span class="pill pill-todo">Canvas Aura System — Next</span>
+    <span class="pill pill-block">Female Variant — After Avatar Images</span>
+  </div>
+
+  <p>This document specifies every change required to take the student profile from its current state to a production-ready screen, covering two parallel workstreams: completing the SVG avatar character to member-ready quality, and rebuilding the aura system on canvas so it conforms to the body silhouette with organic noise and cinematic transitions.</p>
+
+  <div class="anno anno-note">The two workstreams below are <strong>independent</strong> — the avatar SVG upgrade can be completed and tested first, before the canvas engine is written. Build in the order listed at the end of this document.</div>
+
+  <div class="rule"></div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       PART 1 — CURRENT STATE ANALYSIS
+  ══════════════════════════════════════════════════ -->
+  <div class="part-tag">Part 1</div>
+  <div class="section-title">Current State Analysis</div>
+
+  <p>The profile has three columns: <strong>left</strong> (name, aura stage, belt, element stripes, stats), <strong>center</strong> (SVG avatar in a 124×295px char-wrap on iPhone, 160×440px on iPad), and <strong>right</strong> (nav pills). The overall framing, layout, typography and belt system are complete and require no changes.</p>
+
+  <div class="subsection-title">What works well — do not change</div>
+  <table class="spec-table">
+    <tr><th>Element</th><th>Status</th></tr>
+    <tr><td>Layout (3-column, col-sep, ground)</td><td><span class="new">Complete. No changes.</span></td></tr>
+    <tr><td>Belt switcher (11 belts, 3 tiers)</td><td><span class="new">Complete. Fully functional.</span></td></tr>
+    <tr><td>Element stripe badges (Air/Earth/Water/Fire)</td><td><span class="new">Complete. Ghost/half/full states working.</span></td></tr>
+    <tr><td>Character belt & stripe (color-synced to JS)</td><td><span class="new">Complete. Dynamic color already wired.</span></td></tr>
+    <tr><td>iPhone / iPad responsive modes</td><td><span class="new">Complete. Both frames rendering correctly.</span></td></tr>
+    <tr><td>Hero background + vignette</td><td><span class="new">Complete. Atmospheric depth working.</span></td></tr>
+    <tr><td>Nav pills + icons</td><td><span class="new">Complete. No changes.</span></td></tr>
+    <tr><td>Stats, name, aura label (left column)</td><td><span class="new">Complete. Placeholder data only.</span></td></tr>
+  </table>
+
+  <div class="subsection-title">What needs work</div>
+  <table class="spec-table">
+    <tr><th>Element</th><th>Issue</th></tr>
+    <tr>
+      <td>SVG avatar fills</td>
+      <td><span class="old">All fills at ~5–7% opacity white. Character is nearly invisible — looks like a ghost. Not suitable for member-facing use.</span></td>
+    </tr>
+    <tr>
+      <td>Aura system</td>
+      <td><span class="old">Single CSS div with hardcoded gold box-shadow. Not connected to 13-stage system. Generic oval shape — ignores body silhouette entirely.</span></td>
+    </tr>
+    <tr>
+      <td>Female variant</td>
+      <td><span class="old">Not yet created. Single male character only.</span></td>
+    </tr>
+  </table>
+
+
+  <div class="rule"></div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       PART 2 — AVATAR SVG UPGRADE
+  ══════════════════════════════════════════════════ -->
+  <div class="part-tag">Part 2</div>
+  <div class="section-title">Avatar SVG — Member-Ready Spec</div>
+
+  <p>The goal is a stylised martial arts character that reads clearly as a solid form in the dark environment, while remaining appropriate for the aura to illuminate from outside. The aesthetic should feel like the character exists in low light — dark fabric, warm skin, the belt as the one vivid accent — with the aura glow providing the surrounding luminosity. <em>Not photorealistic. Stylised and purposeful.</em></p>
+
+  <div class="anno anno-warn">The key principle: <strong>the aura lights the character, not the character itself.</strong> This means fills stay subdued so that when the aura color falls across the figure it reads as genuine illumination rather than competing with a brightly-lit avatar.</div>
+
+  <div class="subsection-title">Colour palette for the avatar</div>
+
+  <div class="swatch-row">
+    <div class="swatch" style="background:rgba(18,22,36,0.92)"></div>
+    <div>
+      <div class="swatch-label">Gi fabric (body, arms, legs)</div>
+      <div class="swatch-hex">rgba(18,22,36,0.88) — dark navy-charcoal</div>
+    </div>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:rgba(200,174,144,0.45)"></div>
+    <div>
+      <div class="swatch-label">Skin (face, neck, hands)</div>
+      <div class="swatch-hex">rgba(200,174,144,0.45) — warm neutral, intentionally faint</div>
+    </div>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:rgba(22,14,8,0.82)"></div>
+    <div>
+      <div class="swatch-label">Hair</div>
+      <div class="swatch-hex">rgba(22,14,8,0.82) — near-black dark brown</div>
+    </div>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:rgba(28,18,10,0.9)"></div>
+    <div>
+      <div class="swatch-label">Eyes (iris)</div>
+      <div class="swatch-hex">rgba(28,18,10,0.9) — dark, with white highlight dot</div>
+    </div>
+  </div>
+  <div class="swatch-row">
+    <div class="swatch" style="background:rgba(245,240,232,0.22)"></div>
+    <div>
+      <div class="swatch-label">Form strokes (gi edges, limb lines)</div>
+      <div class="swatch-hex">rgba(245,240,232,0.22) — raised from current 0.09</div>
+    </div>
+  </div>
+  <div class="swatch-row" style="margin-bottom:24px;">
+    <div class="swatch" style="background:rgba(245,240,232,0.12)"></div>
+    <div>
+      <div class="swatch-label">Interior detail strokes (folds, lapels)</div>
+      <div class="swatch-hex">rgba(245,240,232,0.12) — subtle interior definition</div>
+    </div>
+  </div>
+
+  <div class="subsection-title">Element-by-element SVG changes</div>
+
+  <table class="spec-table">
+    <tr><th>SVG Element</th><th>Current</th><th>New</th><th>Notes</th></tr>
+
+    <tr>
+      <td>Gi body / torso<br><span style="font-size:10px;opacity:0.4;font-family:monospace">path d="M40,112…"</span></td>
+      <td class="old">fill rgba(245,240,232,0.055)<br>stroke rgba(245,240,232,0.09)</td>
+      <td class="new">fill rgba(18,22,36,0.88)<br>stroke rgba(245,240,232,0.22)</td>
+      <td class="note">This is the biggest visual change. Going from ghost to solid fabric instantly anchors the character.</td>
+    </tr>
+
+    <tr>
+      <td>Left arm / Right arm</td>
+      <td class="old">fill rgba(245,240,232,0.05)<br>stroke rgba(245,240,232,0.09)</td>
+      <td class="new">fill rgba(18,22,36,0.82)<br>stroke rgba(245,240,232,0.20)</td>
+      <td class="note">Slightly lighter than torso — sleeve fabric. Hands use skin tone instead (see below).</td>
+    </tr>
+
+    <tr>
+      <td>Left hand / Right hand<br><span style="font-size:10px;opacity:0.4;font-family:monospace">path after arm (the fist shape)</span></td>
+      <td class="old">fill rgba(245,240,232,0.06)</td>
+      <td class="new">fill rgba(200,174,144,0.42)<br>stroke rgba(180,150,120,0.25)</td>
+      <td class="note">Switch from gi fabric to skin tone. This tiny detail — visible hands — makes the character feel inhabited.</td>
+    </tr>
+
+    <tr>
+      <td>Left leg / Right leg</td>
+      <td class="old">fill rgba(245,240,232,0.055)</td>
+      <td class="new">fill rgba(18,22,36,0.80)<br>stroke rgba(245,240,232,0.20)</td>
+      <td class="note">Same fabric as torso. Slightly lower opacity for visual depth (legs recede behind body).</td>
+    </tr>
+
+    <tr>
+      <td>Left foot / Right foot</td>
+      <td class="old">fill rgba(245,240,232,0.07)</td>
+      <td class="new">fill rgba(26,30,48,0.82)<br>stroke rgba(245,240,232,0.18)</td>
+      <td class="note">Slightly darker — feet are the furthest point, least illuminated.</td>
+    </tr>
+
+    <tr>
+      <td>Shoulders (both)</td>
+      <td class="old">fill rgba(245,240,232,0.05)</td>
+      <td class="new">fill rgba(18,22,36,0.82)<br>stroke rgba(245,240,232,0.22)</td>
+      <td class="note">Gi fabric — match torso.</td>
+    </tr>
+
+    <tr>
+      <td>Neck</td>
+      <td class="old">fill rgba(245,240,232,0.06)</td>
+      <td class="new">fill rgba(200,174,144,0.40)<br>stroke rgba(180,150,120,0.20)</td>
+      <td class="note">Skin tone — connects head to body.</td>
+    </tr>
+
+    <tr>
+      <td>Head (face ellipse)</td>
+      <td class="old">fill rgba(245,240,232,0.055)<br>stroke rgba(245,240,232,0.11)</td>
+      <td class="new">fill rgba(200,174,144,0.42)<br>stroke rgba(180,150,120,0.28)</td>
+      <td class="note">Warm skin. The opacity stays below 0.5 so aura glow can colour the face at higher stages.</td>
+    </tr>
+
+    <tr>
+      <td>Hair</td>
+      <td class="old">fill rgba(245,240,232,0.04)</td>
+      <td class="new">fill rgba(22,14,8,0.82)<br>stroke rgba(50,30,10,0.45)</td>
+      <td class="note">Solid dark — the only element that should feel opaque. Provides visual contrast against the face.</td>
+    </tr>
+
+    <tr>
+      <td>Eyes (both ellipses)</td>
+      <td class="old">fill rgba(245,240,232,0.10) — single shape each</td>
+      <td class="new">
+        Replace each eye with 3 shapes:<br>
+        1. Outer iris ellipse — fill rgba(28,18,10,0.92) (dark)<br>
+        2. Pupil circle r=1.2 — fill rgba(8,5,3,0.95) (near-black)<br>
+        3. Highlight dot r=0.6 — fill rgba(245,240,232,0.7) at offset (-0.8, -0.6) from centre
+      </td>
+      <td class="note">Three shapes per eye. This single change most impacts whether the character feels alive. cx=(50,54) rx=3 ry=1.8 stays the same for the iris.</td>
+    </tr>
+
+    <tr>
+      <td>Eyebrows</td>
+      <td class="old">stroke rgba(245,240,232,0.06) — very faint</td>
+      <td class="new">stroke rgba(22,14,8,0.55)</td>
+      <td class="note">Dark brows. Small change, big impact on expression.</td>
+    </tr>
+
+    <tr>
+      <td>Mouth</td>
+      <td class="old">stroke rgba(245,240,232,0.07)</td>
+      <td class="new">stroke rgba(180,120,100,0.35)</td>
+      <td class="note">Warm tint — subtle but contextually correct.</td>
+    </tr>
+
+    <tr>
+      <td>Gi lapels (two diagonal strokes)</td>
+      <td class="old">stroke rgba(245,240,232,0.09)</td>
+      <td class="new">stroke rgba(245,240,232,0.18)</td>
+      <td class="note">Raised opacity so the V-collar reads clearly against the dark gi body.</td>
+    </tr>
+
+    <tr>
+      <td>Belt (rect #char-belt)</td>
+      <td class="old">fill driven by JS — no change needed</td>
+      <td class="new">No change. Belt color from JS stays. <strong>Raise opacity from 0.7 to 0.85.</strong></td>
+      <td class="note">The belt is the only vivid accent on the character. Make it count.</td>
+    </tr>
+
+    <tr>
+      <td>Belt stripe (rect #char-belt-stripe)</td>
+      <td class="old">opacity 0.6</td>
+      <td class="new">opacity 0.75</td>
+      <td class="note">Slight raise to maintain contrast on the belt.</td>
+    </tr>
+
+    <tr>
+      <td>Belt knot (ellipse)</td>
+      <td class="old">stroke rgba(245,240,232,0.12)</td>
+      <td class="new">stroke rgba(245,240,232,0.18)</td>
+      <td class="note">More readable at the center of the waist.</td>
+    </tr>
+
+    <tr>
+      <td>Belt tails (paths)</td>
+      <td class="old">stroke rgba(245,240,232,0.09)</td>
+      <td class="new">stroke using belt colour at 0.35 opacity (tint the tails to match belt)</td>
+      <td class="note">Belt tails should feel like the same fabric as the belt — add a dynamic stroke colour in JS matching <code>belt.colour + '59'</code> (hex alpha ≈ 35%).</td>
+    </tr>
+
+    <tr>
+      <td>Ground shadow (ellipse)</td>
+      <td class="old">fill rgba(0,0,0,0.22)</td>
+      <td class="new">No change</td>
+      <td class="note">Works well. Leave as is.</td>
+    </tr>
+  </table>
+
+  <div class="subsection-title">Additional details to add</div>
+  <p>These are new SVG elements to add inside the existing SVG, that provide form depth without over-complicating the character:</p>
+
+  <table class="spec-table">
+    <tr><th>Addition</th><th>SVG spec</th><th>Rationale</th></tr>
+
+    <tr>
+      <td>Gi fold lines (3)</td>
+      <td class="new">
+        Three subtle horizontal strokes across the torso:<br>
+        <code>path d="M42,130 Q63,128 82,130"</code> stroke rgba(245,240,232,0.07) sw=0.6<br>
+        <code>path d="M41,148 Q63,146 83,148"</code> stroke rgba(245,240,232,0.06) sw=0.5<br>
+        <code>path d="M41,158 Q63,156 83,158"</code> stroke rgba(245,240,232,0.05) sw=0.5<br>
+        Place these above the belt (y=130–158).
+      </td>
+      <td class="note">Gi fabric has natural horizontal creases. These whisper-thin lines suggest a real textile without adding visual noise.</td>
+    </tr>
+
+    <tr>
+      <td>Side shadow (torso)</td>
+      <td class="new">
+        Add a subtle dark overlay on the left side of the gi body:<br>
+        <code>path d="M40,112 Q37,125 36,142 L35,200 Q38,208 50,208 L50,200 Q40,190 40,145 Q41,128 44,115 Z"</code><br>
+        fill rgba(0,0,0,0.18) — creates an implied light source from the right
+      </td>
+      <td class="note">One-sided shadow suggests dimensionality. Pairs well with aura light — when the aura grows, it visually "replaces" this shadow with coloured glow.</td>
+    </tr>
+
+    <tr>
+      <td>Collar V-fill</td>
+      <td class="new">
+        Fill the V-collar opening with skin tone:<br>
+        <code>path d="M52,112 L62,130 L72,112 Z"</code><br>
+        fill rgba(200,174,144,0.22) — glimpse of chest/neck at the collar
+      </td>
+      <td class="note">The current lapels are just strokes. A faint skin-tone fill inside the V anchors them and makes the gi feel worn rather than drawn.</td>
+    </tr>
+
+    <tr>
+      <td>Nose bridge</td>
+      <td class="new">
+        <code>path d="M60,58 Q62,62 64,58"</code><br>
+        stroke rgba(180,150,120,0.18) sw=0.5 fill=none
+      </td>
+      <td class="note">A 3-point hint of a nose — barely visible but contextually completing the face.</td>
+    </tr>
+
+    <tr>
+      <td>Ear hints</td>
+      <td class="new">
+        Left: <code>ellipse cx=36 cy=60 rx=2.5 ry=3.5</code> fill rgba(190,165,135,0.30)<br>
+        Right: <code>ellipse cx=88 cy=60 rx=2.5 ry=3.5</code> fill rgba(190,165,135,0.30)
+      </td>
+      <td class="note">Optional. Small oval ears at the sides of the head ellipse. Add only if the face feels bare after other changes.</td>
+    </tr>
+  </table>
+
+  <div class="subsection-title">Female variant — spec for future build</div>
+  <div class="anno anno-note">
+    Don't build this until the male character is confirmed member-ready. The female variant is a separate SVG with the following modifications from the male base — not a separate design from scratch.
+  </div>
+  <table class="spec-table">
+    <tr><th>Element</th><th>Adjustment from male base</th></tr>
+    <tr><td>Head ellipse</td><td>rx=25 (slightly narrower), ry=31</td></tr>
+    <tr><td>Hair</td><td>Extend path to y≈92 — longer hair with a simple ponytail curl. Add a hair tie mark at y≈72.</td></tr>
+    <tr><td>Hip width</td><td>Gi torso path widens at hip: left=33, right=90 at y=200 (vs 35/88 for male)</td></tr>
+    <tr><td>Shoulder width</td><td>Slightly narrower: left shoulder x=30, right=90 (vs 28/92)</td></tr>
+    <tr><td>Arms</td><td>Slightly narrower — reduce width by 2px on each side</td></tr>
+    <tr><td>Everything else</td><td>Identical to male. Same belt, same stance, same SVG structure.</td></tr>
+  </table>
+
+
+  <div class="rule"></div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       PART 3 — CANVAS AURA SYSTEM ARCHITECTURE
+  ══════════════════════════════════════════════════ -->
+  <div class="part-tag">Part 3</div>
+  <div class="section-title">Canvas Aura System — Architecture</div>
+
+  <p>The CSS aura ring is replaced entirely by a canvas element. The key advance over the prototype aura (v1.3) is that instead of uniform elliptical gradients, the aura is rendered as <strong>a dilated, blurred version of the actual character silhouette</strong>. The body shape defines the glow shape.</p>
+
+  <div class="subsection-title">Why canvas over CSS</div>
+  <table class="spec-table">
+    <tr><th>Capability</th><th>CSS (current)</th><th>Canvas (target)</th></tr>
+    <tr><td>Aura conforms to body shape</td><td class="old">No — generic oval</td><td class="new">Yes — path dilation</td></tr>
+    <tr><td>Organic noise / edge irregularity</td><td class="old">No</td><td class="new">Yes — sine perturbation per frame</td></tr>
+    <tr><td>Motes launch from body surface</td><td class="old">No — fixed oval</td><td class="new">Yes — points sampled from silhouette path</td></tr>
+    <tr><td>Colour transitions</td><td class="old">CSS transition (OK)</td><td class="new">Smooth per-frame interpolation</td></tr>
+    <tr><td>Rim lighting</td><td class="old">Approximated with box-shadow</td><td class="new">True edge stroke on silhouette path</td></tr>
+    <tr><td>Performance on mobile</td><td class="old">Very good</td><td class="new">Good (2D canvas, no WebGL needed)</td></tr>
+  </table>
+
+  <div class="subsection-title">Core technique — silhouette dilation</div>
+  <p>The silhouette of the character is defined as a polygon/bezier path in canvas coordinates. Each aura "layer" is produced by:</p>
+  <div class="code-block"><span class="comment">// Pseudocode — per frame, per layer</span>
+
+<span class="key">function</span> <span class="val">renderAuraLayer</span>(ctx, silhouettePath, layerIndex, density, time) {
+  <span class="key">const</span> outset   = <span class="val">LAYER_OUTSET</span>[layerIndex];    <span class="comment">// px outset from silhouette</span>
+  <span class="key">const</span> blur     = <span class="val">LAYER_BLUR</span>[layerIndex];     <span class="comment">// gaussian blur radius</span>
+  <span class="key">const</span> maxOpacity = <span class="val">LAYER_MAX_OP</span>[layerIndex];
+
+  <span class="comment">// 1. Perturb the silhouette points with organic noise</span>
+  <span class="key">const</span> noisyPath = perturbPath(silhouettePath, time, layerIndex, density);
+
+  <span class="comment">// 2. Expand (dilate) the path outward by `outset` px</span>
+  <span class="key">const</span> dilatedPath = expandPath(noisyPath, outset);
+
+  <span class="comment">// 3. Draw on offscreen canvas, fill in aura colour</span>
+  offCtx.clearRect(0, 0, w, h);
+  offCtx.fillStyle = auraColor(currentStage, layerOpacity);
+  offCtx.fill(dilatedPath);
+
+  <span class="comment">// 4. Apply blur filter</span>
+  offCtx.filter = <span class="str">`blur(${blur}px)`</span>;
+
+  <span class="comment">// 5. Composite onto main canvas</span>
+  ctx.globalAlpha = layerProgress * maxOpacity * surgeBoost;
+  ctx.drawImage(offscreenCanvas, 0, 0);
+}
+  <div class="subsection-title">Silhouette path — canvas coordinates</div>
+  <p>The SVG uses viewBox 0 0 130 285. The char-wrap on iPhone is 124×295px, giving scale factors of 0.954x and 1.035y. The canvas is positioned 40px outside the char-wrap on all sides (so canvas = 204×375px on iPhone, 280×520px on iPad), offset by left:-40px top:-40px. The silhouette path below is in canvas-local coords with the 40px offset already added.</p>
+
+  <div class="code-block"><span class="comment">// 22-point outline path — canvas coords (iPhone, canvas=204×375)</span>
+<span class="comment">// Drawn as quadratic beziers between anchor points</span>
+<span class="comment">// Counter-clockwise from hair apex</span>
+
+<span class="key">const</span> SILHOUETTE_POINTS = [
+  <span class="comment">// Head & hair</span>
+  { x: <span class="val">99</span>,  y: <span class="val">63</span>  },   <span class="comment">// hair apex</span>
+  { x: <span class="val">73</span>,  y: <span class="val">67</span>  },   <span class="comment">// hair top-left</span>
+  { x: <span class="val">72</span>,  y: <span class="val">94</span>  },   <span class="comment">// head left</span>
+  <span class="comment">// Left side — shoulder, arm, hand</span>
+  { x: <span class="val">65</span>,  y: <span class="val">158</span> },   <span class="comment">// left shoulder</span>
+  { x: <span class="val">63</span>,  y: <span class="val">192</span> },   <span class="comment">// left arm outer mid</span>
+  { x: <span class="val">64</span>,  y: <span class="val">215</span> },   <span class="comment">// left hand tip</span>
+  { x: <span class="val">71</span>,  y: <span class="val">224</span> },   <span class="comment">// left wrist re-entry</span>
+  <span class="comment">// Left leg & foot</span>
+  { x: <span class="val">73</span>,  y: <span class="val">256</span> },   <span class="comment">// left hip</span>
+  { x: <span class="val">71</span>,  y: <span class="val">300</span> },   <span class="comment">// left knee outer</span>
+  { x: <span class="val">72</span>,  y: <span class="val">329</span> },   <span class="comment">// left ankle</span>
+  { x: <span class="val">70</span>,  y: <span class="val">340</span> },   <span class="comment">// left heel</span>
+  { x: <span class="val">84</span>,  y: <span class="val">342</span> },   <span class="comment">// left foot far end</span>
+  <span class="comment">// Right foot & leg</span>
+  { x: <span class="val">118</span>, y: <span class="val">341</span> },   <span class="comment">// right foot far end</span>
+  { x: <span class="val">126</span>, y: <span class="val">336</span> },   <span class="comment">// right heel</span>
+  { x: <span class="val">124</span>, y: <span class="val">325</span> },   <span class="comment">// right ankle</span>
+  { x: <span class="val">120</span>, y: <span class="val">295</span> },   <span class="comment">// right knee outer</span>
+  { x: <span class="val">120</span>, y: <span class="val">256</span> },   <span class="comment">// right hip</span>
+  <span class="comment">// Right arm & shoulder</span>
+  { x: <span class="val">127</span>, y: <span class="val">222</span> },   <span class="comment">// right wrist re-entry</span>
+  { x: <span class="val">134</span>, y: <span class="val">213</span> },   <span class="comment">// right hand tip</span>
+  { x: <span class="val">135</span>, y: <span class="val">191</span> },   <span class="comment">// right arm outer mid</span>
+  { x: <span class="val">133</span>, y: <span class="val">157</span> },   <span class="comment">// right shoulder</span>
+  { x: <span class="val">126</span>, y: <span class="val">93</span>  },   <span class="comment">// head right</span>
+  { x: <span class="val">125</span>, y: <span class="val">67</span>  },   <span class="comment">// hair top-right</span>
+  <span class="comment">// close to apex</span>
+];
+
+<span class="comment">// iPad: multiply all coords by 1.28 (160/124)</span>
+<span class="comment">// Scale factor stored as SILHOUETTE_SCALE_IPAD = 1.28</span></div>
+
+  <div class="subsection-title">Layer configuration</div>
+  <table class="spec-table">
+    <tr><th>Layer</th><th>Outset (px)</th><th>Blur (px)</th><th>Max opacity</th><th>Density threshold</th><th>Purpose</th></tr>
+    <tr><td>L1 — Core</td><td>0</td><td>5</td><td>0.40</td><td>0.00 (always)</td><td>Tight glow hugging body — always present if stage &gt; 0</td></tr>
+    <tr><td>L2 — Inner field</td><td>10</td><td>12</td><td>0.28</td><td>0.15</td><td>First expansion ring — visible from very early</td></tr>
+    <tr><td>L3 — Outer field</td><td>22</td><td>22</td><td>0.18</td><td>0.35</td><td>Main aura body — most visually prominent layer</td></tr>
+    <tr><td>L4 — Atmosphere</td><td>36</td><td>34</td><td>0.10</td><td>0.55</td><td>Wide faint halo — suggests aura extending into space</td></tr>
+    <tr><td>L5 — Corona</td><td>52</td><td>48</td><td>0.06</td><td>0.75</td><td>Edge of field — barely visible at max density</td></tr>
+  </table>
+
+  <div class="subsection-title">Noise / organic edge parameters</div>
+  <div class="code-block"><span class="comment">// Each outline point is perturbed each frame using overlapping sine waves</span>
+<span class="comment">// The perturbation is small — aura feels alive, not distorted</span>
+
+<span class="key">function</span> <span class="val">perturbPoint</span>(point, pointIndex, layerIndex, time, density) {
+  <span class="key">const</span> FREQ   = [<span class="val">0.40</span>, <span class="val">0.55</span>, <span class="val">0.70</span>, <span class="val">0.85</span>, <span class="val">1.0</span>];   <span class="comment">// Hz per layer</span>
+  <span class="key">const</span> OFFSET = [<span class="val">0.0</span>,  <span class="val">1.3</span>,  <span class="val">2.6</span>,  <span class="val">3.9</span>,  <span class="val">5.2</span>];   <span class="comment">// phase per layer</span>
+  <span class="key">const</span> maxAmp = <span class="val">1.2</span> + density * <span class="val">2.0</span>;  <span class="comment">// 1.2px at min density → 3.2px at max</span>
+
+  <span class="key">const</span> t   = time * FREQ[layerIndex] + OFFSET[layerIndex];
+  <span class="key">const</span> phi = pointIndex * <span class="val">0.618</span>;  <span class="comment">// golden ratio spacing per point</span>
+
+  <span class="key">return</span> {
+    x: point.x + Math.sin(t + phi)       * maxAmp,
+    y: point.y + Math.cos(t * <span class="val">0.8</span> + phi) * maxAmp * <span class="val">0.6</span>,  <span class="comment">// less vertical noise</span>
+  };
+}</div>
+
+  <div class="subsection-title">Mote system (updated for canvas)</div>
+  <p>In v1.3 motes spawned on a fixed oval. In v4.0 they spawn at random points <em>on the silhouette path</em>, so they drift upward from the character's actual surface rather than thin air.</p>
+  <div class="code-block"><span class="comment">// Sample a random point on the silhouette outline</span>
+<span class="key">function</span> <span class="val">randomSilhouettePoint</span>(path) {
+  <span class="key">const</span> i   = Math.floor(Math.random() * path.length);
+  <span class="key">const</span> j   = (i + <span class="val">1</span>) % path.length;
+  <span class="key">const</span> t   = Math.random();
+  <span class="key">return</span> {
+    x: path[i].x + (path[j].x - path[i].x) * t,
+    y: path[i].y + (path[j].y - path[i].y) * t,
+  };
+}
+
+<span class="comment">// Mote count by density (same curve as v1.3)</span>
+<span class="key">const</span> moteCount = density &lt; <span class="val">0.40</span> ? <span class="val">0</span> : Math.round((density - <span class="val">0.40</span>) / <span class="val">0.60</span> * <span class="val">18</span>);
+<span class="comment">// Standard tier: cap at 12. Enhanced tier: cap at 24.</span></div>
+
+  <div class="subsection-title">Rim lighting — dark stages (10–13)</div>
+  <p>For stages 10–13 (Shinku through Stage 13), the outer aura is very dark and the glow would be invisible against the background. The solution is rim lighting: after drawing the aura layers, draw the silhouette path as a coloured stroke, blurred slightly, so it appears as light emanating from the body's edge.</p>
+  <table class="spec-table">
+    <tr><th>Stage</th><th>Rim colour (bright version)</th><th>Stroke width</th><th>Blur</th></tr>
+    <tr><td>Shinku (9)</td><td>rgba(220, 90, 90, rimOp)</td><td>3px</td><td>6px</td></tr>
+    <tr><td>Kurenai (10)</td><td>rgba(200, 80, 140, rimOp)</td><td>3px</td><td>7px</td></tr>
+    <tr><td>Tasogare (11)</td><td>rgba(170, 100, 210, rimOp)</td><td>4px</td><td>8px</td></tr>
+    <tr><td>Stage 13 (12)</td><td>rgba(200, 130, 255, rimOp)</td><td>4px</td><td>10px</td></tr>
+  </table>
+  <p style="font-size:13px;color:rgba(245,240,232,0.4);">rimOp = 0.18 + density × 0.40 — scales with how much XP the student has earned in that stage.</p>
+
+  <div class="subsection-title">Colour bleed — 90%+ XP</div>
+  <p>Same logic as v1.3 but rendered on canvas. When XP ≥ 90, an additional L5-equivalent layer is drawn in the <em>next stage's</em> colour at very low opacity, composited on top of the outer aura layers. Strength ramps from 0 at 90% to max at 100%.</p>
+  <div class="code-block"><span class="key">if</span> (xp &gt;= <span class="val">90</span> &amp;&amp; currentStage &lt; <span class="val">12</span>) {
+  <span class="key">const</span> bleedStrength = (xp - <span class="val">90</span>) / <span class="val">10</span>;  <span class="comment">// 0 → 1</span>
+  <span class="key">const</span> bleedOp = bleedStrength * <span class="val">0.10</span>;
+  <span class="comment">// Draw L5 in next stage colour at bleedOp opacity</span>
+  renderAuraLayer(ctx, silhouette, <span class="val">4</span>, density, time, GLOW_RGB[currentStage + <span class="val">1</span>], bleedOp);
+}</div>
+
+  <div class="subsection-title">Cinematic level-up transition</div>
+  <p>Identical 4-phase sequence to v1.3, now implemented on canvas rather than CSS:</p>
+  <table class="spec-table">
+    <tr><th>Phase</th><th>Timing</th><th>Canvas implementation</th></tr>
+    <tr><td>1. Contract</td><td>0–300ms</td><td>Scale the canvas element to 0.85 using CSS transform. Simultaneously reduce all layer outsets toward 0. The silhouette appears to draw inward.</td></tr>
+    <tr><td>2. Burst</td><td>300–600ms</td><td>Draw a radial gradient flash on canvas in white blending to next stage colour. Fade out over 300ms while canvas scales back toward 1.0.</td></tr>
+    <tr><td>3. Stage change</td><td>600ms</td><td>Update currentStage and reset XP to 0. New colour loads into GLOW_RGB slot. Canvas spring-scales back to 1.0 with overshoot (cubic-bezier 0.34, 1.56, 0.64, 1).</td></tr>
+    <tr><td>4. Settle</td><td>600–1400ms</td><td>Normal render loop resumes. New colour fades in over ~800ms as density is at floor (0.25). isTransitioning flag cleared at 1400ms.</td></tr>
+  </table>
+
+  <div class="subsection-title">Performance tiers</div>
+  <table class="spec-table">
+    <tr><th>Tier</th><th>FPS</th><th>Layers</th><th>Motes</th><th>Noise</th><th>Pixel ratio</th><th>When applied</th></tr>
+    <tr><td><strong>Reduced</strong></td><td>Static — render once on state change</td><td>L1–L2 only</td><td>0</td><td>None — static path</td><td>1×</td><td>User-selected, or detected low RAM</td></tr>
+    <tr><td><strong>Standard</strong></td><td>30fps</td><td>L1–L5</td><td>Max 12</td><td>±1.5px</td><td>1.5×</td><td>Default for all devices</td></tr>
+    <tr><td><strong>Enhanced</strong></td><td>60fps</td><td>L1–L5 + sub-layers in surge</td><td>Max 24</td><td>±3px</td><td>2×</td><td>User-selected</td></tr>
+  </table>
+
+  <div class="anno anno-note">
+    <strong>Detection heuristic (auto):</strong> On first render, time one full frame. If &gt;33ms (below 30fps), silently drop to Reduced. Otherwise run Standard. User can always override in settings.
+  </div>
+
+
+  <div class="rule"></div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       PART 4 — INTEGRATION SPEC
+  ══════════════════════════════════════════════════ -->
+  <div class="part-tag">Part 4</div>
+  <div class="section-title">DOM Integration</div>
+
+  <div class="subsection-title">Structure — what changes in the HTML</div>
+  <div class="code-block"><span class="comment">&lt;!-- REMOVE the .aura-ring div entirely --&gt;</span>
+
+<span class="comment">&lt;!-- NEW structure inside .char-wrap --&gt;</span>
+&lt;<span class="key">div</span> class=<span class="str">"char-wrap"</span>&gt;
+
+  <span class="comment">&lt;!-- Canvas sits behind SVG --&gt;</span>
+  &lt;<span class="key">canvas</span>
+    class=<span class="str">"aura-canvas"</span>
+    id=<span class="str">"aura-canvas"</span>
+    style=<span class="str">"position:absolute; left:-40px; top:-40px; z-index:0; pointer-events:none;"</span>
+  &gt;&lt;/<span class="key">canvas</span>&gt;
+
+  <span class="comment">&lt;!-- SVG character — unchanged except fill/stroke values --&gt;</span>
+  &lt;<span class="key">svg</span>
+    viewBox=<span class="str">"0 0 130 285"</span>
+    style=<span class="str">"position:relative; z-index:2; width:100%; height:100%;"</span>
+  &gt;
+    ... character paths (updated fills as per Part 2) ...
+  &lt;/<span class="key">svg</span>&gt;
+
+&lt;/<span class="key">div</span>&gt;</div>
+
+  <div class="subsection-title">Canvas sizing</div>
+  <table class="spec-table">
+    <tr><th>Device</th><th>char-wrap</th><th>Canvas element size</th><th>Canvas offset</th><th>Canvas pixel size</th></tr>
+    <tr><td>iPhone</td><td>124 × 295px</td><td>204 × 375px</td><td>left:-40px top:-40px</td><td>306 × 563px (@1.5×)</td></tr>
+    <tr><td>iPad</td><td>160 × 440px</td><td>280 × 560px</td><td>left:-60px top:-60px</td><td>420 × 840px (@1.5×)</td></tr>
+  </table>
+  <p>On resize (device toggle), destroy and recreate the canvas. Do not attempt to rescale — redraw from scratch.</p>
+
+  <div class="subsection-title">Data flow — aura controller</div>
+  <div class="code-block"><span class="comment">// AuraController — the single object that owns canvas state</span>
+
+<span class="key">const</span> aura = <span class="key">new</span> <span class="val">AuraController</span>({
+  canvasId:     <span class="str">'aura-canvas'</span>,
+  stage:        <span class="val">1</span>,           <span class="comment">// 0-indexed (0=Tomoshibi)</span>
+  xp:           <span class="val">65</span>,          <span class="comment">// 0–100</span>
+  quality:      <span class="str">'standard'</span>, <span class="comment">// 'reduced' | 'standard' | 'enhanced'</span>
+  deviceScale:  <span class="val">1.0</span>,         <span class="comment">// 1.0=iPhone, 1.28=iPad</span>
+});
+
+<span class="comment">// Update from XP change (e.g. after a Mushin session)</span>
+aura.setXP(<span class="val">82</span>);          <span class="comment">// → automatically triggers surge mode</span>
+
+<span class="comment">// Level-up (triggered when XP reaches 100)</span>
+aura.triggerLevelUp();    <span class="comment">// → runs cinematic sequence, then sets stage+1, xp=0</span>
+
+<span class="comment">// Clean up (on component unmount)</span>
+aura.destroy();           <span class="comment">// → cancels RAF, nulls canvas ref</span></div>
+
+  <div class="subsection-title">Belt colour → aura</div>
+  <div class="anno anno-ok">
+    <strong>Recommendation: keep these two systems completely independent.</strong> The belt tracks physical dojo rank. The aura tracks Nendō progression. Mixing them visually would blur two distinct achievement systems. The belt stays as the vivid accent on the character body; the aura is its own surrounding field. No data connection needed.
+  </div>
+
+  <div class="subsection-title">Aura stage label — left column sync</div>
+  <p>The left column already shows <em>"Stage 2 · Hikari"</em> in the <code>.id-aura</code> div. This is currently static. In production, this text should be driven by the same <code>stage</code> value passed to AuraController. Wire them to the same data source — don't duplicate.</p>
+
+
+  <div class="rule"></div>
+
+
+  <!-- ══════════════════════════════════════════════════
+       PART 5 — BUILD ORDER
+  ══════════════════════════════════════════════════ -->
+  <div class="part-tag">Part 5</div>
+  <div class="section-title">Build Order</div>
+
+  <p>Each step is independently testable. Never start step N until step N-1 is visually confirmed.</p>
+
+  <div style="margin-top:24px;">
+
+    <div class="build-step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Avatar SVG upgrade — male character</div>
+        <div class="step-desc">Apply all fill/stroke changes from Part 2 to the existing SVG in StudentProfile_v3.0.html. Save as v3.1. Confirm visually at both iPhone and iPad sizes. The character should read as a solid dark-clad martial artist with a warm face and vivid belt. The aura ring stays as CSS at this stage — only the character changes.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">Canvas — static proof of concept</div>
+        <div class="step-desc">Add the canvas element to v3.1. Write the silhouette path, the path dilation function, and render a single static aura in Stage 3 (Kogane, gold) at 60% density. No animation, no motes. Just confirm the shape conforms to the body. This is the technically risky step — prove it before adding complexity.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Canvas — breathing animation + noise</div>
+        <div class="step-desc">Add the requestAnimationFrame loop. Connect the sine-wave noise perturbation. All 5 layers breathing at their staggered frequencies. Density controlled by a test slider. Confirm Standard quality tier performance on a real device (or throttled Chrome DevTools).</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-title">Connect all 13 stages + density system</div>
+        <div class="step-desc">Port the STAGES data and GLOW_RGB table from the aura prototype. Wire stage and XP to the canvas renderer. Connect the density formula (floor 0.15 for Tomoshibi, 0.25 for all others). Add the belt switcher from v3.0 so stage changes visually in the profile context.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-title">Surge, corona, colour bleed</div>
+        <div class="step-desc">Add the 80% XP surge mode (faster breathing), the corona ring (now a canvas stroke, not a CSS div), and the 90%+ colour bleed from the next stage. Add the XP bar shimmer. Port directly from v1.3 logic.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">6</div>
+      <div class="step-body">
+        <div class="step-title">Motes</div>
+        <div class="step-desc">Add floating mote particles spawning from the silhouette outline rather than a fixed oval. Use the randomSilhouettePoint() function from Part 3. Confirm mote count scaling with density and the performance cap per quality tier.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">7</div>
+      <div class="step-body">
+        <div class="step-title">Rim lighting (dark stages)</div>
+        <div class="step-desc">Add the rim stroke pass for stages 10–13. Draw the silhouette as a blurred coloured stroke after the aura fill layers. Confirm visibility of Stage 13 (the deep violet) against the dark background.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">8</div>
+      <div class="step-body">
+        <div class="step-title">Cinematic level-up</div>
+        <div class="step-desc">Build the 4-phase transition. Contract, burst, stage change, settle. isTransitioning flag prevents user input during sequence. Run through all 12 transitions (stage 1→2 through 12→13) and confirm each looks correct — the burst colour should match the incoming stage's glow, not white.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">9</div>
+      <div class="step-body">
+        <div class="step-title">Performance tiers + quality setting</div>
+        <div class="step-desc">Wrap the renderer in the quality tier system. Add the auto-detection heuristic (time first frame). Add the user-facing quality toggle (a small settings entry in the profile — not prominent, but accessible). Confirm Reduced tier works as a fully static fallback.</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">10</div>
+      <div class="step-body">
+        <div class="step-title">Female variant SVG</div>
+        <div class="step-desc">Build the female character SVG using the modification spec from Part 2. Drop in as an alternate SVG block, toggled by a gender flag. The canvas aura requires no changes — the silhouette path will need a matching female version (same structure, adjusted proportions).</div>
+      </div>
+    </div>
+
+    <div class="build-step">
+      <div class="step-num">11</div>
+      <div class="step-body">
+        <div class="step-title">React component wrap</div>
+        <div class="step-desc">Extract the canvas controller and SVG into a self-contained React component AuraAvatar with props: stage, xp, gender, beltColor, beltStripeColor, quality. Matches inline-style architecture of the rest of the app. Cleanup on unmount. This is the production deliverable.</div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <div class="rule"></div>
+
+
+  <!-- ══ FOOTER ══ -->
+  <div class="part-tag">Document info</div>
+  <p style="color:rgba(245,240,232,0.25);font-size:13px;">
+    Ninja Learning · Nendō · AuraAvatar Build Spec v1.0<br>
+    Based on: AuraDisplay_Prototype_v1.3.html · StudentProfile_v3.0.html<br>
+    Next file: StudentProfile_v3.1.html (avatar upgrade, step 1)
+  </p>
+
+</div>
+</body>
+</html>

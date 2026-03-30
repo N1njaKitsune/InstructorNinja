@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aura Orb Component</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #050508;
+            color: #F5F0E8;
+            font-family: 'Cinzel', serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .layout {
+            display: flex;
+            gap: 40px;
+            align-items: flex-start;
+            max-width: 1400px;
+        }
+
+        /* Device Frames */
+        .device-frames {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .device-frame {
+            background-color: #0A0A12;
+            border: 0.5px solid rgba(245, 240, 232, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .frame-small {
+            width: 844px;
+            height: 390px;
+        }
+
+        .frame-large {
+            width: 1194px;
+            height: 834px;
+        }
+
+        .device-frame.hidden {
+            display: none;
+        }
+
+        /* Canvas */
+        #auraCanvas {
+            display: block;
+            cursor: default;
+        }
+
+        /* Control Panel */
+        .control-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background: rgba(10, 10, 18, 0.4);
+            backdrop-filter: blur(16px);
+            border: 0.5px solid rgba(245, 240, 232, 0.1);
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 240px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .control-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: rgba(245, 240, 232, 0.6);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 8px 12px;
+            background-color: rgba(122, 184, 154, 0.15);
+            border: 0.5px solid rgba(122, 184, 154, 0.3);
+            border-radius: 6px;
+            color: #F5F0E8;
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        button:hover {
+            background-color: rgba(122, 184, 154, 0.25);
+            border-color: rgba(122, 184, 154, 0.5);
+        }
+
+        button.active {
+            background-color: rgba(122, 184, 154, 0.4);
+            border-color: rgba(122, 184, 154, 0.7);
+            box-shadow: 0 0 12px rgba(122, 184, 154, 0.2);
+        }
+
+        .colour-btn {
+            padding: 8px 12px;
+            flex: 1;
+            min-width: 70px;
+        }
+
+        .button-primary {
+            background-color: rgba(122, 184, 154, 0.25);
+            border: 0.5px solid rgba(122, 184, 154, 0.5);
+            padding: 10px 16px;
+            font-size: 12px;
+            width: 100%;
+        }
+
+        .button-primary:hover {
+            background-color: rgba(122, 184, 154, 0.35);
+        }
+
+        .info-display {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding: 12px;
+            background: rgba(122, 184, 154, 0.05);
+            border: 0.5px solid rgba(122, 184, 154, 0.15);
+            border-radius: 6px;
+            font-size: 11px;
+        }
+
+        .info-label {
+            color: rgba(245, 240, 232, 0.5);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .info-value {
+            color: #F5F0E8;
+            font-weight: 600;
+        }
+
+        .colour-swatch {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 6px;
+            vertical-align: middle;
+        }
+
+        .divider {
+            height: 0.5px;
+            background: rgba(245, 240, 232, 0.08);
+            margin: 12px 0;
+        }
+
+        /* Scrollbar styling */
+        .control-panel::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .control-panel::-webkit-scrollbar-track {
+            background: rgba(122, 184, 154, 0.05);
+            border-radius: 3px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb {
+            background: rgba(122, 184, 154, 0.3);
+            border-radius: 3px;
+        }
+
+        .control-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(122, 184, 154, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- Device Frames -->
+        <div class="device-frames">
+            <div class="device-frame frame-small" id="frameSmall">
+                <canvas id="auraCanvas" width="844" height="390"></canvas>
+            </div>
+            <div class="device-frame frame-large hidden" id="frameLarge">
+                <canvas id="auraCanvasLarge" width="1194" height="834"></canvas>
+            </div>
+        </div>
+
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="control-label">Device Frame</div>
+                <div class="button-group">
+                    <button class="frame-btn active" data-frame="small">844×390</button>
+                    <button class="frame-btn" data-frame="large">1194×834</button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-group">
+                <div class="control-label">Breathing Mode</div>
+                <div class="button-group">
+                    <button class="breathing-btn active" data-breathing="idle">Idle</button>
+                    <button class="breathing-btn" data-breathing="active">Breathing</button>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <div class="control-label">Aura Colour</div>
+                <div class="button-group" style="flex-direction: column; gap: 10px;">
+                    <button class="colour-btn active" data-colour="mushin">
+                        <span class="colour-swatch" style="background: rgba(122, 184, 154, 0.6);"></span>Mushin
+                    </button>
+                    <button class="colour-btn" data-colour="seed">
+                        <span class="colour-swatch" style="background: rgba(200, 200, 200, 0.6);"></span>Seed
+                    </button>
+                    <button class="colour-btn" data-colour="ember">
+                        <span class="colour-swatch" style="background: rgba(220, 160, 80, 0.6);"></span>Ember
+                    </button>
+                    <button class="colour-btn" data-colour="flow">
+                        <span class="colour-swatch" style="background: rgba(141, 184, 212, 0.6);"></span>Flow
+                    </button>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="info-display">
+                <div class="info-label">Current Aura</div>
+                <div class="info-value" id="colourInfo">Mushin</div>
+                <div class="info-label" style="margin-top: 8px;">Breathing Mode</div>
+                <div class="info-value" id="breathingInfo">Idle</div>
+                <div class="info-label" style="margin-top: 8px;">Frame Size</div>
+                <div class="info-value" id="frameInfo">844 × 390</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('auraCanvas');
+        const canvasLarge = document.getElementById('auraCanvasLarge');
+        const ctx = canvas.getContext('2d');
+        const ctxLarge = canvasLarge.getContext('2d');
+
+        // Colour presets
+        const colours = {
+            mushin: { r: 122, g: 184, b: 154, name: 'Mushin' },
+            seed: { r: 200, g: 200, b: 200, name: 'Seed' },
+            ember: { r: 220, g: 160, b: 80, name: 'Ember' },
+            flow: { r: 141, g: 184, b: 212, name: 'Flow' }
+        };
+
+        // State
+        let currentColour = 'mushin';
+        let breathingMode = 'idle'; // idle or active
+        let currentFrame = 'small';
+        let animationStartTime = Date.now();
+        let phaseIndex = 0;
+        let phaseTime = 0;
+        const phaseDuration = 4000; // 4 seconds per phase
+
+        const phases = ['inhale', 'hold-inhale', 'exhale', 'hold-exhale'];
+
+        // Perlin-like noise for subtle movement
+        function pseudoNoise(x, y, time) {
+            const n = Math.sin(x * 12.9898 + y * 78.233 + time * 0.001) * 43758.5453;
+            return n - Math.floor(n);
+        }
+
+        // Event listeners
+        document.querySelectorAll('.frame-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.frame-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFrame = e.target.dataset.frame;
+                updateFrameDisplay();
+            });
+        });
+
+        document.querySelectorAll('.breathing-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.breathing-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                breathingMode = e.target.dataset.breathing;
+                document.getElementById('breathingInfo').textContent =
+                    breathingMode === 'idle' ? 'Idle' : 'Breathing';
+            });
+        });
+
+        document.querySelectorAll('.colour-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.colour-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentColour = e.target.dataset.colour;
+                document.getElementById('colourInfo').textContent = colours[currentColour].name;
+            });
+        });
+
+        function updateFrameDisplay() {
+            const frameSmall = document.getElementById('frameSmall');
+            const frameLarge = document.getElementById('frameLarge');
+            if (currentFrame === 'small') {
+                frameSmall.classList.remove('hidden');
+                frameLarge.classList.add('hidden');
+                document.getElementById('frameInfo').textContent = '844 × 390';
+            } else {
+                frameSmall.classList.add('hidden');
+                frameLarge.classList.remove('hidden');
+                document.getElementById('frameInfo').textContent = '1194 × 834';
+            }
+        }
+
+        function getOrbScale() {
+            const phase = phases[phaseIndex];
+            const progress = phaseTime / phaseDuration;
+
+            if (breathingMode === 'idle') {
+                // Gentle breathing at rest
+                return 1 + Math.sin((animationStartTime - Date.now()) * 0.0015) * 0.05;
+            }
+
+            // Active breathing response
+            if (phase === 'inhale') {
+                return 1 + progress * 0.3;
+            } else if (phase === 'hold-inhale') {
+                return 1.3 + Math.sin((animationStartTime - Date.now()) * 0.003) * 0.03;
+            } else if (phase === 'exhale') {
+                return 1.3 - progress * 0.4;
+            } else {
+                return 0.9 + Math.sin((animationStartTime - Date.now()) * 0.002) * 0.04;
+            }
+        }
+
+        function getGlowIntensity() {
+            const phase = phases[phaseIndex];
+            const progress = phaseTime / phaseDuration;
+
+            if (breathingMode === 'idle') {
+                return 0.3 + Math.sin((animationStartTime - Date.now()) * 0.001) * 0.15;
+            }
+
+            if (phase === 'inhale') {
+                return 0.3 + progress * 0.5;
+            } else if (phase === 'hold-inhale') {
+                return 0.8 + Math.sin((animationStartTime - Date.now()) * 0.004) * 0.1;
+            } else if (phase === 'exhale') {
+                return Math.max(0.3, 0.8 - progress * 0.5);
+            } else {
+                return 0.3 + Math.sin((animationStartTime - Date.now()) * 0.002) * 0.08;
+            }
+        }
+
+        function getColourShift() {
+            const phase = phases[phaseIndex];
+
+            if (breathingMode === 'idle') return 0;
+
+            if (phase === 'inhale') {
+                return 0.1; // Warmer
+            } else if (phase === 'hold-inhale') {
+                return 0.08;
+            } else if (phase === 'exhale') {
+                return -0.1; // Cooler
+            } else {
+                return -0.08;
+            }
+        }
+
+        function drawOrb(context, centerX, centerY, baseRadius) {
+            const colour = colours[currentColour];
+            const scale = getOrbScale();
+            const radius = baseRadius * scale;
+            const glowIntensity = getGlowIntensity();
+            const colourShift = getColourShift();
+
+            // Perlin noise offset for subtle movement
+            const noiseX = (pseudoNoise(0, 0, animationStartTime - Date.now()) - 0.5) * 4;
+            const noiseY = (pseudoNoise(1, 0, animationStartTime - Date.now()) - 0.5) * 4;
+
+            const x = centerX + noiseX;
+            const y = centerY + noiseY;
+
+            // Outer halo (very soft, large)
+            const haloGradient = context.createRadialGradient(x, y, radius, x, y, radius * 2.5);
+            haloGradient.addColorStop(0, `rgba(${colour.r}, ${colour.g}, ${colour.b}, 0.05)`);
+            haloGradient.addColorStop(1, `rgba(${colour.r}, ${colour.g}, ${colour.b}, 0)`);
+            context.fillStyle = haloGradient;
+            context.beginPath();
+            context.arc(x, y, radius * 2.5, 0, Math.PI * 2);
+            context.fill();
+
+            // Middle ring glow
+            const middleGradient = context.createRadialGradient(x, y, radius * 0.6, x, y, radius * 1.2);
+            middleGradient.addColorStop(0, `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${0.15 * glowIntensity})`);
+            middleGradient.addColorStop(1, `rgba(${colour.r}, ${colour.g}, ${colour.b}, 0)`);
+            context.fillStyle = middleGradient;
+            context.beginPath();
+            context.arc(x, y, radius * 1.2, 0, Math.PI * 2);
+            context.fill();
+
+            // Inner core with warmth/coolness shift
+            const innerR = Math.max(200, colour.r + colourShift * 20);
+            const innerG = Math.max(200, colour.g + colourShift * 10);
+            const innerB = Math.min(250, colour.b - colourShift * 15);
+
+            const coreGradient = context.createRadialGradient(x, y, 0, x, y, radius * 0.5);
+            coreGradient.addColorStop(0, `rgba(250, 246, 238, ${0.4 * glowIntensity})`);
+            coreGradient.addColorStop(0.8, `rgba(${innerR}, ${innerG}, ${innerB}, ${0.3 * glowIntensity})`);
+            coreGradient.addColorStop(1, `rgba(${colour.r}, ${colour.g}, ${colour.b}, ${0.15 * glowIntensity})`);
+            context.fillStyle = coreGradient;
+            context.beginPath();
+            context.arc(x, y, radius, 0, Math.PI * 2);
+            context.fill();
+
+            // Subtle highlights for depth
+            const highlightGradient = context.createRadialGradient(x - radius * 0.3, y - radius * 0.3, 0, x, y, radius * 0.4);
+            highlightGradient.addColorStop(0, `rgba(250, 246, 238, ${0.2 * glowIntensity})`);
+            highlightGradient.addColorStop(1, `rgba(250, 246, 238, 0)`);
+            context.fillStyle = highlightGradient;
+            context.beginPath();
+            context.arc(x - radius * 0.3, y - radius * 0.3, radius * 0.4, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        function animate() {
+            // Update phase for active breathing
+            if (breathingMode === 'active') {
+                const elapsed = Date.now() - animationStartTime;
+                const cycleDuration = phaseDuration * 4;
+                const cyclePosition = elapsed % cycleDuration;
+                phaseIndex = Math.floor(cyclePosition / phaseDuration);
+                phaseTime = cyclePosition % phaseDuration;
+            } else {
+                phaseTime = 0;
+            }
+
+            // Draw on small canvas
+            ctx.fillStyle = '#0A0A12';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            drawOrb(ctx, canvas.width / 2, canvas.height / 2, 40);
+
+            // Draw on large canvas if visible
+            if (!document.getElementById('frameLarge').classList.contains('hidden')) {
+                ctxLarge.fillStyle = '#0A0A12';
+                ctxLarge.fillRect(0, 0, canvasLarge.width, canvasLarge.height);
+                drawOrb(ctxLarge, canvasLarge.width / 2, canvasLarge.height / 2, 60);
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        // Initialize
+        document.getElementById('colourInfo').textContent = colours[currentColour].name;
+        document.getElementById('breathingInfo').textContent = 'Idle';
+        document.getElementById('frameInfo').textContent = '844 × 390';
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nendō — BreathHome v2.0</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Crimson Pro', serif;
+            background: #0A0A12;
+            color: #E8E8E8;
+            overflow: hidden;
+        }
+
+        /* Device Frame Toggle */
+        .device-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            gap: 10px;
+        }
+        .device-toggle button {
+            padding: 8px 12px;
+            background: rgba(255,255,255, 0.1);
+            border: 1px solid rgba(122, 184, 154, 0.5);
+            color: #7AB89A;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+        .device-toggle button.active {
+            background: rgba(122, 184, 154, 0.3);
+            border-color: #7AB89A;
+        }
+        .device-toggle button:hover {
+            background: rgba(122, 184, 154, 0.2);
+        }
+
+        /* Debug Toggles */
+        .debug-toggles {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            font-size: 11px;
+        }
+        .debug-toggles label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            color: rgba(232, 232, 232, 0.6);
+        }
+        .debug-toggles input {
+            cursor: pointer;
+        }
+
+        /* Device Frames */
+        .frame-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: none;
+        }
+        .frame-container.active {
+            display: block;
+        }
+
+        /* iPhone Frame */
+        .frame-iphone {
+            width: 844px;
+            height: 390px;
+            background: #1a1a22;
+            border-radius: 50px;
+            border: 12px solid #222;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.8), inset 0 0 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        .frame-iphone::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 25px;
+            background: #0a0a12;
+            border-radius: 0 0 20px 20px;
+            z-index: 10;
+        }
+
+        /* iPad Frame */
+        .frame-ipad {
+            width: 1194px;
+            height: 834px;
+            background: #1a1a22;
+            border-radius: 30px;
+            border: 16px solid #222;
+            box-shadow: 0 0 80px rgba(0, 0, 0, 0.8), inset 0 0 40px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Screen Content */
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: #0A0A12;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Environment Background */
+        .environment-bg {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+        }
+
+        /* Sky gradient */
+        .sky {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(to bottom, #1a2633 0%, #0f1721 50%, #0A0A12 100%);
+        }
+
+        /* Dojo frame suggestion */
+        .dojo-frame {
+            position: absolute;
+            inset: 0;
+            border: 2px solid rgba(122, 184, 154, 0.08);
+            pointer-events: none;
+        }
+
+        /* Floor */
+        .floor {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 40%;
+            background: radial-gradient(ellipse at center bottom, rgba(20,25,35,0.8), transparent 70%);
+        }
+
+        /* Vignette */
+        .vignette {
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.4) 100%);
+        }
+
+        /* Paper texture */
+        .texture {
+            position: absolute;
+            inset: 0;
+            opacity: 0.04;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><filter id="noise"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4"/></filter><rect width="100" height="100" filter="url(%23noise)" fill="%23fff"/></svg>');
+        }
+
+        /* Warm glow */
+        .glow-ambient {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(200, 160, 80, 0.15) 0%, transparent 70%);
+            bottom: -50px;
+            right: -100px;
+            pointer-events: none;
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 1;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        .top-bar {
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(122, 184, 154, 0.1);
+        }
+        .back-arrow {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        .back-arrow:hover {
+            opacity: 1;
+        }
+        .back-arrow::before {
+            content: '←';
+            font-size: 18px;
+        }
+        .title {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #7AB89A;
+        }
+
+        /* Main Layout */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Diamond Layout */
+        .diamond-container {
+            position: relative;
+            width: 360px;
+            height: 360px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SVG for connector lines */
+        .connector-svg {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Element Node */
+        .element-node {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .element-node:hover {
+            transform: scale(1.08);
+        }
+
+        /* Node Circle */
+        .node-circle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .element-node:hover .node-circle {
+            filter: brightness(1.2);
+        }
+
+        /* Icon container */
+        .node-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            z-index: 2;
+        }
+
+        /* Node Label */
+        .node-label {
+            position: absolute;
+            bottom: -50px;
+            text-align: center;
+            z-index: 2;
+        }
+        .node-name {
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 1px;
+        }
+        .node-subtitle {
+            font-family: 'Crimson Pro', serif;
+            font-style: italic;
+            font-size: 11px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+
+        /* Feeling word on hover */
+        .feeling {
+            position: absolute;
+            top: -30px;
+            font-family: 'Crimson Pro', serif;
+            font-style: italic;
+            font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+        }
+        .element-node:hover .feeling {
+            opacity: 1;
+        }
+
+        /* Element-specific styles */
+        .kaze {
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .kaze .node-circle {
+            background: radial-gradient(circle, #C8D8E8 0%, rgba(200, 216, 232, 0.6) 60%);
+            box-shadow: 0 0 20px rgba(200, 216, 232, 0.4);
+        }
+        .kaze .node-circle::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent);
+            z-index: 1;
+        }
+
+        .chi {
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .chi .node-circle {
+            background: radial-gradient(circle, #C8A46A 0%, rgba(200, 164, 106, 0.6) 60%);
+            box-shadow: 0 0 20px rgba(200, 164, 106, 0.4);
+        }
+
+        .hi {
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .hi .node-circle {
+            background: radial-gradient(circle, #D4826A 0%, rgba(212, 130, 106, 0.6) 60%);
+            box-shadow: 0 0 20px rgba(212, 130, 106, 0.4);
+        }
+
+        .mizu {
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+        .mizu .node-circle {
+            background: radial-gradient(circle, #5B8FA8 0%, rgba(91, 143, 168, 0.6) 60%);
+            box-shadow: 0 0 20px rgba(91, 143, 168, 0.4);
+        }
+
+        /* Shiho Centre */
+        .shiho-centre {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .shiho-box {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            border: 2px solid rgba(122, 184, 154, 0.5);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(122, 184, 154, 0.1), 0 0 20px rgba(122, 184, 154, 0.15);
+            transition: all 0.3s ease;
+            animation: shiho-breathe 6s ease-in-out infinite;
+        }
+
+        .shiho-centre:hover .shiho-box {
+            box-shadow: inset 0 0 20px rgba(122, 184, 154, 0.2), 0 0 30px rgba(122, 184, 154, 0.3);
+            border-color: #7AB89A;
+        }
+
+        .shiho-icon {
+            font-size: 40px;
+            color: rgba(122, 184, 154, 0.7);
+            animation: shiho-rotate 12s linear infinite;
+        }
+
+        @keyframes shiho-breathe {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes shiho-rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Breathing Pulse Animation */
+        @keyframes pulse-breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.06); opacity: 0.95; }
+        }
+
+        .kaze .node-circle {
+            animation: pulse-breathe 4s ease-in-out infinite;
+        }
+        .chi .node-circle {
+            animation: pulse-breathe 4s ease-in-out 0.3s infinite;
+        }
+        .hi .node-circle {
+            animation: pulse-breathe 4s ease-in-out 0.6s infinite;
+        }
+        .mizu .node-circle {
+            animation: pulse-breathe 4s ease-in-out 0.9s infinite;
+        }
+
+        /* Bottom Button */
+        .bottom-section {
+            padding: 20px 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .begin-button {
+            padding: 14px 40px;
+            font-family: 'Cinzel', serif;
+            font-weight: 600;
+            font-size: 13px;
+            letter-spacing: 2px;
+            color: #0A0A12;
+            background: linear-gradient(135deg, #7AB89A 0%, #6BA489 100%);
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(122, 184, 154, 0.2);
+        }
+
+        .begin-button:hover {
+            box-shadow: 0 0 30px rgba(122, 184, 154, 0.5), inset 0 0 20px rgba(255,255,255,0.1);
+            transform: translateY(-2px);
+        }
+
+        .begin-button:active {
+            transform: translateY(0);
+        }
+
+        /* Layer Toggle Debug */
+        .layer {
+            display: block;
+        }
+        .layer.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Device Toggle -->
+    <div class="device-toggle">
+        <button class="active" data-device="iphone">iPhone</button>
+        <button data-device="ipad">iPad</button>
+    </div>
+
+    <!-- Debug Toggles -->
+    <div class="debug-toggles">
+        <label>
+            <input type="checkbox" id="toggle-sky"> Sky
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-dojo-frame"> Dojo Frame
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-floor"> Floor
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-vignette"> Vignette
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-texture"> Texture
+        </label>
+        <label>
+            <input type="checkbox" id="toggle-glow"> Glow
+        </label>
+    </div>
+
+    <!-- iPhone Frame -->
+    <div class="frame-container active" id="frame-iphone">
+        <div class="frame-iphone">
+            <div class="screen">
+                <!-- Environment -->
+                <div class="environment-bg">
+                    <div class="sky layer" id="layer-sky"></div>
+                    <div class="dojo-frame layer" id="layer-dojo-frame"></div>
+                    <div class="floor layer" id="layer-floor"></div>
+                    <div class="vignette layer" id="layer-vignette"></div>
+                    <div class="texture layer" id="layer-texture"></div>
+                    <div class="glow-ambient layer" id="layer-glow"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="content">
+                    <!-- Top Bar -->
+                    <div class="top-bar">
+                        <div class="back-arrow"></div>
+                        <div class="title">MUSHIN · THE STILL MIND</div>
+                    </div>
+
+                    <!-- Main -->
+                    <div class="main">
+                        <!-- Diamond Layout -->
+                        <div class="diamond-container">
+                            <!-- Connector Lines SVG -->
+                            <svg class="connector-svg" viewBox="0 0 360 360">
+                                <!-- Kaze to Shiho -->
+                                <line x1="180" y1="40" x2="180" y2="140" stroke="rgba(200,216,232,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <!-- Chi to Shiho -->
+                                <line x1="40" y1="180" x2="140" y2="180" stroke="rgba(200,164,106,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <!-- Hi to Shiho -->
+                                <line x1="320" y1="180" x2="220" y2="180" stroke="rgba(212,130,106,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <!-- Mizu to Shiho -->
+                                <line x1="180" y1="320" x2="180" y2="220" stroke="rgba(91,143,168,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                            </svg>
+
+                            <!-- Kaze (Wind) — Top -->
+                            <div class="element-node kaze">
+                                <div class="feeling">Settled</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">〜〜〜</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">KAZE</div>
+                                    <div class="node-subtitle">Wind</div>
+                                </div>
+                            </div>
+
+                            <!-- Chi (Earth) — Left -->
+                            <div class="element-node chi">
+                                <div class="feeling">Grounded</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">△</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">CHI</div>
+                                    <div class="node-subtitle">Earth</div>
+                                </div>
+                            </div>
+
+                            <!-- Hi (Fire) — Right -->
+                            <div class="element-node hi">
+                                <div class="feeling">Energized</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">🔥</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">HI</div>
+                                    <div class="node-subtitle">Fire</div>
+                                </div>
+                            </div>
+
+                            <!-- Mizu (Water) — Bottom -->
+                            <div class="element-node mizu">
+                                <div class="feeling">Flowing</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">💧</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">MIZU</div>
+                                    <div class="node-subtitle">Water</div>
+                                </div>
+                            </div>
+
+                            <!-- Shiho (Balance) — Centre -->
+                            <div class="shiho-centre">
+                                <div class="shiho-box">
+                                    <div class="shiho-icon">⬜</div>
+                                </div>
+                                <div class="node-label" style="position: relative; bottom: auto; margin-top: 60px;">
+                                    <div class="node-name" style="font-size: 12px;">SHIHO</div>
+                                    <div class="node-subtitle" style="font-size: 10px;">Balance</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Button -->
+                    <div class="bottom-section">
+                        <button class="begin-button">BEGIN SESSION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- iPad Frame -->
+    <div class="frame-container" id="frame-ipad">
+        <div class="frame-ipad">
+            <div class="screen">
+                <!-- Environment -->
+                <div class="environment-bg">
+                    <div class="sky layer" id="layer-sky"></div>
+                    <div class="dojo-frame layer" id="layer-dojo-frame"></div>
+                    <div class="floor layer" id="layer-floor"></div>
+                    <div class="vignette layer" id="layer-vignette"></div>
+                    <div class="texture layer" id="layer-texture"></div>
+                    <div class="glow-ambient layer" id="layer-glow"></div>
+                </div>
+
+                <!-- Content -->
+                <div class="content">
+                    <!-- Top Bar -->
+                    <div class="top-bar">
+                        <div class="back-arrow"></div>
+                        <div class="title">MUSHIN · THE STILL MIND</div>
+                    </div>
+
+                    <!-- Main -->
+                    <div class="main">
+                        <!-- Diamond Layout -->
+                        <div class="diamond-container">
+                            <!-- Connector Lines SVG -->
+                            <svg class="connector-svg" viewBox="0 0 360 360">
+                                <line x1="180" y1="40" x2="180" y2="140" stroke="rgba(200,216,232,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <line x1="40" y1="180" x2="140" y2="180" stroke="rgba(200,164,106,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <line x1="320" y1="180" x2="220" y2="180" stroke="rgba(212,130,106,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                                <line x1="180" y1="320" x2="180" y2="220" stroke="rgba(91,143,168,0.3)" stroke-width="1.5" stroke-dasharray="5,3"/>
+                            </svg>
+
+                            <div class="element-node kaze">
+                                <div class="feeling">Settled</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">〜〜〜</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">KAZE</div>
+                                    <div class="node-subtitle">Wind</div>
+                                </div>
+                            </div>
+
+                            <div class="element-node chi">
+                                <div class="feeling">Grounded</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">△</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">CHI</div>
+                                    <div class="node-subtitle">Earth</div>
+                                </div>
+                            </div>
+
+                            <div class="element-node hi">
+                                <div class="feeling">Energized</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">🔥</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">HI</div>
+                                    <div class="node-subtitle">Fire</div>
+                                </div>
+                            </div>
+
+                            <div class="element-node mizu">
+                                <div class="feeling">Flowing</div>
+                                <div class="node-circle">
+                                    <div class="node-icon">💧</div>
+                                </div>
+                                <div class="node-label">
+                                    <div class="node-name">MIZU</div>
+                                    <div class="node-subtitle">Water</div>
+                                </div>
+                            </div>
+
+                            <div class="shiho-centre">
+                                <div class="shiho-box">
+                                    <div class="shiho-icon">⬜</div>
+                                </div>
+                                <div class="node-label" style="position: relative; bottom: auto; margin-top: 60px;">
+                                    <div class="node-name" style="font-size: 12px;">SHIHO</div>
+                                    <div class="node-subtitle" style="font-size: 10px;">Balance</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bottom Button -->
+                    <div class="bottom-section">
+                        <button class="begin-button">BEGIN SESSION</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASSET INSERTION POINTS (placeholder for production) -->
+    <!-- ASSET: icon-kaze.png - Wind element icon -->
+    <!-- ASSET: icon-chi.png - Earth element icon -->
+    <!-- ASSET: icon-hi.png - Fire element icon -->
+    <!-- ASSET: icon-mizu.png - Water element icon -->
+    <!-- ASSET: icon-shiho.png - Balance/Shiho icon -->
+
+    <script>
+        // Device Toggle
+        document.querySelectorAll('.device-toggle button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.device-toggle button').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.frame-container').forEach(f => f.classList.remove('active'));
+
+                btn.classList.add('active');
+                const device = btn.dataset.device;
+                document.getElementById(`frame-${device}`).classList.add('active');
+            });
+        });
+
+        // Debug Layer Toggles
+        const toggles = {
+            'toggle-sky': 'layer-sky',
+            'toggle-dojo-frame': 'layer-dojo-frame',
+            'toggle-floor': 'layer-floor',
+            'toggle-vignette': 'layer-vignette',
+            'toggle-texture': 'layer-texture',
+            'toggle-glow': 'layer-glow'
+        };
+
+        Object.entries(toggles).forEach(([toggleId, layerId]) => {
+            const checkbox = document.getElementById(toggleId);
+            checkbox.checked = true;
+            checkbox.addEventListener('change', () => {
+                document.querySelectorAll(`#${layerId}`).forEach(layer => {
+                    layer.classList.toggle('hidden', !checkbox.checked);
+                });
+            });
+        });
+
+        // Element Node Interactions
+        document.querySelectorAll('.element-node, .shiho-centre').forEach(node => {
+            node.addEventListener('click', (e) => {
+                const isShiho = node.classList.contains('shiho-centre');
+                const element = node.querySelector('.node-name').textContent;
+                console.log(isShiho ? `Viewing Shiho techniques` : `Browsing ${element} techniques`);
+            });
+        });
+
+        // Begin Button
+        document.querySelector('.begin-button').addEventListener('click', () => {
+            console.log('Starting breathing session...');
+        });
+    </script>
+</body>
+</html>

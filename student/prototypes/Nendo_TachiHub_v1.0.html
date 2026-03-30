@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nendō — Tachi Hub</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #0A0A12;
+      font-family: 'Crimson Pro', serif;
+      overflow: hidden;
+      color: #E8E8E8;
+    }
+
+    /* DEVICE FRAME TOGGLE */
+    .device-selector {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      background: rgba(13, 13, 26, 0.9);
+      padding: 8px 12px;
+      border: 1px solid rgba(212, 130, 106, 0.3);
+      border-radius: 4px;
+    }
+
+    .device-selector button {
+      background: rgba(212, 130, 106, 0.2);
+      border: 1px solid rgba(212, 130, 106, 0.4);
+      color: #D4826A;
+      padding: 4px 10px;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 3px;
+      transition: all 0.3s ease;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+    }
+
+    .device-selector button.active {
+      background: #D4826A;
+      color: #0A0A12;
+      border-color: #D4826A;
+    }
+
+    .device-selector button:hover {
+      border-color: #D4826A;
+    }
+
+    /* LAYER TOGGLE */
+    .layer-toggle {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 11px;
+    }
+
+    .layer-toggle label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: #D4826A;
+      background: rgba(13, 13, 26, 0.85);
+      padding: 4px 8px;
+      border-radius: 3px;
+      border: 1px solid rgba(212, 130, 106, 0.3);
+    }
+
+    .layer-toggle input {
+      cursor: pointer;
+      width: 14px;
+      height: 14px;
+    }
+
+    /* DEVICE FRAME WRAPPER */
+    .device-frame-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100vw;
+      height: 100vh;
+      background: #0A0A12;
+      position: relative;
+    }
+
+    .device-frame {
+      position: relative;
+      background: #000;
+      border: 12px solid #1a1a24;
+      border-radius: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .device-frame.iphone {
+      width: 844px;
+      height: 390px;
+    }
+
+    .device-frame.ipad {
+      width: 1194px;
+      height: 834px;
+    }
+
+    .device-notch {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 150px;
+      height: 25px;
+      background: #000;
+      border-radius: 0 0 20px 20px;
+      z-index: 10;
+    }
+
+    .device-content {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* DOJO ENVIRONMENT LAYERS */
+    .env-layer {
+      position: absolute;
+      inset: 0;
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    .env-layer.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* SKY GRADIENT - Warm red-amber tint */
+    .sky-layer {
+      background: linear-gradient(135deg,
+        #1a0f0f 0%,
+        #2a1515 30%,
+        #1a0a0f 50%,
+        #0f0a0a 100%);
+      z-index: 1;
+    }
+
+    /* DOJO FRAME LAYER */
+    .frame-layer {
+      z-index: 2;
+      background: radial-gradient(ellipse 80% 100% at 50% 100%,
+        rgba(212, 130, 106, 0.08) 0%,
+        rgba(212, 130, 106, 0.02) 40%,
+        transparent 70%);
+    }
+
+    /* FLOOR & DEPTH */
+    .floor-layer {
+      z-index: 3;
+      background: linear-gradient(180deg,
+        transparent 0%,
+        rgba(13, 13, 26, 0.3) 40%,
+        rgba(13, 13, 26, 0.6) 100%);
+    }
+
+    /* VIGNETTE */
+    .vignette-layer {
+      z-index: 4;
+      background: radial-gradient(ellipse at 50% 50%,
+        transparent 30%,
+        rgba(0, 0, 0, 0.4) 100%);
+    }
+
+    /* PAPER TEXTURE OVERLAY */
+    .texture-layer {
+      z-index: 5;
+      background-image:
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px),
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.02) 2px, rgba(255, 255, 255, 0.02) 4px);
+      pointer-events: none;
+    }
+
+    /* AMBIENT PARTICLES - Red/amber embers */
+    .particles-layer {
+      z-index: 6;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: #D4826A;
+      border-radius: 50%;
+      opacity: 0;
+      filter: blur(0.5px);
+      box-shadow: 0 0 4px rgba(212, 130, 106, 0.6);
+    }
+
+    @keyframes float-up {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) translateX(0);
+      }
+      10% {
+        opacity: 0.6;
+      }
+      90% {
+        opacity: 0.3;
+      }
+      100% {
+        opacity: 0;
+        transform: translateY(-100px) translateX(var(--drift));
+      }
+    }
+
+    .particle {
+      animation: float-up var(--duration) ease-out forwards;
+      animation-delay: var(--delay);
+    }
+
+    /* CONTENT LAYER */
+    .content-layer {
+      z-index: 7;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 24px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      gap: 20px;
+    }
+
+    /* HEADER */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .back-button {
+      width: 32px;
+      height: 32px;
+      border: 1px solid rgba(212, 130, 106, 0.3);
+      background: rgba(13, 13, 26, 0.7);
+      color: #D4826A;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.3s ease;
+    }
+
+    .back-button:hover {
+      background: rgba(212, 130, 106, 0.15);
+      border-color: #D4826A;
+    }
+
+    .header-title {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: #E8E8E8;
+    }
+
+    .header-title .accent {
+      color: #D4826A;
+      font-weight: 700;
+    }
+
+    /* MAIN CONTENT AREA */
+    .main-area {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 0;
+      align-items: stretch;
+      align-content: stretch;
+    }
+
+    /* LEFT MOTIF - Bokken sword */
+    .motif-section {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      grid-column: 1;
+      grid-row: 1 / 3;
+    }
+
+    .motif-bokken {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bokken-glow {
+      position: absolute;
+      width: 120px;
+      height: 200px;
+      background: radial-gradient(ellipse at center,
+        rgba(212, 130, 106, 0.3) 0%,
+        rgba(212, 130, 106, 0.1) 50%,
+        transparent 100%);
+      border-radius: 50%;
+      filter: blur(20px);
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 0.7;
+      }
+    }
+
+    .bokken-asset {
+      position: relative;
+      z-index: 2;
+      font-size: 12px;
+      color: rgba(212, 130, 106, 0.5);
+      text-align: center;
+    }
+
+    /* CARDS GRID */
+    .cards-section {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+      grid-column: 1;
+      grid-row: 1 / 3;
+    }
+
+    .device-frame.ipad .cards-section {
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .challenge-card {
+      background: rgba(13, 13, 26, 0.7);
+      border: 0.5px solid rgba(212, 130, 106, 0.2);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      animation: fade-in-stagger both;
+    }
+
+    @keyframes fade-in-stagger {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .challenge-card:nth-child(1) { animation-delay: 0.1s; }
+    .challenge-card:nth-child(2) { animation-delay: 0.2s; }
+    .challenge-card:nth-child(3) { animation-delay: 0.3s; }
+    .challenge-card:nth-child(4) { animation-delay: 0.4s; }
+    .challenge-card:nth-child(5) { animation-delay: 0.5s; }
+    .challenge-card:nth-child(6) { animation-delay: 0.6s; }
+
+    .challenge-card:hover {
+      border-color: rgba(212, 130, 106, 0.5);
+      background: rgba(13, 13, 26, 0.85);
+      transform: scale(1.03);
+      box-shadow: 0 0 20px rgba(212, 130, 106, 0.15);
+    }
+
+    .card-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(212, 130, 106, 0.12);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #D4826A;
+      transition: all 0.3s ease;
+    }
+
+    .challenge-card:hover .card-icon {
+      background: rgba(212, 130, 106, 0.2);
+      filter: drop-shadow(0 0 8px rgba(212, 130, 106, 0.4));
+    }
+
+    .card-name {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #E8E8E8;
+    }
+
+    .card-description {
+      font-size: 12px;
+      color: rgba(232, 232, 232, 0.65);
+      font-style: italic;
+      line-height: 1.4;
+    }
+
+    /* FOOTER */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid rgba(212, 130, 106, 0.15);
+      gap: 12px;
+      font-size: 12px;
+    }
+
+    .progress-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(212, 130, 106, 0.3);
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: #D4826A;
+      width: 16px;
+      border-radius: 3px;
+    }
+
+    .mantra {
+      font-style: italic;
+      color: rgba(212, 130, 106, 0.7);
+      text-align: right;
+      flex: 1;
+    }
+
+    /* HEAT SHIMMER EFFECT */
+    .heat-shimmer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 40%;
+      background: radial-gradient(ellipse at center top,
+        rgba(212, 130, 106, 0.1) 0%,
+        transparent 100%);
+      pointer-events: none;
+      z-index: 5;
+      animation: shimmer-pulse 4s ease-in-out infinite;
+    }
+
+    @keyframes shimmer-pulse {
+      0%, 100% {
+        opacity: 0.3;
+      }
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    /* RESPONSIVE */
+    .device-frame.iphone .content-layer {
+      padding: 18px;
+      gap: 12px;
+    }
+
+    .device-frame.iphone .header-title {
+      font-size: 14px;
+    }
+
+    .device-frame.iphone .card-name {
+      font-size: 12px;
+    }
+
+    .device-frame.iphone .card-description {
+      font-size: 11px;
+    }
+
+    .device-frame.iphone .footer {
+      padding-top: 10px;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="device-selector">
+  <button class="active" data-device="iphone">iPhone</button>
+  <button data-device="ipad">iPad</button>
+</div>
+
+<div class="layer-toggle">
+  <label><input type="checkbox" class="layer-check" data-layer="sky-layer" checked> Sky</label>
+  <label><input type="checkbox" class="layer-check" data-layer="frame-layer" checked> Frame</label>
+  <label><input type="checkbox" class="layer-check" data-layer="floor-layer" checked> Floor</label>
+  <label><input type="checkbox" class="layer-check" data-layer="vignette-layer" checked> Vignette</label>
+  <label><input type="checkbox" class="layer-check" data-layer="texture-layer" checked> Texture</label>
+  <label><input type="checkbox" class="layer-check" data-layer="particles-layer" checked> Particles</label>
+</div>
+
+<div class="device-frame-wrapper">
+  <div class="device-frame iphone">
+    <div class="device-notch"></div>
+
+    <div class="device-content">
+      <!-- ENVIRONMENT LAYERS -->
+      <div class="env-layer sky-layer"></div>
+      <div class="env-layer frame-layer"></div>
+      <div class="env-layer floor-layer"></div>
+      <div class="env-layer vignette-layer"></div>
+      <div class="env-layer texture-layer"></div>
+      <div class="env-layer particles-layer" id="particles"></div>
+      <div class="heat-shimmer"></div>
+
+      <!-- CONTENT -->
+      <div class="content-layer">
+        <div class="header">
+          <button class="back-button">←</button>
+          <div class="header-title">TACHI · <span class="accent">THE STRIKING MIND</span></div>
+        </div>
+
+        <div class="main-area">
+          <div class="motif-section">
+            <div class="motif-bokken">
+              <div class="bokken-glow"></div>
+              <div class="bokken-asset">
+                <!-- ASSET: motif-tachi.png -->
+                🗡️
+              </div>
+            </div>
+          </div>
+
+          <div class="cards-section">
+            <div class="challenge-card">
+              <div class="card-icon">⚙️</div>
+              <div class="card-name">Logic</div>
+              <div class="card-description">Reasoning & deduction</div>
+            </div>
+
+            <div class="challenge-card">
+              <div class="card-icon">🧭</div>
+              <div class="card-name">Route</div>
+              <div class="card-description">Maze & path puzzles</div>
+            </div>
+
+            <div class="challenge-card">
+              <div class="card-icon">♟️</div>
+              <div class="card-name">Strategy</div>
+              <div class="card-description">Plan ahead & adapt</div>
+            </div>
+
+            <div class="challenge-card">
+              <div class="card-icon">⚡</div>
+              <div class="card-name">Quick-Fire</div>
+              <div class="card-description">Speed & accuracy</div>
+            </div>
+
+            <div class="challenge-card">
+              <div class="card-icon">🔱</div>
+              <div class="card-name">Decision</div>
+              <div class="card-description">Choose wisely, fast</div>
+            </div>
+
+            <div class="challenge-card">
+              <div class="card-icon">🔢</div>
+              <div class="card-name">Numeracy</div>
+              <div class="card-description">Number mastery</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer">
+          <div class="progress-dots">
+            <div class="dot active"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+          <div class="mantra">The swift blade cuts true</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // DEVICE FRAME TOGGLE
+  document.querySelectorAll('.device-selector button').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      document.querySelectorAll('.device-selector button').forEach(b => b.classList.remove('active'));
+      e.target.classList.add('active');
+      const device = e.target.dataset.device;
+      const frame = document.querySelector('.device-frame');
+      frame.classList.remove('iphone', 'ipad');
+      frame.classList.add(device);
+    });
+  });
+
+  // LAYER VISIBILITY TOGGLE
+  document.querySelectorAll('.layer-check').forEach(check => {
+    check.addEventListener('change', (e) => {
+      const layer = document.querySelector(`.${e.target.dataset.layer}`);
+      if (layer) {
+        layer.classList.toggle('hidden', !e.target.checked);
+      }
+    });
+  });
+
+  // AMBIENT PARTICLES - Red/amber embers
+  function createParticles() {
+    const container = document.getElementById('particles');
+    const count = 20;
+
+    for (let i = 0; i < count; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+
+      const startX = Math.random() * 100;
+      const duration = 4 + Math.random() * 4;
+      const delay = Math.random() * 2;
+      const drift = (Math.random() - 0.5) * 40;
+
+      particle.style.setProperty('--duration', `${duration}s`);
+      particle.style.setProperty('--delay', `${delay}s`);
+      particle.style.setProperty('--drift', `${drift}px`);
+      particle.style.left = `${startX}%`;
+      particle.style.bottom = `-20px`;
+
+      container.appendChild(particle);
+
+      // Respawn particle after animation
+      setTimeout(() => {
+        createParticles();
+        particle.remove();
+      }, (duration + delay) * 1000);
+    }
+  }
+
+  createParticles();
+</script>
+
+</body>
+</html>

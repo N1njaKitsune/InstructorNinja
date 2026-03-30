@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aura Display — Prototype v1.1</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  width:100%;height:100%;
+  background:#0A0A12;
+  font-family:'Crimson Pro',serif;
+  color:rgba(245,240,232,0.85);
+  overflow:hidden;
+}
+
+/* ══════════════════════════════════════
+   LAYOUT — landscape split
+   ══════════════════════════════════════ */
+.page{
+  display:flex;
+  width:100%;height:100%;
+  padding:24px;
+  gap:32px;
+}
+.aura-stage{
+  flex:0 0 340px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.controls{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:20px;
+  max-width:440px;
+}
+
+/* ══════════════════════════════════════
+   AVATAR CONTAINER
+   ══════════════════════════════════════ */
+.avatar-container{
+  position:relative;
+  width:200px;
+  height:310px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.avatar-body{
+  width:88px;
+  height:220px;
+  border-radius:44px 44px 18px 18px;
+  background:linear-gradient(180deg,
+    rgba(60,60,80,0.15) 0%,
+    rgba(40,40,60,0.1) 100%);
+  border:0.5px solid rgba(245,240,232,0.12);
+  position:relative;
+  z-index:10;
+}
+.avatar-body::before{
+  content:'';
+  position:absolute;
+  top:-30px; left:50%;
+  transform:translateX(-50%);
+  width:44px; height:44px;
+  border-radius:50%;
+  background:rgba(60,60,80,0.12);
+  border:0.5px solid rgba(245,240,232,0.1);
+}
+
+/* ══════════════════════════════════════
+   AURA LAYERS
+   ══════════════════════════════════════ */
+.aura-layer{
+  position:absolute;
+  border-radius:50% 50% 30% 30%;
+  pointer-events:none;
+  z-index:1;
+  transition: opacity 0.8s ease, box-shadow 1.2s ease, background 1.2s ease;
+}
+.aura-L1{ inset:20%; border-radius:46px 46px 22px 22px; }
+.aura-L2{ inset:10%; border-radius:52px 52px 28px 28px; }
+.aura-L3{ inset:0%;  border-radius:58px 58px 34px 34px; }
+.aura-L4{ inset:-12%; border-radius:66px 66px 40px 40px; }
+.aura-L5{ inset:-26%; border-radius:78px 78px 50px 50px; }
+
+/* ── Default breathing (normal state) ── */
+.aura-breathe-1{ animation: auraBreathe1 4.0s ease-in-out infinite; }
+.aura-breathe-2{ animation: auraBreathe2 5.2s ease-in-out infinite; }
+.aura-breathe-3{ animation: auraBreathe3 6.5s ease-in-out infinite; }
+.aura-breathe-4{ animation: auraBreathe4 7.8s ease-in-out infinite; }
+.aura-breathe-5{ animation: auraBreathe5 9.0s ease-in-out infinite; }
+
+@keyframes auraBreathe1 {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.03); }
+}
+@keyframes auraBreathe2 {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.05); }
+}
+@keyframes auraBreathe3 {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.06); }
+}
+@keyframes auraBreathe4 {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.08); }
+}
+@keyframes auraBreathe5 {
+  0%,100%{ transform:scale(1); }
+  50%    { transform:scale(1.1); }
+}
+
+/* ── Surge breathing (80%+ threshold) ── */
+.aura-surge-1{ animation: auraSurge1 2.4s ease-in-out infinite; }
+.aura-surge-2{ animation: auraSurge2 3.0s ease-in-out infinite; }
+.aura-surge-3{ animation: auraSurge3 3.6s ease-in-out infinite; }
+.aura-surge-4{ animation: auraSurge4 4.2s ease-in-out infinite; }
+.aura-surge-5{ animation: auraSurge5 4.8s ease-in-out infinite; }
+
+@keyframes auraSurge1 {
+  0%,100%{ transform:scale(1); }
+  35%    { transform:scale(1.06); }
+  65%    { transform:scale(0.98); }
+}
+@keyframes auraSurge2 {
+  0%,100%{ transform:scale(1); }
+  40%    { transform:scale(1.09); }
+  70%    { transform:scale(0.97); }
+}
+@keyframes auraSurge3 {
+  0%,100%{ transform:scale(1); }
+  30%    { transform:scale(1.10); }
+  60%    { transform:scale(0.96); }
+}
+@keyframes auraSurge4 {
+  0%,100%{ transform:scale(1); }
+  45%    { transform:scale(1.13); }
+  75%    { transform:scale(0.95); }
+}
+@keyframes auraSurge5 {
+  0%,100%{ transform:scale(1); }
+  35%    { transform:scale(1.16); }
+  65%    { transform:scale(0.94); }
+}
+
+/* ── Corona ring (80%+ only) ── */
+.corona-ring{
+  position:absolute;
+  inset:-34%;
+  border-radius:80px 80px 52px 52px;
+  pointer-events:none;
+  z-index:2;
+  opacity:0;
+  transition:opacity 1.0s ease, border-color 1.0s ease, box-shadow 1.0s ease;
+  border:1px solid transparent;
+}
+.corona-ring.active{
+  opacity:1;
+  animation:coronaPulse 2.8s ease-in-out infinite;
+}
+@keyframes coronaPulse{
+  0%,100%{ transform:scale(1); opacity:0.6; }
+  50%    { transform:scale(1.04); opacity:1; }
+}
+
+/* ══════════════════════════════════════
+   STAGE INFO
+   ══════════════════════════════════════ */
+.stage-info{
+  text-align:center;
+  margin-top:16px;
+  z-index:10;
+}
+.stage-name{
+  font-family:'Cinzel',serif;
+  font-size:16px;
+  font-weight:600;
+  letter-spacing:0.1em;
+  margin-bottom:2px;
+  transition:color 0.8s ease;
+}
+.stage-phase{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.2em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.25);
+}
+.stage-meaning{
+  font-size:12px;
+  font-style:italic;
+  color:rgba(245,240,232,0.35);
+  margin-top:6px;
+  max-width:260px;
+  line-height:1.5;
+}
+
+/* ── Surge indicator (appears at 80%) ── */
+.surge-label{
+  font-family:'Cinzel',serif;
+  font-size:7px;
+  letter-spacing:0.22em;
+  text-transform:uppercase;
+  margin-top:6px;
+  opacity:0;
+  transition:opacity 0.8s ease, color 0.8s ease;
+}
+.surge-label.visible{ opacity:1; }
+
+/* ══════════════════════════════════════
+   XP BAR
+   ══════════════════════════════════════ */
+.xp-bar-wrap{
+  width:100%;
+  max-width:260px;
+  margin-top:12px;
+  z-index:10;
+}
+.xp-bar-track{
+  width:100%;
+  height:3px;
+  background:rgba(245,240,232,0.06);
+  border-radius:2px;
+  overflow:hidden;
+  position:relative;
+}
+.xp-bar-fill{
+  height:100%;
+  border-radius:2px;
+  transition:width 0.6s ease, background 0.8s ease;
+}
+/* Surge shimmer on the XP bar at 80%+ */
+.xp-bar-shimmer{
+  position:absolute;
+  top:0;right:0;bottom:0;
+  width:0%;
+  border-radius:2px;
+  opacity:0;
+  transition:opacity 0.6s ease;
+  pointer-events:none;
+}
+.xp-bar-shimmer.active{
+  opacity:1;
+  animation:barShimmer 1.8s ease-in-out infinite;
+}
+@keyframes barShimmer{
+  0%,100%{ opacity:0.4; }
+  50%    { opacity:0.9; }
+}
+
+.xp-bar-label{
+  display:flex;
+  justify-content:space-between;
+  margin-top:4px;
+}
+.xp-bar-label span{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.12em;
+  color:rgba(245,240,232,0.2);
+}
+
+/* ══════════════════════════════════════
+   CONTROLS PANEL
+   ══════════════════════════════════════ */
+.ctrl-section{ margin-bottom:8px; }
+.ctrl-label{
+  font-family:'Cinzel',serif;
+  font-size:9px;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.3);
+  margin-bottom:8px;
+}
+.ctrl-value{
+  font-family:'Cinzel',serif;
+  font-size:11px;
+  letter-spacing:0.06em;
+  color:rgba(245,240,232,0.6);
+  float:right;
+}
+
+input[type=range]{
+  -webkit-appearance:none;
+  appearance:none;
+  width:100%;
+  height:2px;
+  background:rgba(245,240,232,0.1);
+  border-radius:1px;
+  outline:none;
+  cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;
+  width:14px;height:14px;
+  border-radius:50%;
+  background:rgba(245,240,232,0.6);
+  border:1px solid rgba(245,240,232,0.15);
+  cursor:grab;
+  transition:background 0.3s;
+}
+input[type=range]::-webkit-slider-thumb:hover{
+  background:rgba(245,240,232,0.85);
+}
+
+.stage-selector{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+.stage-dot{
+  width:28px;height:28px;
+  border-radius:50%;
+  cursor:pointer;
+  border:1.5px solid transparent;
+  transition:transform 0.15s ease, border-color 0.3s ease;
+  position:relative;
+}
+.stage-dot:hover{ transform:scale(1.12); }
+.stage-dot.active{
+  border-color:rgba(245,240,232,0.5);
+  transform:scale(1.15);
+}
+.stage-dot-num{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Cinzel',serif;
+  font-size:7px;
+  font-weight:700;
+  pointer-events:none;
+}
+
+.detail-readout{
+  padding:14px 18px;
+  border:0.5px solid rgba(245,240,232,0.06);
+  border-radius:10px;
+  background:rgba(245,240,232,0.02);
+}
+.readout-row{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:4px 0;
+}
+.readout-key{
+  font-family:'Cinzel',serif;
+  font-size:8px;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:rgba(245,240,232,0.25);
+}
+.readout-val{
+  font-size:12px;
+  color:rgba(245,240,232,0.55);
+  font-style:italic;
+}
+
+/* Level-up flash */
+.level-up-flash{
+  position:absolute;
+  inset:-40%;
+  border-radius:50%;
+  background:radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  opacity:0;
+  pointer-events:none;
+  z-index:20;
+  transition:opacity 0.1s;
+}
+.level-up-flash.fire{
+  animation:flashPulse 0.8s ease-out forwards;
+}
+@keyframes flashPulse{
+  0%  { opacity:0.7; transform:scale(0.8); }
+  100%{ opacity:0; transform:scale(1.6); }
+}
+
+/* Responsive */
+@media (max-width:700px){
+  .page{ flex-direction:column; padding:16px; gap:16px; overflow-y:auto; }
+  .aura-stage{ flex:none; }
+  .controls{ max-width:100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <!-- ══ LEFT: Avatar + Aura ══ -->
+  <div class="aura-stage">
+    <div class="avatar-container" id="avatar-container">
+      <div class="aura-layer aura-L5 aura-breathe-5" id="aL5"></div>
+      <div class="aura-layer aura-L4 aura-breathe-4" id="aL4"></div>
+      <div class="aura-layer aura-L3 aura-breathe-3" id="aL3"></div>
+      <div class="aura-layer aura-L2 aura-breathe-2" id="aL2"></div>
+      <div class="aura-layer aura-L1 aura-breathe-1" id="aL1"></div>
+      <!-- Corona ring (80%+ effect) -->
+      <div class="corona-ring" id="corona"></div>
+      <!-- Avatar -->
+      <div class="avatar-body" id="avatar-body"></div>
+      <!-- Level-up flash -->
+      <div class="level-up-flash" id="flash"></div>
+    </div>
+
+    <div class="stage-info">
+      <div class="stage-name" id="info-name">Tomoshibi</div>
+      <div class="stage-phase" id="info-phase">Phase 1 · Kindling</div>
+      <div class="stage-meaning" id="info-meaning">A single small flame — the first flicker of awareness</div>
+      <div class="surge-label" id="surge-label">Aura surging</div>
+    </div>
+
+    <div class="xp-bar-wrap">
+      <div class="xp-bar-track">
+        <div class="xp-bar-fill" id="xp-fill"></div>
+        <div class="xp-bar-shimmer" id="xp-shimmer"></div>
+      </div>
+      <div class="xp-bar-label">
+        <span id="xp-label-left">0 XP</span>
+        <span id="xp-label-right">Stage 2 →</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ RIGHT: Controls ══ -->
+  <div class="controls">
+
+    <div class="ctrl-section">
+      <div class="ctrl-label">Aura Stage <span class="ctrl-value" id="ctrl-stage-val">1 — Tomoshibi</span></div>
+      <div class="stage-selector" id="stage-selector"></div>
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-label">XP within stage <span class="ctrl-value" id="ctrl-xp-val">50%</span></div>
+      <input type="range" id="xp-slider" min="0" max="100" value="50">
+    </div>
+
+    <div class="ctrl-section">
+      <div class="ctrl-label">Simulate Level-Up</div>
+      <button id="btn-levelup" style="
+        font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;
+        text-transform:uppercase;color:rgba(245,240,232,0.6);
+        background:rgba(245,240,232,0.06);border:0.5px solid rgba(245,240,232,0.1);
+        border-radius:6px;padding:8px 20px;cursor:pointer;
+        transition:background 0.2s,color 0.2s;
+      ">Advance to next stage →</button>
+    </div>
+
+    <div class="detail-readout">
+      <div class="readout-row">
+        <span class="readout-key">Aura colour</span>
+        <span class="readout-val" id="r-hex">#FAF6EE</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">Density</span>
+        <span class="readout-val" id="r-density">50%</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">Active layers</span>
+        <span class="readout-val" id="r-layers">3 of 5</span>
+      </div>
+      <div class="readout-row">
+        <span class="readout-key">State</span>
+        <span class="readout-val" id="r-state">Normal</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   AURA STAGE DATA — 13 stages
+   ══════════════════════════════════════════════ */
+const STAGES = [
+  { name:'Tomoshibi', phase:'Phase 1 · Kindling', meaning:'A single small flame — the first flicker of awareness',
+    hex:'#FAF6EE', rgb:[250,246,238] },
+  { name:'Hikari', phase:'Phase 1 · Kindling', meaning:'Warm light — the aura becomes visible for the first time',
+    hex:'#F5EDD0', rgb:[245,237,208] },
+  { name:'Kogane', phase:'Phase 2 · Rising', meaning:'Gold — energy builds, the aura warms and brightens',
+    hex:'#F0D060', rgb:[240,208,96] },
+  { name:'Kohaku', phase:'Phase 2 · Rising', meaning:'Amber — the gold deepens, intention strengthens',
+    hex:'#E8B830', rgb:[232,184,48] },
+  { name:'Kagayaki', phase:'Phase 2 · Rising', meaning:'Radiance — the aura is visible at a distance',
+    hex:'#D89018', rgb:[216,144,24] },
+  { name:'Moeru', phase:'Phase 2 · Rising', meaning:'Smouldering — heat building toward combustion',
+    hex:'#C86C08', rgb:[200,108,8] },
+  { name:'Akane', phase:'Phase 3 · Burning', meaning:'Red-orange — fire finding its true form',
+    hex:'#C05020', rgb:[192,80,32] },
+  { name:'Honoo', phase:'Phase 3 · Burning', meaning:'Full flame — total combustion, nothing held back',
+    hex:'#A83018', rgb:[168,48,24] },
+  { name:'Homura', phase:'Phase 3 · Burning', meaning:'Blaze — the fire at its most intense',
+    hex:'#8A1A10', rgb:[138,26,16] },
+  { name:'Shinku', phase:'Phase 3 · Burning', meaning:'Deep crimson — fire condensing into mastery',
+    hex:'#6A0808', rgb:[106,8,8] },
+  { name:'Kurenai', phase:'Phase 4 · Forging', meaning:'Ancient crimson bleeding toward violet — power transforming',
+    hex:'#4A0A28', rgb:[74,10,40] },
+  { name:'Tasogare', phase:'Phase 4 · Forging', meaning:'Twilight — the moment between fire and something beyond',
+    hex:'#2A0535', rgb:[42,5,53] },
+  { name:'—', phase:'Stage 13 · Alone', meaning:'No name has been given to this stage. Those who reach it do not need one.',
+    hex:'#1A0535', rgb:[26,5,53] },
+];
+
+const DISPLAY_COLORS = [
+  '#FAF6EE','#F5EDD0','#F0D060','#E8B830','#D89018','#C86C08',
+  '#C05020','#A83018','#8A1A10','#9A4040','#A04070','#9050B0','#B060FF'
+];
+
+/* Brighter RGB for dark stages (glow needs to be visible against #0A0A12) */
+const GLOW_RGB = [
+  [250,246,238], [245,237,208], [240,208,96],  [232,184,48],
+  [216,144,24],  [200,108,8],   [192,80,32],   [168,48,24],
+  [168,50,30],   [160,64,64],   [160,64,112],  [144,80,176],
+  [176,96,255]
+];
+
+/* ══════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════ */
+let currentStage = 0;
+let currentXP    = 50;
+let isSurging    = false;   // tracks 80%+ state
+
+/* ══════════════════════════════════════════════
+   DENSITY SYSTEM  v1.1
+
+   Key changes from v1.0:
+   ─────────────────────────────────────────────
+   • Tomoshibi (stage 0): ALWAYS has a faint aura.
+     At 0% XP density = 0.15 (faint flicker).
+     Minimum density floor = 0.15.
+
+   • Hikari onwards (stages 1–12): 0% XP maps to
+     the density that v1.0 showed at ~25%.
+     Minimum density floor = 0.25.
+
+   • 80% XP threshold: breathing switches from
+     gentle to "surge" — faster, more volatile
+     pulses + a corona ring appears.
+   ═════════════════════════════════════════════ */
+function densityFromXP(xp, stageIndex) {
+  const rawCurve = 1 - Math.pow(1 - xp / 100, 2);
+
+  if (stageIndex === 0) {
+    // Tomoshibi: floor at 0.15, ceiling at 1.0
+    return 0.15 + rawCurve * 0.85;
+  } else {
+    // All other stages: floor at 0.25
+    return 0.25 + rawCurve * 0.75;
+  }
+}
+
+/* ══════════════════════════════════════════════
+   SURGE MODE — 80%+ threshold effect
+   ══════════════════════════════════════════════ */
+function setSurgeMode(active) {
+  if (active === isSurging) return;
+  isSurging = active;
+
+  const layers = [
+    document.getElementById('aL1'),
+    document.getElementById('aL2'),
+    document.getElementById('aL3'),
+    document.getElementById('aL4'),
+    document.getElementById('aL5'),
+  ];
+
+  layers.forEach((el, i) => {
+    const normalClass = 'aura-breathe-' + (i+1);
+    const surgeClass  = 'aura-surge-' + (i+1);
+    if (active) {
+      el.classList.remove(normalClass);
+      el.classList.add(surgeClass);
+    } else {
+      el.classList.remove(surgeClass);
+      el.classList.add(normalClass);
+    }
+  });
+
+  // Corona ring
+  const corona = document.getElementById('corona');
+  corona.classList.toggle('active', active);
+
+  // Surge label
+  document.getElementById('surge-label').classList.toggle('visible', active);
+
+  // XP bar shimmer
+  document.getElementById('xp-shimmer').classList.toggle('active', active);
+}
+
+/* ══════════════════════════════════════════════
+   MAIN RENDER
+   ══════════════════════════════════════════════ */
+function updateAura() {
+  const s = STAGES[currentStage];
+  const [r,g,b] = GLOW_RGB[currentStage];
+  const d = densityFromXP(currentXP, currentStage);
+
+  // ── Surge check ──
+  setSurgeMode(currentXP >= 80);
+
+  // ── Layer thresholds & rendering ──
+  const layerThresholds = [0.0, 0.15, 0.35, 0.55, 0.75];
+  const layers = [
+    document.getElementById('aL1'),
+    document.getElementById('aL2'),
+    document.getElementById('aL3'),
+    document.getElementById('aL4'),
+    document.getElementById('aL5'),
+  ];
+
+  // Surge boost: at 80%+ layers get an extra opacity & spread kick
+  const surgeBoost = isSurging ? 1.25 : 1.0;
+
+  let activeLayers = 0;
+  layers.forEach((el, i) => {
+    const t = layerThresholds[i];
+    if (d >= t) {
+      activeLayers++;
+      const layerProgress = Math.min((d - t) / (1 - t), 1);
+      const maxOpacity = [0.40, 0.28, 0.18, 0.10, 0.06][i];
+      const opacity = layerProgress * maxOpacity * surgeBoost;
+
+      const spreadBase = [8, 14, 22, 32, 44][i];
+      const spread = spreadBase * (0.4 + layerProgress * 0.6) * surgeBoost;
+      const blurBase = [12, 20, 30, 44, 60][i];
+      const blur = blurBase * (0.5 + layerProgress * 0.5) * surgeBoost;
+
+      el.style.opacity = '1';
+      el.style.background = `radial-gradient(ellipse at 50% 45%, rgba(${r},${g},${b},${opacity}) 0%, rgba(${r},${g},${b},${opacity * 0.3}) 60%, transparent 100%)`;
+      el.style.boxShadow = `0 0 ${blur}px ${spread}px rgba(${r},${g},${b},${opacity * 0.7})`;
+    } else {
+      el.style.opacity = '0';
+      el.style.background = 'none';
+      el.style.boxShadow = 'none';
+    }
+  });
+
+  // ── Corona ring colour ──
+  const corona = document.getElementById('corona');
+  corona.style.borderColor = `rgba(${r},${g},${b},0.2)`;
+  corona.style.boxShadow = `0 0 30px 8px rgba(${r},${g},${b},0.08), inset 0 0 20px rgba(${r},${g},${b},0.04)`;
+
+  // ── Avatar body tint ──
+  const bodyTint = d * 0.12;
+  const body = document.getElementById('avatar-body');
+  body.style.background = `linear-gradient(180deg, rgba(${r},${g},${b},${bodyTint + 0.03}) 0%, rgba(${r},${g},${b},${bodyTint * 0.5}) 100%)`;
+  body.style.borderColor = `rgba(${r},${g},${b},${0.1 + d * 0.2})`;
+
+  // ── Stage info ──
+  document.getElementById('info-name').textContent = s.name;
+  document.getElementById('info-name').style.color = DISPLAY_COLORS[currentStage];
+  document.getElementById('info-phase').textContent = s.phase;
+  document.getElementById('info-meaning').textContent = s.meaning;
+
+  // Surge label colour
+  const surgeLabel = document.getElementById('surge-label');
+  surgeLabel.style.color = DISPLAY_COLORS[currentStage];
+
+  // ── XP bar ──
+  const fill = document.getElementById('xp-fill');
+  fill.style.width = currentXP + '%';
+  fill.style.background = `linear-gradient(90deg, rgba(${r},${g},${b},0.5), rgba(${r},${g},${b},0.8))`;
+
+  // Shimmer covers the last 20% of the bar
+  const shimmer = document.getElementById('xp-shimmer');
+  shimmer.style.width = '20%';
+  shimmer.style.background = `linear-gradient(90deg, transparent, rgba(${r},${g},${b},0.4))`;
+
+  document.getElementById('xp-label-left').textContent = currentXP + '% XP';
+  if (currentStage < 12) {
+    document.getElementById('xp-label-right').textContent = 'Stage ' + (currentStage + 2) + ' →';
+  } else {
+    document.getElementById('xp-label-right').textContent = '— · —';
+  }
+
+  // ── Control readouts ──
+  document.getElementById('ctrl-stage-val').textContent = (currentStage + 1) + ' — ' + s.name;
+  document.getElementById('ctrl-xp-val').textContent = currentXP + '%';
+  document.getElementById('r-hex').textContent = s.hex;
+  document.getElementById('r-density').textContent = Math.round(d * 100) + '%';
+  document.getElementById('r-layers').textContent = activeLayers + ' of 5';
+
+  let stateLabel;
+  if (currentXP >= 80) stateLabel = 'Surging';
+  else if (d < 0.3) stateLabel = 'Faint';
+  else if (d < 0.55) stateLabel = 'Gentle';
+  else stateLabel = 'Strong';
+  document.getElementById('r-state').textContent = stateLabel;
+
+  // ── Update stage dots ──
+  document.querySelectorAll('.stage-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === currentStage);
+  });
+}
+
+/* ══════════════════════════════════════════════
+   LEVEL-UP
+   ══════════════════════════════════════════════ */
+function triggerLevelUp() {
+  if (currentStage >= 12) return;
+
+  const flash = document.getElementById('flash');
+  flash.classList.remove('fire');
+  void flash.offsetWidth;
+  flash.classList.add('fire');
+
+  setTimeout(() => {
+    currentStage++;
+    // New stage starts at 0% XP — but densityFromXP floors at 0.25
+    // so visually the aura is already present (equivalent to old ~25%)
+    currentXP = 0;
+    document.getElementById('xp-slider').value = 0;
+    updateAura();
+  }, 200);
+}
+
+/* ══════════════════════════════════════════════
+   INIT
+   ══════════════════════════════════════════════ */
+function init() {
+  const sel = document.getElementById('stage-selector');
+  STAGES.forEach((s, i) => {
+    const dot = document.createElement('div');
+    dot.className = 'stage-dot';
+    dot.style.background = s.hex;
+    if (i >= 9) dot.style.boxShadow = 'inset 0 0 0 1px rgba(180,80,255,0.25)';
+
+    const num = document.createElement('div');
+    num.className = 'stage-dot-num';
+    num.textContent = i + 1;
+    num.style.color = i < 6 ? 'rgba(10,10,18,0.5)' : 'rgba(245,240,232,0.4)';
+    dot.appendChild(num);
+
+    dot.addEventListener('click', () => {
+      currentStage = i;
+      updateAura();
+    });
+    sel.appendChild(dot);
+  });
+
+  document.getElementById('xp-slider').addEventListener('input', (e) => {
+    currentXP = parseInt(e.target.value);
+    updateAura();
+  });
+
+  document.getElementById('btn-levelup').addEventListener('click', triggerLevelUp);
+
+  const btn = document.getElementById('btn-levelup');
+  btn.addEventListener('mouseenter', () => { btn.style.background = 'rgba(245,240,232,0.1)'; btn.style.color = 'rgba(245,240,232,0.85)'; });
+  btn.addEventListener('mouseleave', () => { btn.style.background = 'rgba(245,240,232,0.06)'; btn.style.color = 'rgba(245,240,232,0.6)'; });
+
+  updateAura();
+}
+
+init();
+</script>
+</body>
+</html>

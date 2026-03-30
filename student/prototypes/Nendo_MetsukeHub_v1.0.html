@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Metsuke Hub · Prototype v1.0</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0A0A12;color:#F5F0E8;font-family:'Crimson Pro',serif;overflow:hidden;width:100vw;height:100vh;display:flex;flex-direction:column}
+
+/* ── Landscape note: designs are landscape-optimised ── */
+.rotate-msg{display:none}
+
+/* ── Topbar — matches Mushin exactly ── */
+.topbar{height:44px;display:flex;align-items:center;padding:0 20px;border-bottom:0.5px solid rgba(245,240,232,0.07);flex-shrink:0}
+.back{font-family:'Cinzel',serif;font-size:10px;letter-spacing:0.12em;color:rgba(245,240,232,0.35);background:none;border:none;cursor:pointer;padding:0;width:80px;text-align:left}
+.back:hover{color:rgba(245,240,232,0.55)}
+.tb-title{flex:1;text-align:center;font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.2em;color:rgba(245,240,232,0.28)}
+.tb-right{width:80px;text-align:right;font-family:'Cinzel',serif;font-size:9px;letter-spacing:0.1em;color:rgba(141,184,212,0.3)}
+
+/* ── Body ── */
+.body{flex:1;display:flex;align-items:center;justify-content:center;padding:4px 8px;overflow:hidden}
+.main-svg{width:100%;height:auto;max-width:760px;display:block}
+
+/* ── Pulse animation for centre eye ── */
+@keyframes eye-pulse{
+  0%,100%{opacity:0.08}
+  50%{opacity:0.16}
+}
+@keyframes iris-scan{
+  0%,100%{r:14}
+  50%{r:16}
+}
+@keyframes ring-breathe{
+  0%,100%{stroke-opacity:0.06}
+  50%{stroke-opacity:0.14}
+}
+
+/* ── Detail overlay ── */
+.overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(8,8,14,0.88);align-items:center;justify-content:center;padding:24px}
+.overlay.visible{display:flex}
+.card{background:#0E0E18;border:0.5px solid rgba(141,184,212,0.15);border-radius:14px;padding:24px 28px;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;position:relative}
+.card-close{position:absolute;top:12px;right:16px;font-family:'Cinzel',serif;font-size:18px;color:rgba(245,240,232,0.3);cursor:pointer;background:none;border:none;padding:4px}
+.card-close:hover{color:rgba(245,240,232,0.6)}
+.card-title{font-family:'Cinzel',serif;font-size:16px;letter-spacing:0.08em;color:rgba(141,184,212,0.85);margin-bottom:4px}
+.card-sub{font-size:10px;font-style:italic;color:rgba(245,240,232,0.3);margin-bottom:14px}
+.card-section{margin-bottom:12px}
+.card-section-title{font-family:'Cinzel',serif;font-size:8px;letter-spacing:0.18em;color:rgba(141,184,212,0.4);text-transform:uppercase;margin-bottom:5px}
+.card-text{font-size:12px;color:rgba(245,240,232,0.5);line-height:1.55}
+.card-list{list-style:none;padding:0}
+.card-list li{font-size:11px;color:rgba(245,240,232,0.42);padding:3px 0 3px 10px;position:relative;line-height:1.35}
+.card-list li::before{content:'';position:absolute;left:0;top:9px;width:3px;height:3px;border-radius:50%;background:rgba(141,184,212,0.3)}
+.challenge-preview{margin-top:8px;padding:10px 12px;border-radius:8px;border:0.5px solid rgba(141,184,212,0.12);background:rgba(141,184,212,0.03)}
+.preview-label{font-family:'Cinzel',serif;font-size:7px;letter-spacing:0.15em;color:rgba(141,184,212,0.35);margin-bottom:6px}
+.preview-grid{display:grid;gap:4px}
+</style>
+</head>
+<body>
+
+<!-- Landscape enforcement message -->
+<div class="rotate-msg">
+  <svg viewBox="0 0 48 48" fill="none"><rect x="8" y="14" width="32" height="20" rx="3" stroke="rgba(245,240,232,0.3)" stroke-width="1.5"/><path d="M24 38v4M20 42h8" stroke="rgba(245,240,232,0.2)" stroke-width="1.2" stroke-linecap="round"/><path d="M36 8l4 4-4 4" stroke="rgba(245,240,232,0.25)" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span>Rotate to landscape</span>
+</div>
+
+<!-- Topbar -->
+<div class="topbar">
+  <button class="back" onclick="alert('← Back to Nendō Home')">← Nendō</button>
+  <div class="tb-title">Metsuke · Challenges</div>
+  <div class="tb-right">目付</div>
+</div>
+
+<!-- Body -->
+<div class="body">
+  <svg class="main-svg" viewBox="0 0 760 420" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background field -->
+    <rect width="760" height="420" fill="#0A0A12"/>
+
+    <!-- Subtle grid / constellation dots -->
+    <circle cx="95"  cy="68"  r="0.6" fill="rgba(141,184,212,0.08)"/>
+    <circle cx="210" cy="32"  r="0.5" fill="rgba(141,184,212,0.06)"/>
+    <circle cx="340" cy="55"  r="0.7" fill="rgba(141,184,212,0.07)"/>
+    <circle cx="480" cy="38"  r="0.5" fill="rgba(141,184,212,0.05)"/>
+    <circle cx="620" cy="72"  r="0.6" fill="rgba(141,184,212,0.08)"/>
+    <circle cx="680" cy="120" r="0.4" fill="rgba(141,184,212,0.06)"/>
+    <circle cx="55"  cy="180" r="0.5" fill="rgba(141,184,212,0.05)"/>
+    <circle cx="710" cy="260" r="0.6" fill="rgba(141,184,212,0.07)"/>
+    <circle cx="130" cy="340" r="0.5" fill="rgba(141,184,212,0.06)"/>
+    <circle cx="380" cy="390" r="0.4" fill="rgba(141,184,212,0.05)"/>
+    <circle cx="600" cy="360" r="0.5" fill="rgba(141,184,212,0.07)"/>
+
+    <!-- Faint watermark -->
+    <text x="20" y="18" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.08)" letter-spacing="1">METSUKE · THE READING MIND</text>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- CENTRE EYE — the Metsuke symbol        -->
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- Outer awareness rings -->
+    <circle cx="380" cy="196" r="58" fill="none" stroke="rgba(141,184,212,0.04)" stroke-width="0.5">
+      <animate attributeName="stroke-opacity" values="0.04;0.1;0.04" dur="4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="380" cy="196" r="44" fill="none" stroke="rgba(141,184,212,0.06)" stroke-width="0.5">
+      <animate attributeName="stroke-opacity" values="0.06;0.12;0.06" dur="3.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="380" cy="196" r="32" fill="none" stroke="rgba(141,184,212,0.1)" stroke-width="0.5">
+      <animate attributeName="stroke-opacity" values="0.1;0.18;0.1" dur="3s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Eye shape — the metsuke gaze -->
+    <g id="centre-eye" style="cursor:pointer" onclick="showInfo('metsuke-core')">
+      <!-- Eye outline -->
+      <path d="M 350 196 Q 365 176 380 174 Q 395 176 410 196 Q 395 216 380 218 Q 365 216 350 196 Z"
+            fill="rgba(141,184,212,0.05)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85"/>
+      <!-- Iris -->
+      <circle cx="380" cy="196" r="14" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.45)" stroke-width="0.75">
+        <animate attributeName="r" values="14;15.5;14" dur="3s" repeatCount="indefinite"/>
+      </circle>
+      <!-- Pupil -->
+      <circle cx="380" cy="196" r="5" fill="rgba(141,184,212,0.5)"/>
+      <!-- Highlight -->
+      <circle cx="384" cy="192" r="1.5" fill="rgba(200,216,232,0.4)"/>
+      <!-- Label -->
+      <text x="380" y="234" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(141,184,212,0.35)" letter-spacing="1.5">METSUKE</text>
+      <text x="380" y="244" text-anchor="middle" font-family="Cinzel,serif" font-size="6.5" fill="rgba(245,240,232,0.2)" letter-spacing="0.5">The Reading Mind</text>
+    </g>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- CONNECTOR LINES from centre to nodes   -->
+    <!-- ═══════════════════════════════════════ -->
+    <line x1="380" y1="142" x2="380" y2="78"  stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+    <line x1="436" y1="170" x2="530" y2="110" stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+    <line x1="436" y1="222" x2="530" y2="282" stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+    <line x1="380" y1="250" x2="380" y2="316" stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+    <line x1="324" y1="222" x2="230" y2="282" stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+    <line x1="324" y1="170" x2="230" y2="110" stroke="rgba(141,184,212,0.12)" stroke-width="0.75" stroke-dasharray="3 4"/>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- CATEGORY NODES — 6 challenge types      -->
+    <!-- arranged in a hexagonal ring            -->
+    <!-- ═══════════════════════════════════════ -->
+
+    <!-- 1. PATTERN — top centre -->
+    <g style="cursor:pointer" onclick="showInfo('pattern')" id="node-pattern">
+      <circle cx="380" cy="58" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="380" cy="58" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-pattern.mouseenter" end="node-pattern.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-pattern.mouseenter" end="node-pattern.mouseleave"/>
+      </circle>
+      <circle cx="380" cy="58" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: 3x3 grid pattern -->
+      <rect x="374" y="52" width="4" height="4" rx="0.5" fill="rgba(141,184,212,0.7)" opacity="0.8"/>
+      <rect x="380" y="52" width="4" height="4" rx="0.5" fill="rgba(141,184,212,0.7)" opacity="0.35"/>
+      <rect x="374" y="58" width="4" height="4" rx="0.5" fill="rgba(141,184,212,0.7)" opacity="0.35"/>
+      <rect x="380" y="58" width="4" height="4" rx="0.5" fill="rgba(141,184,212,0.7)" opacity="0.8"/>
+      <text x="380" y="97" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">PATTERN</text>
+      <text x="380" y="108" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Recognition</text>
+    </g>
+
+    <!-- 2. DIFFERENCE — top right -->
+    <g style="cursor:pointer" onclick="showInfo('difference')" id="node-diff">
+      <circle cx="560" cy="100" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="560" cy="100" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-diff.mouseenter" end="node-diff.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-diff.mouseenter" end="node-diff.mouseleave"/>
+      </circle>
+      <circle cx="560" cy="100" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: two overlapping circles with gap -->
+      <circle cx="556" cy="98" r="5" fill="none" stroke="rgba(141,184,212,0.7)" stroke-width="0.75"/>
+      <circle cx="564" cy="102" r="5" fill="none" stroke="rgba(141,184,212,0.7)" stroke-width="0.75"/>
+      <circle cx="564" cy="102" r="1" fill="rgba(141,184,212,0.6)"/>
+      <text x="560" y="139" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">DIFFERENCE</text>
+      <text x="560" y="150" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Spot the change</text>
+    </g>
+
+    <!-- 3. COMPREHENSION — bottom right -->
+    <g style="cursor:pointer" onclick="showInfo('comprehension')" id="node-comp">
+      <circle cx="560" cy="292" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="560" cy="292" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-comp.mouseenter" end="node-comp.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-comp.mouseenter" end="node-comp.mouseleave"/>
+      </circle>
+      <circle cx="560" cy="292" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: scroll/text lines -->
+      <line x1="554" y1="287" x2="566" y2="287" stroke="rgba(141,184,212,0.7)" stroke-width="0.85"/>
+      <line x1="554" y1="291" x2="564" y2="291" stroke="rgba(141,184,212,0.45)" stroke-width="0.7"/>
+      <line x1="554" y1="295" x2="562" y2="295" stroke="rgba(141,184,212,0.3)" stroke-width="0.6"/>
+      <text x="560" y="331" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">COMPREHENSION</text>
+      <text x="560" y="342" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Read &amp; understand</text>
+    </g>
+
+    <!-- 4. MEMORY — bottom centre -->
+    <g style="cursor:pointer" onclick="showInfo('memory')" id="node-mem">
+      <circle cx="380" cy="336" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="380" cy="336" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-mem.mouseenter" end="node-mem.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-mem.mouseenter" end="node-mem.mouseleave"/>
+      </circle>
+      <circle cx="380" cy="336" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: sequence dots -->
+      <circle cx="373" cy="334" r="2" fill="rgba(141,184,212,0.7)"/>
+      <circle cx="380" cy="334" r="2" fill="rgba(141,184,212,0.45)"/>
+      <circle cx="387" cy="334" r="2" fill="rgba(141,184,212,0.25)"/>
+      <path d="M374 339 L386 339" fill="none" stroke="rgba(141,184,212,0.3)" stroke-width="0.5" stroke-dasharray="2 2"/>
+      <text x="380" y="375" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">MEMORY</text>
+      <text x="380" y="386" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Sequence recall</text>
+    </g>
+
+    <!-- 5. HIDDEN — bottom left -->
+    <g style="cursor:pointer" onclick="showInfo('hidden')" id="node-hidden">
+      <circle cx="200" cy="292" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="200" cy="292" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-hidden.mouseenter" end="node-hidden.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-hidden.mouseenter" end="node-hidden.mouseleave"/>
+      </circle>
+      <circle cx="200" cy="292" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: magnifying glass -->
+      <circle cx="198" cy="290" r="4.5" fill="none" stroke="rgba(141,184,212,0.7)" stroke-width="0.75"/>
+      <line x1="201" y1="293.5" x2="205" y2="297" stroke="rgba(141,184,212,0.5)" stroke-width="0.75" stroke-linecap="round"/>
+      <text x="200" y="331" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">HIDDEN</text>
+      <text x="200" y="342" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Find what others miss</text>
+    </g>
+
+    <!-- 6. DETAIL — top left -->
+    <g style="cursor:pointer" onclick="showInfo('detail')" id="node-detail">
+      <circle cx="200" cy="100" r="32" fill="rgba(141,184,212,0.025)" stroke="rgba(141,184,212,0.07)" stroke-width="0.5"/>
+      <circle cx="200" cy="100" r="22" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.35)" stroke-width="0.85">
+        <set attributeName="fill" to="rgba(141,184,212,0.12)" begin="node-detail.mouseenter" end="node-detail.mouseleave"/>
+        <set attributeName="stroke" to="rgba(141,184,212,0.6)" begin="node-detail.mouseenter" end="node-detail.mouseleave"/>
+      </circle>
+      <circle cx="200" cy="100" r="12" fill="rgba(141,184,212,0.08)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <!-- Icon: crosshair / focus point -->
+      <line x1="193" y1="100" x2="207" y2="100" stroke="rgba(141,184,212,0.5)" stroke-width="0.5"/>
+      <line x1="200" y1="93" x2="200" y2="107" stroke="rgba(141,184,212,0.5)" stroke-width="0.5"/>
+      <circle cx="200" cy="100" r="3" fill="none" stroke="rgba(141,184,212,0.65)" stroke-width="0.7"/>
+      <text x="200" y="139" text-anchor="middle" font-family="Cinzel,serif" font-size="9" fill="rgba(141,184,212,0.75)" letter-spacing="1.2">DETAIL</text>
+      <text x="200" y="150" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(245,240,232,0.25)" letter-spacing="0.5">Precision observation</text>
+    </g>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- BEGIN CHALLENGE button                  -->
+    <!-- ═══════════════════════════════════════ -->
+    <g style="cursor:pointer" onclick="showInfo('begin')">
+      <rect x="300" y="386" width="160" height="24" rx="12" fill="rgba(141,184,212,0.06)" stroke="rgba(141,184,212,0.25)" stroke-width="0.75"/>
+      <text x="380" y="402" text-anchor="middle" font-family="Cinzel,serif" font-size="8" fill="rgba(141,184,212,0.7)" letter-spacing="2">BEGIN CHALLENGE</text>
+    </g>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- MANTRA — top right corner               -->
+    <!-- ═══════════════════════════════════════ -->
+    <text x="740" y="410" text-anchor="end" font-family="Crimson Pro,serif" font-size="9" fill="rgba(141,184,212,0.12)" font-style="italic">
+      The untrained eye sees. The ninja's eye reads.
+    </text>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- PROGRESS PIPS — left edge               -->
+    <!-- ═══════════════════════════════════════ -->
+    <g>
+      <text x="32" y="165" text-anchor="middle" font-family="Cinzel,serif" font-size="7" fill="rgba(141,184,212,0.2)" letter-spacing="0.5" transform="rotate(-90,32,196)">STAGE</text>
+      <circle cx="32" cy="174" r="3" fill="rgba(141,184,212,0.5)" stroke="rgba(141,184,212,0.3)" stroke-width="0.5"/>
+      <circle cx="32" cy="186" r="3" fill="rgba(141,184,212,0.3)" stroke="rgba(141,184,212,0.2)" stroke-width="0.5"/>
+      <circle cx="32" cy="198" r="3" fill="rgba(141,184,212,0.1)" stroke="rgba(141,184,212,0.1)" stroke-width="0.5"/>
+      <circle cx="32" cy="210" r="3" fill="rgba(141,184,212,0.05)" stroke="rgba(141,184,212,0.08)" stroke-width="0.5"/>
+      <circle cx="32" cy="222" r="3" fill="rgba(141,184,212,0.05)" stroke="rgba(141,184,212,0.08)" stroke-width="0.5"/>
+      <text x="32" y="238" text-anchor="middle" font-family="Cinzel,serif" font-size="6" fill="rgba(141,184,212,0.18)" letter-spacing="0.3">2 / 5</text>
+    </g>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!-- XP COUNTER — right edge                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <g>
+      <text x="728" y="190" text-anchor="end" font-family="Cinzel,serif" font-size="7" fill="rgba(141,184,212,0.2)" letter-spacing="1">METSUKE XP</text>
+      <text x="728" y="206" text-anchor="end" font-family="Cinzel,serif" font-size="14" fill="rgba(141,184,212,0.35)" font-weight="700">340</text>
+    </g>
+
+  </svg>
+</div>
+
+<!-- Detail overlay -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeInfo()">
+  <div class="card">
+    <button class="card-close" onclick="closeInfo()">&times;</button>
+    <div id="card-content"></div>
+  </div>
+</div>
+
+<script>
+const info = {
+  'metsuke-core': {
+    title: 'Metsuke — The Reading Mind',
+    sub: 'Perception and comprehension · Intake quality',
+    sections: [
+      { title: 'Centre symbol', text: 'The eye replaces Mushin\'s Shiho box at the centre. Metsuke is about seeing clearly — the gaze is the core metaphor. Clicking the eye could show overall discipline stats or the mantra.' },
+      { title: 'Layout', text: 'Hexagonal ring of 6 challenge categories around the central eye. This mirrors BreathHome\'s diamond with 4 elements + Shiho, but adapted for Metsuke\'s broader category set. The hex ring fills the landscape viewport more evenly than a diamond would with 6 nodes.' },
+      { title: 'Design rules followed', list: [
+        'Landscape only — no portrait scroll',
+        'Full SVG layout like BreathHome (760×420 viewBox)',
+        'Cinzel font family throughout, same letter-spacing patterns',
+        'Concentric circle nodes (3 layers: outer glow, mid fill, inner core)',
+        'Dashed connector lines from centre to each node',
+        'Same topbar: 44px height, back button, centred title',
+        'Metsuke blue (#8DB8D4 / rgb 141,184,212) throughout',
+        'Content appropriate for 7-9 year olds'
+      ]}
+    ]
+  },
+  'pattern': {
+    title: 'Pattern Recognition',
+    sub: 'Find the sequence · See the rule · Match the shape',
+    sections: [
+      { title: 'Challenge type', text: 'Challenges that test the ability to spot patterns, sequences, and rules. The student sees a series of shapes, colours, or numbers and must identify what comes next or what fits.' },
+      { title: 'Example challenges', list: [
+        '"Which shape completes the sequence?" — 4 shapes shown, pick the 5th',
+        '"Find the rule" — spot what connects a set of objects',
+        '"Match the pattern" — replicate a visual pattern from memory',
+        '"What doesn\'t belong?" — identify the outlier in a group'
+      ]},
+      { title: 'Difficulty curve', text: 'Stage 1: simple colour/shape patterns. Stage 2: multi-attribute patterns. Stage 3: abstract rules. Stage 4: time-limited. Stage 5: complex layered patterns.' }
+    ]
+  },
+  'difference': {
+    title: 'Spot the Difference',
+    sub: 'Two scenes · Find what changed · Train the eye',
+    sections: [
+      { title: 'Challenge type', text: 'Classic spot-the-difference adapted for the Metsuke framework. Two images shown side by side (landscape layout is perfect for this). The student taps differences they find.' },
+      { title: 'Design consideration', text: 'This is the most naturally visual challenge category. The runner screen for this type needs a split-view layout — two images side by side with tap targets on the differences. Could use SVG scenes so they scale perfectly.' },
+      { title: 'Difficulty curve', text: 'Stage 1: 3 obvious differences. Stage 2: 5 differences, subtler. Stage 3: differences in position/rotation not just presence. Stage 4: time-limited. Stage 5: animated scenes where differences appear and disappear.' }
+    ]
+  },
+  'comprehension': {
+    title: 'Comprehension',
+    sub: 'Read the scroll · Find the answer · Understand deeply',
+    sections: [
+      { title: 'Challenge type', text: 'Short reading passages followed by questions. Tests the ability to extract meaning, not just read words. The passages should use ninja-themed content — short stories, instructions, riddles.' },
+      { title: 'UI consideration', text: 'This is the most text-heavy challenge type. For 7-9 year olds, passages must be short (3-6 sentences), with clear font sizing and generous line spacing. Questions should be multiple choice with 3-4 options.' },
+      { title: 'Content direction', list: [
+        'Ninja training scrolls with instructions to follow',
+        'Short stories about dojo life with hidden details',
+        'Riddles that require careful reading',
+        'Instructions where one word changes the meaning'
+      ]}
+    ]
+  },
+  'memory': {
+    title: 'Memory Sequences',
+    sub: 'Watch · Remember · Repeat · Grow',
+    sections: [
+      { title: 'Challenge type', text: 'Sequence recall challenges. A pattern is shown, then hidden. The student must reproduce it. This directly trains working memory — a core cognitive skill for this age group.' },
+      { title: 'Example challenges', list: [
+        '"Follow the path" — a sequence of nodes lights up, reproduce it',
+        '"Remember the order" — objects appear in order, recall the sequence',
+        '"Growing chain" — starts with 2 items, adds one each round',
+        '"Mirror sequence" — reproduce the sequence backwards'
+      ]},
+      { title: 'Runner needs', text: 'Needs a grid or path of tappable nodes. Animation for the "show" phase. Input phase with immediate feedback. Growing difficulty within a single challenge.' }
+    ]
+  },
+  'hidden': {
+    title: 'Hidden Detail',
+    sub: 'The detail others miss · The ninja\'s eye reads',
+    sections: [
+      { title: 'Challenge type', text: 'Scene-based challenges where specific items or details are hidden within a larger image. Similar to "hidden objects" games but with a Metsuke twist — the items are meaningful, not random.' },
+      { title: 'Design opportunity', text: 'This category has the highest potential for beautiful visual design. Richly illustrated scenes of dojo life, nature, or ninja worlds with hidden elements. Could become the most visually distinctive part of the Nendō.' },
+      { title: 'Difficulty curve', text: 'Stage 1: find 3 items, they contrast with background. Stage 2: find 5 items, better camouflaged. Stage 3: find items that match a description, not a picture. Stage 4: time-limited. Stage 5: items hidden by context, not just visually.' }
+    ]
+  },
+  'detail': {
+    title: 'Precision Observation',
+    sub: 'Look closer · Count exactly · Miss nothing',
+    sections: [
+      { title: 'Challenge type', text: 'Challenges that test precise observation — counting specific items in a busy scene, identifying exact colours, spotting tiny changes. The Metsuke equivalent of a surgeon\'s eye.' },
+      { title: 'Example challenges', list: [
+        '"How many?" — count specific items in a detailed scene',
+        '"Which is exactly the same?" — pick the precise match from near-identical options',
+        '"What changed?" — brief flash of an image, then a changed version — spot it',
+        '"Describe what you saw" — image shown for 5 seconds, then questions about details'
+      ]},
+      { title: 'Crossover with other types', text: 'Detail challenges overlap with Difference and Hidden. The distinguishing factor: Detail focuses on precision and accuracy, not searching. The answer requires careful looking, not exploring.' }
+    ]
+  },
+  'begin': {
+    title: 'Begin Challenge',
+    sub: 'How challenge selection works',
+    sections: [
+      { title: 'Two entry modes', text: 'Students can either click a specific category node to browse challenges within it, or click BEGIN CHALLENGE for a smart session that mixes categories based on their progress and recent activity.' },
+      { title: 'Smart session', text: 'Like Mushin\'s check-in system, a smart session could ask "What kind of seeing do you want to practice today?" or auto-select based on which categories need the most work.' },
+      { title: 'Decision needed', text: 'Should BEGIN CHALLENGE start a mixed session (like Mushin\'s multi-technique flow) or go to a category selection screen? The Mushin pattern suggests a brief check-in → curated sequence is the right approach.' }
+    ]
+  }
+};
+
+function showInfo(id) {
+  const d = info[id];
+  if (!d) return;
+  const el = document.getElementById('card-content');
+  let html = `<div class="card-title">${d.title}</div><div class="card-sub">${d.sub}</div>`;
+  d.sections.forEach(s => {
+    html += `<div class="card-section"><div class="card-section-title">${s.title}</div>`;
+    if (s.text) html += `<div class="card-text">${s.text}</div>`;
+    if (s.list) { html += '<ul class="card-list">'; s.list.forEach(li => html += `<li>${li}</li>`); html += '</ul>'; }
+    html += '</div>';
+  });
+  el.innerHTML = html;
+  document.getElementById('overlay').classList.add('visible');
+}
+
+function closeInfo() {
+  document.getElementById('overlay').classList.remove('visible');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInfo(); });
+</script>
+
+</body>
+</html>

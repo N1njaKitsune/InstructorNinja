@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nendō Student Profile</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: #050508;
+      font-family: 'Crimson Pro', serif;
+      color: #F5F0E8;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 40px;
+      padding: 20px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 30px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .control-group {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .control-label {
+      font-family: 'Cinzel', serif;
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.7;
+    }
+
+    .btn-variant, .btn-device {
+      width: 50px;
+      height: 50px;
+      border: 2px solid rgba(245,240,232,0.3);
+      background: rgba(20,18,14,0.5);
+      color: #F5F0E8;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+
+    .btn-variant.active, .btn-device.active {
+      border-color: rgba(122,184,154,1);
+      background: rgba(122,184,154,0.2);
+      box-shadow: 0 0 12px rgba(122,184,154,0.4);
+    }
+
+    .btn-variant:hover, .btn-device:hover {
+      border-color: rgba(122,184,154,0.6);
+    }
+
+    .screen-container {
+      position: relative;
+      width: 844px;
+      height: 390px;
+      border: 8px solid #1a1a1a;
+      border-radius: 40px;
+      background: #050508;
+      box-shadow: 0 0 60px rgba(0,0,0,0.8);
+      overflow: hidden;
+    }
+
+    .screen-container.tablet {
+      width: 1194px;
+      height: 834px;
+    }
+
+    .device-viewport {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+      background: #050508;
+    }
+
+    .content-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .variant {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 400ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+
+    .variant.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* ===== VARIANT A: THE GATEWAY ===== */
+    .variant-a {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 40px 50px;
+    }
+
+    .gateway-student-info {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .aura-orb-small {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(220,180,100,0.6), rgba(220,180,100,0.2));
+      border: 2px solid rgba(220,180,100,0.4);
+      box-shadow: 0 0 24px rgba(220,180,100,0.3), inset 0 0 12px rgba(255,255,255,0.1);
+      animation: breathe 4s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 24px rgba(220,180,100,0.3), inset 0 0 12px rgba(255,255,255,0.1); }
+      50% { transform: scale(1.05); box-shadow: 0 0 32px rgba(220,180,100,0.5), inset 0 0 16px rgba(255,255,255,0.15); }
+    }
+
+    .student-name {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .student-rank {
+      font-family: 'Crimson Pro', serif;
+      font-size: 14px;
+      font-style: italic;
+      opacity: 0.8;
+      text-align: center;
+    }
+
+    .gateway-portal-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .portal-button {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(122,184,154,0.4), rgba(122,184,154,0.1));
+      border: 3px solid rgba(122,184,154,0.5);
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+      box-shadow: 0 0 30px rgba(122,184,154,0.2), inset 0 0 20px rgba(255,255,255,0.05);
+      position: relative;
+    }
+
+    .portal-button:hover {
+      transform: scale(1.08);
+      border-color: rgba(122,184,154,0.8);
+      box-shadow: 0 0 40px rgba(122,184,154,0.4), inset 0 0 30px rgba(122,184,154,0.2);
+    }
+
+    .portal-button.ripple::after {
+      content: '';
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 3px solid rgba(122,184,154,0.8);
+      animation: portalRipple 600ms cubic-bezier(0.22,0.61,0.36,1);
+    }
+
+    @keyframes portalRipple {
+      0% { transform: scale(0.8); opacity: 1; }
+      100% { transform: scale(1.4); opacity: 0; }
+    }
+
+    .portal-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.9;
+      pointer-events: none;
+    }
+
+    .portal-stats {
+      display: flex;
+      gap: 30px;
+      font-size: 12px;
+      text-align: center;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-label {
+      opacity: 0.6;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stat-value {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    /* ===== VARIANT B: THE PATH ===== */
+    .variant-b {
+      display: flex;
+      flex-direction: column;
+      padding: 40px 50px;
+      gap: 50px;
+    }
+
+    .path-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .path-student-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .path-stats {
+      display: flex;
+      gap: 40px;
+      font-size: 12px;
+    }
+
+    .path-journey {
+      position: relative;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .path-line {
+      position: absolute;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(220,180,100,0.2), rgba(122,184,154,0.3), rgba(141,184,212,0.2));
+      width: 90%;
+      left: 5%;
+      top: 50%;
+    }
+
+    .milestone {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(122,184,154,0.6);
+      border: 1px solid rgba(122,184,154,0.8);
+      box-shadow: 0 0 8px rgba(122,184,154,0.4);
+      position: relative;
+      z-index: 2;
+      animation: floatMilestone 3s ease-in-out infinite;
+    }
+
+    .milestone:nth-child(2) { animation-delay: 0s; }
+    .milestone:nth-child(3) { animation-delay: 0.4s; }
+    .milestone:nth-child(4) { animation-delay: 0.8s; }
+
+    @keyframes floatMilestone {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+
+    .gate-button {
+      width: 70px;
+      height: 70px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, rgba(122,184,154,0.3), rgba(122,184,154,0.1));
+      border: 2px solid rgba(122,184,154,0.6);
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+      box-shadow: 0 0 20px rgba(122,184,154,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .gate-button:hover {
+      border-color: rgba(122,184,154,0.9);
+      box-shadow: 0 0 30px rgba(122,184,154,0.5);
+      transform: scale(1.1);
+    }
+
+    /* ===== VARIANT C: THE COMPANION ===== */
+    .variant-c {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 50px;
+      gap: 20px;
+    }
+
+    .aura-orb-large {
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, rgba(220,180,100,0.6), rgba(220,180,100,0.2));
+      border: 3px solid rgba(220,180,100,0.5);
+      box-shadow: 0 0 40px rgba(220,180,100,0.4), inset 0 0 20px rgba(255,255,255,0.1);
+      animation: breatheLarge 5s ease-in-out infinite;
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+      position: relative;
+    }
+
+    .aura-orb-large:hover {
+      box-shadow: 0 0 50px rgba(220,180,100,0.6), inset 0 0 30px rgba(255,255,255,0.15);
+    }
+
+    @keyframes breatheLarge {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.08); }
+    }
+
+    .orbit-stat {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      background: rgba(20,18,14,0.6);
+      border: 1px solid rgba(122,184,154,0.4);
+      font-size: 11px;
+      text-align: center;
+      animation: orbit 8s linear infinite;
+      pointer-events: none;
+    }
+
+    @keyframes orbit {
+      0% { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+      100% { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+    }
+
+    .orbit-stat:nth-child(1) { animation-delay: 0s; }
+    .orbit-stat:nth-child(2) { animation-delay: -2.6s; }
+    .orbit-stat:nth-child(3) { animation-delay: -5.2s; }
+
+    .orbit-label {
+      font-size: 9px;
+      opacity: 0.7;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .orbit-value {
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .companion-name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 600;
+      margin-top: 20px;
+    }
+
+    .companion-rank {
+      font-family: 'Crimson Pro', serif;
+      font-size: 13px;
+      font-style: italic;
+      opacity: 0.8;
+      margin-top: 4px;
+    }
+
+    /* ===== DOJO HOME ===== */
+    .dojo-home {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      gap: 30px;
+      z-index: 10;
+    }
+
+    .dojo-title {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 600;
+      text-align: center;
+    }
+
+    .discipline-doors {
+      display: flex;
+      gap: 30px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .discipline-door {
+      width: 120px;
+      height: 160px;
+      border-radius: 8px;
+      border: 2px solid;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+      flex-direction: column;
+      gap: 8px;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .door-mushin {
+      background: rgba(122,184,154,0.15);
+      border-color: rgba(122,184,154,0.5);
+      box-shadow: 0 0 20px rgba(122,184,154,0.2);
+    }
+
+    .door-mushin:hover {
+      background: rgba(122,184,154,0.25);
+      border-color: rgba(122,184,154,0.8);
+      box-shadow: 0 0 30px rgba(122,184,154,0.4);
+    }
+
+    .door-metsuke {
+      background: rgba(141,184,212,0.15);
+      border-color: rgba(141,184,212,0.5);
+      box-shadow: 0 0 20px rgba(141,184,212,0.2);
+    }
+
+    .door-metsuke:hover {
+      background: rgba(141,184,212,0.25);
+      border-color: rgba(141,184,212,0.8);
+      box-shadow: 0 0 30px rgba(141,184,212,0.4);
+    }
+
+    .door-tachi {
+      background: rgba(212,130,106,0.15);
+      border-color: rgba(212,130,106,0.5);
+      box-shadow: 0 0 20px rgba(212,130,106,0.2);
+    }
+
+    .door-tachi:hover {
+      background: rgba(212,130,106,0.25);
+      border-color: rgba(212,130,106,0.8);
+      box-shadow: 0 0 30px rgba(212,130,106,0.4);
+    }
+
+    .back-button {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      width: 60px;
+      height: 60px;
+      border: 2px solid rgba(245,240,232,0.3);
+      background: rgba(20,18,14,0.5);
+      color: #F5F0E8;
+      font-family: 'Cinzel', serif;
+      font-weight: 600;
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 200ms cubic-bezier(0.22,0.61,0.36,1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .back-button:hover {
+      border-color: rgba(122,184,154,0.6);
+    }
+
+    /* Environment Layers */
+    .env-hero {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      background-size: cover;
+      background-position: center;
+      background-image: url('../Assets/backgrounds/bg-student-profile.webp');
+      filter: brightness(0.45) saturate(0.7);
+    }
+
+    .env-warmth {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: radial-gradient(ellipse at 50% 70%, rgba(200,160,80,0.06) 0%, transparent 60%);
+    }
+
+    .env-texture {
+      position: absolute;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%23f5f0e8' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+    }
+
+    .env-vignette {
+      position: absolute;
+      inset: 0;
+      z-index: 4;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, transparent 40%, rgba(20,18,14,0.5) 100%);
+    }
+
+    /* Particles Canvas */
+    #particleCanvas {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      pointer-events: none;
+    }
+
+    /* Content Layer - sits above environment */
+    .content-layer {
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="controls">
+    <div class="control-group">
+      <span class="control-label">Variant:</span>
+      <button class="btn-variant active" onclick="switchVariant('a')">A</button>
+      <button class="btn-variant" onclick="switchVariant('b')">B</button>
+      <button class="btn-variant" onclick="switchVariant('c')">C</button>
+    </div>
+    <div class="control-group">
+      <span class="control-label">Device:</span>
+      <button class="btn-device active" onclick="switchDevice('phone')">Phone</button>
+      <button class="btn-device" onclick="switchDevice('tablet')">Tablet</button>
+    </div>
+  </div>
+
+  <div class="screen-container" id="screenContainer">
+    <div class="device-viewport">
+      <!-- Environment Layers -->
+      <div class="env-hero" id="envHero"></div>
+      <div class="env-warmth"></div>
+      <div class="env-texture"></div>
+      <div class="env-vignette"></div>
+      <canvas id="particleCanvas"></canvas>
+
+      <div class="content-layer">
+
+        <!-- VARIANT A: THE GATEWAY -->
+        <div class="variant variant-a active" id="variant-a">
+          <div class="gateway-student-info">
+            <div class="aura-orb-small"></div>
+            <div class="student-name">Kai</div>
+            <div class="student-rank">Ember · Phase 2</div>
+          </div>
+          <div class="gateway-portal-area">
+            <button class="portal-button" id="gatewayPortal" onclick="enterDojo()"></button>
+            <div class="portal-text">Enter</div>
+            <div class="portal-stats">
+              <div class="stat-item">
+                <div class="stat-label">Sessions</div>
+                <div class="stat-value">12</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Streak</div>
+                <div class="stat-value">3d</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- VARIANT B: THE PATH -->
+        <div class="variant variant-b" id="variant-b">
+          <div class="path-header">
+            <div class="path-student-info">
+              <div class="student-name">Kai</div>
+              <div class="student-rank">Ember · Phase 2</div>
+            </div>
+            <div class="path-stats">
+              <div class="stat-item">
+                <div class="stat-label">Sessions</div>
+                <div class="stat-value">12</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-label">Streak</div>
+                <div class="stat-value">3d</div>
+              </div>
+            </div>
+          </div>
+          <div class="path-journey">
+            <div class="path-line"></div>
+            <div class="milestone"></div>
+            <div class="milestone"></div>
+            <div class="milestone"></div>
+            <div class="milestone"></div>
+            <button class="gate-button" onclick="enterDojo()">⛩</button>
+          </div>
+        </div>
+
+        <!-- VARIANT C: THE COMPANION -->
+        <div class="variant variant-c" id="variant-c">
+          <div class="aura-orb-large" id="companionOrb" onclick="enterDojo()"></div>
+          <div class="orbit-stat">
+            <div><div class="orbit-label">Sessions</div><div class="orbit-value">12</div></div>
+          </div>
+          <div class="orbit-stat">
+            <div><div class="orbit-label">Streak</div><div class="orbit-value">3d</div></div>
+          </div>
+          <div class="orbit-stat">
+            <div><div class="orbit-label">Phase</div><div class="orbit-value">2</div></div>
+          </div>
+          <div class="companion-name">Kai</div>
+          <div class="companion-rank">Ember · Phase 2</div>
+        </div>
+
+        <!-- DOJO HOME (hidden until enter) -->
+        <div class="dojo-home" id="dojoHome" style="opacity: 0; pointer-events: none;">
+          <button class="back-button" onclick="backToProfile()">←</button>
+          <div class="dojo-title">Nendō</div>
+          <div class="discipline-doors">
+            <div class="discipline-door door-mushin">Mushin<br>Mind</div>
+            <div class="discipline-door door-metsuke">Metsuke<br>Vision</div>
+            <div class="discipline-door door-tachi">Tachi<br>Presence</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentVariant = 'a';
+    let currentDevice = 'phone';
+    let isInDojo = false;
+
+    function switchVariant(variant) {
+      if (isInDojo) return;
+      currentVariant = variant;
+      document.querySelectorAll('.variant').forEach(v => v.classList.remove('active'));
+      document.getElementById('variant-' + variant).classList.add('active');
+      document.querySelectorAll('.btn-variant').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+    }
+
+    function switchDevice(device) {
+      currentDevice = device;
+      const container = document.getElementById('screenContainer');
+      if (device === 'tablet') {
+        container.classList.add('tablet');
+      } else {
+        container.classList.remove('tablet');
+      }
+      document.querySelectorAll('.btn-device').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      initParticles();
+    }
+
+    function enterDojo() {
+      isInDojo = true;
+      const profile = document.querySelectorAll('.variant');
+      const dojo = document.getElementById('dojoHome');
+
+      // Swap to dojo home background (night scene)
+      document.getElementById('envHero').style.backgroundImage = "url('../Assets/backgrounds/bg-home-hub.webp')";
+      document.getElementById('envHero').style.filter = 'brightness(0.35) saturate(0.6)';
+
+      profile.forEach(p => p.style.opacity = '0');
+      setTimeout(() => {
+        profile.forEach(p => p.style.pointerEvents = 'none');
+        dojo.style.opacity = '1';
+        dojo.style.pointerEvents = 'auto';
+      }, 200);
+    }
+
+    function backToProfile() {
+      isInDojo = false;
+      const profile = document.querySelectorAll('.variant');
+      const dojo = document.getElementById('dojoHome');
+
+      // Swap back to student profile background (daytime scene)
+      document.getElementById('envHero').style.backgroundImage = "url('../Assets/backgrounds/bg-student-profile.webp')";
+      document.getElementById('envHero').style.filter = 'brightness(0.45) saturate(0.7)';
+
+      dojo.style.opacity = '0';
+      dojo.style.pointerEvents = 'none';
+      setTimeout(() => {
+        profile.forEach(p => p.style.opacity = '1');
+        profile.forEach(p => p.style.pointerEvents = 'auto');
+      }, 200);
+    }
+
+    // Particle system
+    let particles = [];
+
+    class Particle {
+      constructor(canvas) {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + 10;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = -Math.random() * 0.5 - 0.2;
+        this.life = 1;
+        this.maxLife = Math.random() * 3000 + 2000;
+        this.age = 0;
+        this.size = Math.random() * 3 + 1;
+      }
+
+      update(deltaTime) {
+        this.age += deltaTime;
+        this.life = Math.max(0, 1 - this.age / this.maxLife);
+        this.x += this.vx;
+        this.y += this.vy;
+      }
+
+      draw(ctx) {
+        ctx.fillStyle = `rgba(220,180,100,${this.life * 0.3})`;
+        ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
+      }
+
+      isDead() {
+        return this.life <= 0;
+      }
+    }
+
+    function initParticles() {
+      const canvas = document.getElementById('particleCanvas');
+      const container = document.getElementById('screenContainer');
+      canvas.width = container.offsetWidth;
+      canvas.height = container.offsetHeight;
+      particles = [];
+    }
+
+    function animateParticles() {
+      const canvas = document.getElementById('particleCanvas');
+      const ctx = canvas.getContext('2d');
+
+      if (particles.length < 20 && Math.random() > 0.7) {
+        particles.push(new Particle(canvas));
+      }
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      for (let i = particles.length - 1; i >= 0; i--) {
+        particles[i].update(16);
+        particles[i].draw(ctx);
+        if (particles[i].isDead()) {
+          particles.splice(i, 1);
+        }
+      }
+
+      requestAnimationFrame(animateParticles);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', function() {
+      initParticles();
+      animateParticles();
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nendō — Check-In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Crimson Pro', serif;
+      background: #0A0A12;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .device-frame {
+      position: relative;
+      border-radius: 40px;
+      border: 12px solid #1a1a2e;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+      display: flex;
+    }
+
+    .device-frame.iphone {
+      width: 844px;
+      height: 390px;
+    }
+
+    .device-frame.ipad {
+      width: 1194px;
+      height: 834px;
+    }
+
+    .device-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      display: flex;
+      gap: 10px;
+    }
+
+    .toggle-btn {
+      padding: 8px 16px;
+      background: rgba(122, 184, 154, 0.2);
+      border: 1px solid #7AB89A;
+      color: #7AB89A;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .toggle-btn.active {
+      background: #7AB89A;
+      color: #0A0A12;
+    }
+
+    .toggle-btn:hover {
+      border-color: #9dd4bc;
+    }
+
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(180deg, #1a1a2e 0%, #0A0A12 50%, #0f0f1a 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: row;
+    }
+
+    /* Background layers */
+    .screen::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background:
+        radial-gradient(ellipse at center bottom, rgba(122, 184, 154, 0.05) 0%, transparent 70%),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(122, 184, 154, 0.02) 2px, rgba(122, 184, 154, 0.02) 4px);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Ambient particles */
+    .particles {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      z-index: 2;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(122, 184, 154, 0.1);
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.3; }
+      50% { transform: translateY(-20px) translateX(10px) scale(1.1); opacity: 0.6; }
+    }
+
+    /* Content container */
+    .content {
+      position: relative;
+      z-index: 3;
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+      height: 100%;
+      padding: 40px;
+      gap: 40px;
+    }
+
+    /* Left panel */
+    .left-panel {
+      flex: 0 0 40%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 24px;
+    }
+
+    .prompt {
+      font-family: 'Cinzel', serif;
+      font-size: 32px;
+      font-weight: 600;
+      color: #f5f5f0;
+      line-height: 1.2;
+      margin-top: 20px;
+    }
+
+    .subtitle {
+      font-family: 'Crimson Pro', serif;
+      font-size: 16px;
+      font-style: italic;
+      color: #b8b8ae;
+      line-height: 1.5;
+    }
+
+    .divider {
+      width: 60px;
+      height: 2px;
+      background: linear-gradient(90deg, #7AB89A, transparent);
+      margin-top: 8px;
+    }
+
+    .state-message {
+      opacity: 0;
+      transition: opacity 0.5s ease 0.2s;
+      pointer-events: none;
+      margin-top: 24px;
+    }
+
+    .state-message.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .state-name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .state-insight {
+      font-family: 'Crimson Pro', serif;
+      font-size: 15px;
+      color: #d0d0c8;
+      line-height: 1.6;
+    }
+
+    /* Right panel - grid */
+    .right-panel {
+      flex: 0 0 60%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .state-card {
+      aspect-ratio: 1;
+      background: rgba(20, 20, 28, 0.6);
+      border: 2px solid rgba(150, 150, 140, 0.3);
+      border-radius: 20px;
+      padding: 20px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+      animation: cardFadeIn 0.6s ease both;
+    }
+
+    @keyframes cardFadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .state-card:nth-child(1) { animation-delay: 0.1s; }
+    .state-card:nth-child(2) { animation-delay: 0.2s; }
+    .state-card:nth-child(3) { animation-delay: 0.3s; }
+    .state-card:nth-child(4) { animation-delay: 0.4s; }
+
+    .state-card:hover {
+      transform: scale(1.04);
+      border-color: rgba(150, 150, 140, 0.6);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .state-card.stormy {
+      --state-color: #6B8EA8;
+    }
+
+    .state-card.flat {
+      --state-color: #A85B4A;
+    }
+
+    .state-card.scattered {
+      --state-color: #C8A46A;
+    }
+
+    .state-card.clear {
+      --state-color: #7AB89A;
+    }
+
+    .state-card.selected {
+      border-color: var(--state-color);
+      border-width: 3px;
+      background: rgba(20, 20, 28, 0.9);
+      box-shadow: 0 0 24px rgba(0, 0, 0, 0.8),
+                  inset 0 0 20px rgba(0, 0, 0, 0.4),
+                  0 0 16px var(--state-color);
+      animation: pulseGlow 3s ease-in-out infinite;
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 24px rgba(0, 0, 0, 0.8),
+                    inset 0 0 20px rgba(0, 0, 0, 0.4),
+                    0 0 16px var(--state-color);
+      }
+      50% {
+        box-shadow: 0 0 24px rgba(0, 0, 0, 0.8),
+                    inset 0 0 20px rgba(0, 0, 0, 0.4),
+                    0 0 24px var(--state-color);
+      }
+    }
+
+    .icon-container {
+      width: 70px;
+      height: 70px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Icon placeholders as CSS shapes */
+    .icon {
+      position: relative;
+      width: 60px;
+      height: 60px;
+    }
+
+    /* Stormy cloud */
+    .icon-cloud {
+      background: #6B8EA8;
+      border-radius: 50%;
+      box-shadow: -20px -10px 0 -5px #6B8EA8,
+                  20px -10px 0 -5px #6B8EA8,
+                  0 0 0 2px rgba(107, 142, 168, 0.4),
+                  3px 3px 0 0 rgba(107, 142, 168, 0.6),
+                  8px 2px 0 0 rgba(107, 142, 168, 0.5);
+    }
+
+    /* Flat stone */
+    .icon-stone {
+      background: #A85B4A;
+      border-radius: 6px;
+      transform: rotate(-15deg);
+      box-shadow: inset -2px -2px 4px rgba(0, 0, 0, 0.4),
+                  inset 1px 1px 2px rgba(255, 255, 255, 0.1);
+    }
+
+    /* Scattered leaves */
+    .icon-leaves {
+      position: relative;
+    }
+
+    .icon-leaves::before,
+    .icon-leaves::after {
+      content: '';
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: #C8A46A;
+      border-radius: 50%;
+      opacity: 0.7;
+    }
+
+    .icon-leaves::before {
+      top: 10px;
+      left: 5px;
+    }
+
+    .icon-leaves::after {
+      top: 25px;
+      right: 8px;
+    }
+
+    .leaf-dot {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      background: #C8A46A;
+      border-radius: 50%;
+      opacity: 0.6;
+    }
+
+    .leaf-dot:nth-child(1) { top: 15px; right: 15px; }
+    .leaf-dot:nth-child(2) { bottom: 15px; left: 10px; }
+    .leaf-dot:nth-child(3) { top: 30px; left: 20px; opacity: 0.4; }
+
+    /* Clear water ripple */
+    .icon-ripple {
+      position: relative;
+      width: 50px;
+      height: 50px;
+    }
+
+    .ripple-ring {
+      position: absolute;
+      border: 2px solid #7AB89A;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: rippleOut 2s ease-out infinite;
+    }
+
+    .ripple-ring:nth-child(1) {
+      width: 50px;
+      height: 50px;
+      animation-delay: 0s;
+    }
+
+    .ripple-ring:nth-child(2) {
+      width: 35px;
+      height: 35px;
+      animation-delay: 0.4s;
+    }
+
+    .ripple-ring:nth-child(3) {
+      width: 20px;
+      height: 20px;
+      animation-delay: 0.8s;
+    }
+
+    @keyframes rippleOut {
+      from {
+        opacity: 1;
+      }
+      to {
+        opacity: 0;
+      }
+    }
+
+    .state-label {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: #f5f5f0;
+      text-align: center;
+    }
+
+    .state-description {
+      font-family: 'Crimson Pro', serif;
+      font-size: 13px;
+      color: #b8b8ae;
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    /* Continue button */
+    .continue-btn {
+      position: absolute;
+      bottom: 40px;
+      right: 40px;
+      padding: 14px 40px;
+      background: rgba(122, 184, 154, 0.15);
+      border: 2px solid #7AB89A;
+      color: #7AB89A;
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.4s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+    }
+
+    .continue-btn.active {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+      box-shadow: 0 0 20px rgba(122, 184, 154, 0.3);
+    }
+
+    .continue-btn:hover {
+      background: rgba(122, 184, 154, 0.25);
+      box-shadow: 0 0 30px rgba(122, 184, 154, 0.5);
+    }
+
+    /* Responsive adjustments for iPad */
+    .device-frame.ipad .prompt {
+      font-size: 42px;
+    }
+
+    .device-frame.ipad .subtitle {
+      font-size: 18px;
+    }
+
+    .device-frame.ipad .state-name {
+      font-size: 28px;
+    }
+
+    .device-frame.ipad .grid {
+      gap: 30px;
+      max-width: 700px;
+    }
+
+    .device-frame.ipad .state-card {
+      padding: 30px;
+    }
+
+    .device-frame.ipad .icon-container {
+      width: 100px;
+      height: 100px;
+    }
+
+    .device-frame.ipad .icon {
+      width: 80px;
+      height: 80px;
+    }
+
+    .device-frame.ipad .state-label {
+      font-size: 22px;
+    }
+
+    .device-frame.ipad .state-description {
+      font-size: 15px;
+    }
+  </style>
+</head>
+<body>
+  <div class="device-toggle">
+    <button class="toggle-btn active" data-device="iphone">iPhone</button>
+    <button class="toggle-btn" data-device="ipad">iPad</button>
+  </div>
+
+  <div class="device-frame iphone">
+    <div class="screen">
+      <div class="particles" id="particles"></div>
+
+      <div class="content">
+        <div class="left-panel">
+          <div>
+            <div class="prompt">How are you arriving today?</div>
+            <div class="subtitle">There is no wrong answer. Notice how you feel.</div>
+            <div class="divider"></div>
+          </div>
+
+          <div class="state-message" id="stateMessage">
+            <div class="state-name" id="stateName"></div>
+            <div class="state-insight" id="stateInsight"></div>
+          </div>
+        </div>
+
+        <div class="right-panel">
+          <div class="grid" id="grid">
+            <!-- Stormy -->
+            <div class="state-card stormy" data-state="stormy">
+              <div class="icon-container">
+                <div class="icon icon-cloud"></div>
+              </div>
+              <div class="state-label">Stormy</div>
+              <div class="state-description">Restless, busy, can't settle</div>
+            </div>
+
+            <!-- Flat -->
+            <div class="state-card flat" data-state="flat">
+              <div class="icon-container">
+                <div class="icon icon-stone"></div>
+              </div>
+              <div class="state-label">Flat</div>
+              <div class="state-description">Low energy, heavy, tired</div>
+            </div>
+
+            <!-- Scattered -->
+            <div class="state-card scattered" data-state="scattered">
+              <div class="icon-container">
+                <div class="icon icon-leaves">
+                  <div class="leaf-dot"></div>
+                  <div class="leaf-dot"></div>
+                  <div class="leaf-dot"></div>
+                </div>
+              </div>
+              <div class="state-label">Scattered</div>
+              <div class="state-description">Distracted, unfocused</div>
+            </div>
+
+            <!-- Clear -->
+            <div class="state-card clear" data-state="clear">
+              <div class="icon-container">
+                <div class="icon icon-ripple">
+                  <div class="ripple-ring"></div>
+                  <div class="ripple-ring"></div>
+                  <div class="ripple-ring"></div>
+                </div>
+              </div>
+              <div class="state-label">Clear</div>
+              <div class="state-description">Calm, ready to go deeper</div>
+            </div>
+          </div>
+        </div>
+
+        <button class="continue-btn" id="continueBtn">CONTINUE</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const stateInsights = {
+      stormy: {
+        name: 'Stormy',
+        message: 'We\'ll start with Cloud breathing to settle the storm.'
+      },
+      flat: {
+        name: 'Flat',
+        message: 'We\'ll start with Phoenix breathing to rekindle your fire.'
+      },
+      scattered: {
+        name: 'Scattered',
+        message: 'We\'ll start with Warrior breathing to gather your focus.'
+      },
+      clear: {
+        name: 'Clear',
+        message: 'We\'ll go deeper with Wave breathing to ride the stillness.'
+      }
+    };
+
+    let selectedState = null;
+
+    // Initialize particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 8; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.width = Math.random() * 6 + 3 + 'px';
+        particle.style.height = particle.style.width;
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.top = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 6 + 's';
+        particle.style.animationDuration = (Math.random() * 4 + 6) + 's';
+        container.appendChild(particle);
+      }
+    }
+
+    // State card click handler
+    document.querySelectorAll('.state-card').forEach(card => {
+      card.addEventListener('click', function() {
+        const state = this.dataset.state;
+
+        // Remove previous selection
+        document.querySelectorAll('.state-card').forEach(c => c.classList.remove('selected'));
+
+        // Add selection to clicked card
+        this.classList.add('selected');
+        selectedState = state;
+
+        // Update left panel message
+        const insight = stateInsights[state];
+        document.getElementById('stateName').textContent = insight.name;
+        document.getElementById('stateInsight').textContent = insight.message;
+        document.getElementById('stateMessage').classList.add('active');
+
+        // Show continue button
+        document.getElementById('continueBtn').classList.add('active');
+      });
+    });
+
+    // Device toggle
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const device = this.dataset.device;
+        const frame = document.querySelector('.device-frame');
+
+        document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+
+        frame.classList.remove('iphone', 'ipad');
+        frame.classList.add(device);
+      });
+    });
+
+    // Continue button handler
+    document.getElementById('continueBtn').addEventListener('click', function() {
+      console.log('Proceeding with state:', selectedState);
+      alert(`You selected: ${stateInsights[selectedState].name}\n\n${stateInsights[selectedState].message}`);
+    });
+
+    // Initialize on load
+    createParticles();
+  </script>
+</body>
+</html>

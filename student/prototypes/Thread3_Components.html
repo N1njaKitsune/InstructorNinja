@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nendō Component Toolkit</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Pro:ital@0;1&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #050508;
+            color: #F5F0E8;
+            font-family: 'Crimson Pro', serif;
+            font-size: 14px;
+            line-height: 1.5;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 200px;
+            background: rgba(10, 10, 18, 0.6);
+            border-right: 0.5px solid rgba(245, 240, 232, 0.08);
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sidebar h1 {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 13px;
+            letter-spacing: 0.15em;
+            margin-bottom: 24px;
+            color: #F5F0E8;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            color: rgba(245, 240, 232, 0.5);
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .nav-item {
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: rgba(245, 240, 232, 0.7);
+            transition: all 0.2s ease;
+            border: 0.5px solid rgba(245, 240, 232, 0.05);
+        }
+
+        .nav-item:hover {
+            background: rgba(245, 240, 232, 0.05);
+            color: rgba(245, 240, 232, 0.9);
+        }
+
+        .nav-item.active {
+            background: rgba(122, 184, 154, 0.25);
+            color: #7AB89A;
+            border-color: rgba(122, 184, 154, 0.5);
+        }
+
+        /* MAIN CONTENT */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            overflow: auto;
+        }
+
+        /* COMPONENT CONTAINER */
+        .component-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .component-view.active {
+            opacity: 1;
+        }
+
+        /* DEVICE FRAME */
+        .device-frame {
+            position: relative;
+            width: 844px;
+            height: 390px;
+            background: #0a0a12;
+            border: 12px solid #1a1a2e;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .device-frame.ipad {
+            width: 1194px;
+            height: 834px;
+        }
+
+        .device-content {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* ENVIRONMENT LAYERS */
+        .env-hero {
+            position: absolute;
+            inset: 0;
+            z-index: 0;
+            background-size: cover;
+            background-position: center;
+            background-image: url('../Assets/backgrounds/bg-breath-home.webp');
+            filter: brightness(0.35) saturate(0.6);
+            transition: filter 0.5s ease, background-image 0.3s ease;
+        }
+
+        .env-vignette {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            background: radial-gradient(ellipse at center, transparent 30%, rgba(6, 6, 10, 0.6) 100%);
+        }
+
+        .env-texture {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            pointer-events: none;
+            opacity: 0.015;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='4'/%3E%3C/filter%3E%3Crect width='200' height='200' fill='%23f5f0e8' filter='url(%23n)'/%3E%3C/svg%3E");
+            background-repeat: repeat;
+        }
+
+        /* DEVICE TOGGLE */
+        .device-toggle {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            background: rgba(122, 184, 154, 0.2);
+            border: 0.5px solid rgba(122, 184, 154, 0.4);
+            color: #7AB89A;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .device-toggle:hover {
+            background: rgba(122, 184, 154, 0.35);
+        }
+
+        /* CONTROLS */
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 11px;
+            letter-spacing: 0.12em;
+            background: rgba(122, 184, 154, 0.15);
+            border: 0.5px solid rgba(122, 184, 154, 0.3);
+            color: #7AB89A;
+            padding: 8px 14px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: rgba(122, 184, 154, 0.25);
+            border-color: rgba(122, 184, 154, 0.5);
+        }
+
+        .btn.active {
+            background: rgba(122, 184, 154, 0.4);
+            border-color: rgba(122, 184, 154, 0.7);
+        }
+
+        /* NAVIGATION BAR */
+        .nav-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 36px;
+            background: rgba(10, 10, 18, 0.3);
+            backdrop-filter: blur(14px);
+            border-bottom: 0.5px solid rgba(245, 240, 232, 0.05);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            z-index: 10;
+        }
+
+        .nav-back {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.12em;
+            color: rgba(245, 240, 232, 0.32);
+            cursor: pointer;
+            flex: 0 0 auto;
+        }
+
+        .nav-title {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 10px;
+            letter-spacing: 0.2em;
+            color: rgba(245, 240, 232, 0.25);
+            flex: 1;
+            text-align: center;
+        }
+
+        .nav-discipline {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: rgba(245, 240, 232, 0.5);
+            flex: 0 0 auto;
+        }
+
+        .discipline-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #7AB89A;
+        }
+
+        /* PARTICLE SYSTEM */
+        #particleCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* BREATHING ANIMATION */
+        #breathingCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* MOOD CARDS */
+        .mood-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            gap: 16px;
+            width: 100%;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .mood-card {
+            width: 100px;
+            height: 130px;
+            border-radius: 14px;
+            backdrop-filter: blur(14px);
+            border: 0.5px solid rgba(245, 240, 232, 0.08);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            opacity: 0.6;
+        }
+
+        .mood-card:hover {
+            opacity: 1;
+            transform: translateY(-4px);
+            border-color: rgba(245, 240, 232, 0.2);
+        }
+
+        .mood-card.selected {
+            opacity: 1;
+            border-color: rgba(245, 240, 232, 0.4);
+            box-shadow: 0 0 20px rgba(245, 240, 232, 0.15);
+        }
+
+        .mood-card.unselected {
+            opacity: 0.3;
+        }
+
+        .mood-icon {
+            font-size: 32px;
+            position: relative;
+        }
+
+        /* RIPPLE ANIMATION */
+        @keyframes ripple {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 0.8;
+            }
+            100% {
+                width: 60px;
+                height: 60px;
+                opacity: 0;
+            }
+        }
+
+        .mood-ripple {
+            position: absolute;
+            border: 2px solid rgba(122, 184, 154, 0.6);
+            border-radius: 50%;
+            animation: ripple 1.5s infinite;
+        }
+
+        /* ORBIT ANIMATION */
+        @keyframes orbit {
+            0% { transform: rotate(0deg) translateX(30px) rotate(0deg); }
+            100% { transform: rotate(360deg) translateX(30px) rotate(-360deg); }
+        }
+
+        .orbit-container {
+            position: relative;
+            width: 60px;
+            height: 60px;
+        }
+
+        .orbit-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: rgba(220, 180, 100, 0.8);
+            border-radius: 50%;
+            animation: orbit 3s linear infinite;
+        }
+
+        .orbit-dot:nth-child(2) {
+            animation-delay: -1s;
+        }
+
+        .orbit-dot:nth-child(3) {
+            animation-delay: -2s;
+        }
+
+        /* FALLING ANIMATION */
+        @keyframes fall {
+            0% {
+                transform: translateY(-40px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(40px);
+                opacity: 0;
+            }
+        }
+
+        .fall-container {
+            position: relative;
+            width: 40px;
+            height: 60px;
+        }
+
+        .fall-dot {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(141, 164, 192, 0.8);
+            border-radius: 50%;
+            left: 50%;
+            animation: fall 2s ease-in infinite;
+        }
+
+        .fall-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .fall-dot:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .fall-dot:nth-child(3) {
+            animation-delay: 0.8s;
+        }
+
+        /* RISING ANIMATION */
+        @keyframes rise {
+            0% {
+                transform: translateY(20px);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-40px);
+                opacity: 0;
+            }
+        }
+
+        .rise-container {
+            position: relative;
+            width: 40px;
+            height: 60px;
+        }
+
+        .rise-spark {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: rgba(212, 140, 120, 0.9);
+            border-radius: 50%;
+            left: 50%;
+            animation: rise 2s ease-out infinite;
+        }
+
+        .rise-spark:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .rise-spark:nth-child(2) {
+            animation-delay: 0.4s;
+        }
+
+        .rise-spark:nth-child(3) {
+            animation-delay: 0.8s;
+        }
+
+        .begin-text {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'Cinzel', sans-serif;
+            font-size: 12px;
+            letter-spacing: 0.1em;
+            color: rgba(245, 240, 232, 0.4);
+            opacity: 0;
+            transition: opacity 1.5s ease;
+        }
+
+        .begin-text.show {
+            opacity: 1;
+        }
+
+        /* AURA ORB */
+        #auraCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* LAYERS DEMO */
+        .layers-demo {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, #0a0a12 0%, #1a1a2e 100%);
+        }
+
+        .layers-list {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 10, 18, 0.7);
+            border: 0.5px solid rgba(245, 240, 232, 0.08);
+            padding: 12px;
+            border-radius: 8px;
+            max-width: 200px;
+            z-index: 20;
+        }
+
+        .layer-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 11px;
+            color: rgba(245, 240, 232, 0.7);
+        }
+
+        .layer-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .layer-item input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .layer-label {
+            font-family: 'Cinzel', sans-serif;
+            font-size: 9px;
+            letter-spacing: 0.1em;
+        }
+
+        #layersCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* SCROLLBAR */
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(245, 240, 232, 0.1);
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover {
+            background: rgba(245, 240, 232, 0.2);
+        }
+    </style>
+</head>
+<body>
+    <div class="sidebar">
+        <h1>COMPONENT TOOLKIT</h1>
+
+        <div class="section">
+            <div class="section-title">Particle System</div>
+            <div class="nav-item active" data-component="particles" data-preset="default">Default</div>
+            <div class="nav-item" data-component="particles" data-preset="kaze">Kaze</div>
+            <div class="nav-item" data-component="particles" data-preset="chi">Chi</div>
+            <div class="nav-item" data-component="particles" data-preset="mizu">Mizu</div>
+            <div class="nav-item" data-component="particles" data-preset="hi">Hi</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Navigation Shell</div>
+            <div class="nav-item" data-component="navigation">Title Cycle Demo</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Breathing</div>
+            <div class="nav-item" data-component="breathing">Shiho Box Breathing</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Mood</div>
+            <div class="nav-item" data-component="mood">Mood Selector</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Aura</div>
+            <div class="nav-item" data-component="aura">Aura Orb</div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Layers</div>
+            <div class="nav-item" data-component="layers">Screen Template</div>
+        </div>
+    </div>
+
+    <div class="main">
+        <!-- PARTICLE SYSTEM VIEW -->
+        <div class="component-view active" id="view-particles">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <canvas id="particleCanvas" style="position: relative; z-index: 10;"></canvas>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn active" data-preset="default">Default</button>
+                <button class="btn" data-preset="kaze">Kaze</button>
+                <button class="btn" data-preset="chi">Chi</button>
+                <button class="btn" data-preset="mizu">Mizu</button>
+                <button class="btn" data-preset="hi">Hi</button>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+
+        <!-- NAVIGATION SHELL VIEW -->
+        <div class="component-view" id="view-navigation">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <div class="nav-bar" style="position: relative; z-index: 10;">
+                        <div class="nav-back">← BACK</div>
+                        <div class="nav-title" id="navTitle">BREATHHOME</div>
+                        <div class="nav-discipline">
+                            <div class="discipline-dot"></div>
+                            <span>Mushin</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+
+        <!-- BREATHING VIEW -->
+        <div class="component-view" id="view-breathing">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <canvas id="breathingCanvas" style="position: relative; z-index: 10;"></canvas>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn active" id="breathStart">Start</button>
+                <button class="btn" data-speed="5">Slow (5s)</button>
+                <button class="btn active" data-speed="4">Normal (4s)</button>
+                <button class="btn" data-speed="3">Fast (3s)</button>
+                <button class="btn" id="breathReset">Reset</button>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+
+        <!-- MOOD SELECTOR VIEW -->
+        <div class="component-view" id="view-mood">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <div class="mood-container" style="position: relative; z-index: 10;">
+                        <div class="mood-card" data-mood="calm">
+                            <div class="mood-icon">
+                                <div class="mood-ripple" style="border-color: rgba(122, 184, 154, 0.6);"></div>
+                                <div style="position: relative; z-index: 1;">🧘</div>
+                            </div>
+                        </div>
+                        <div class="mood-card" data-mood="busy">
+                            <div class="mood-icon">
+                                <div class="orbit-container">
+                                    <div class="orbit-dot"></div>
+                                    <div class="orbit-dot"></div>
+                                    <div class="orbit-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mood-card" data-mood="upset">
+                            <div class="mood-icon">
+                                <div class="fall-container">
+                                    <div class="fall-dot"></div>
+                                    <div class="fall-dot"></div>
+                                    <div class="fall-dot"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mood-card" data-mood="energised">
+                            <div class="mood-icon">
+                                <div class="rise-container">
+                                    <div class="rise-spark"></div>
+                                    <div class="rise-spark"></div>
+                                    <div class="rise-spark"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="begin-text">Let's begin</div>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn" id="moodReset">Reset</button>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+
+        <!-- AURA ORB VIEW -->
+        <div class="component-view" id="view-aura">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <canvas id="auraCanvas" style="position: relative; z-index: 10;"></canvas>
+                </div>
+            </div>
+            <div class="controls">
+                <button class="btn active" id="auraIdle">Idle</button>
+                <button class="btn" id="auraBreathing">Breathing</button>
+                <button class="btn" data-color="seed">Seed (Grey)</button>
+                <button class="btn" data-color="ember">Ember (Amber)</button>
+                <button class="btn active" data-color="mushin">Mushin (Green)</button>
+                <button class="btn" data-color="flow">Flow (Blue)</button>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+
+        <!-- LAYERS VIEW -->
+        <div class="component-view" id="view-layers">
+            <div class="device-frame">
+                <div class="device-content">
+                    <div class="env-hero" id="envHero"></div>
+                    <div class="env-vignette"></div>
+                    <div class="env-texture"></div>
+                    <div class="layers-demo" style="position: relative; z-index: 2;">
+                        <canvas id="layersCanvas"></canvas>
+                    </div>
+                    <div class="layers-list">
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-sky" checked>
+                            <span class="layer-label">L0 Sky</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-hero" checked>
+                            <span class="layer-label">L3 Hero</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-warmth" checked>
+                            <span class="layer-label">L4 Warmth</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-texture" checked>
+                            <span class="layer-label">L6 Texture</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-vignette" checked>
+                            <span class="layer-label">L6 Vignette</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-particles" checked>
+                            <span class="layer-label">L7 Particles</span>
+                        </div>
+                        <div class="layer-item">
+                            <input type="checkbox" id="layer-breath" checked>
+                            <span class="layer-label">L8 Breath</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="device-toggle">iPad View</button>
+        </div>
+    </div>
+
+    <script>
+        // ==================== STATE ====================
+        let state = {
+            currentComponent: 'particles',
+            currentPreset: 'default',
+            particleState: {},
+            breathingState: { running: false, round: 1, phaseTime: 0, totalTime: 0, phaseIndex: 0, speed: 4 },
+            moodState: { selected: null, showBegin: false },
+            auraState: { mode: 'idle', color: 'mushin' },
+            layersState: { sky: true, hero: true, warmth: true, texture: true, vignette: true, particles: true, breath: true }
+        };
+
+        // ==================== COMPONENT BACKGROUNDS ====================
+        const componentBackgrounds = {
+            'particles': { img: 'bg-breath-home.webp', brightness: 0.35, saturate: 0.6 },
+            'navigation': { img: 'bg-home-hub.webp', brightness: 0.35, saturate: 0.6 },
+            'breathing': { img: 'bg-shiho.webp', brightness: 0.4, saturate: 0.7 },
+            'mood': { img: 'bg-session-shell.webp', brightness: 0.35, saturate: 0.65 },
+            'aura': { img: 'bg-student-profile.webp', brightness: 0.4, saturate: 0.65 },
+            'layers': { img: 'bg-runner-kaze.webp', brightness: 0.45, saturate: 0.75 }
+        };
+
+        function updateComponentBg(componentId) {
+            const bg = componentBackgrounds[componentId] || componentBackgrounds['particles'];
+            const heroes = document.querySelectorAll('#envHero');
+            heroes.forEach(hero => {
+                hero.style.backgroundImage = `url('../Assets/backgrounds/${bg.img}')`;
+                hero.style.filter = `brightness(${bg.brightness}) saturate(${bg.saturate})`;
+            });
+        }
+
+        // ==================== PARTICLE SYSTEM ====================
+        class ParticleSystem {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.particles = [];
+                this.preset = 'default';
+                this.setupCanvas();
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.canvas.offsetWidth;
+                this.canvas.height = this.canvas.offsetHeight;
+            }
+
+            initPreset(name) {
+                this.preset = name;
+                this.particles = [];
+
+                const presets = {
+                    default: {
+                        count: 25,
+                        color: 'rgba(250,246,238,0.15)',
+                        size: () => 1 + Math.random() * 2,
+                        init: (p) => {
+                            p.vx = (Math.random() - 0.5) * 0.3;
+                            p.vy = -0.5 - Math.random() * 0.5;
+                            p.wobble = Math.random() * Math.PI * 2;
+                        },
+                        update: (p, t) => {
+                            p.x += p.vx + Math.sin(t * 0.003 + p.wobble) * 0.2;
+                            p.y += p.vy;
+                            if (p.y < 0) p.y = this.canvas.height;
+                            if (p.x < 0) p.x = this.canvas.width;
+                            if (p.x > this.canvas.width) p.x = 0;
+                        }
+                    },
+                    kaze: {
+                        count: 35,
+                        color: 'rgba(180,210,240,0.2)',
+                        size: () => 1 + Math.random() * 1,
+                        init: (p) => {
+                            p.vx = 1 + Math.random() * 2;
+                            p.vy = (Math.random() - 0.5) * 0.5;
+                            p.gust = Math.random();
+                        },
+                        update: (p, t) => {
+                            p.x += p.vx + (Math.sin(t * 0.001 + p.gust) * 1.5);
+                            p.y += p.vy;
+                            if (p.x > this.canvas.width) p.x = -10;
+                            if (p.y < 0 || p.y > this.canvas.height) p.y = Math.random() * this.canvas.height;
+                        }
+                    },
+                    chi: {
+                        count: 25,
+                        color: 'rgba(220,180,100,0.2)',
+                        size: () => 2 + Math.random() * 2,
+                        init: (p) => {
+                            p.vx = (Math.random() - 0.5) * 0.4;
+                            p.vy = 0.2 + Math.random() * 0.3;
+                            p.rock = Math.random() * Math.PI * 2;
+                        },
+                        update: (p, t) => {
+                            p.x += p.vx + Math.sin(t * 0.002 + p.rock) * 0.15;
+                            p.y += p.vy;
+                            if (p.y > this.canvas.height) p.y = -10;
+                            if (p.x < 0) p.x = this.canvas.width;
+                            if (p.x > this.canvas.width) p.x = 0;
+                        }
+                    },
+                    mizu: {
+                        count: 30,
+                        color: 'rgba(100,180,200,0.15)',
+                        size: () => 1 + Math.random() * 2,
+                        init: (p) => {
+                            p.phase = Math.random() * Math.PI * 2;
+                            p.amp = 0.5 + Math.random();
+                        },
+                        update: (p, t) => {
+                            p.x += Math.sin(t * 0.002 + p.phase) * p.amp;
+                            p.y += Math.sin(t * 0.001 + p.phase) * 0.3;
+                            if (p.y > this.canvas.height) p.y = -10;
+                            if (p.x < 0) p.x = this.canvas.width;
+                            if (p.x > this.canvas.width) p.x = 0;
+                        }
+                    },
+                    hi: {
+                        count: 40,
+                        color: 'rgba(240,160,80,0.25)',
+                        size: () => 1 + Math.random() * 2,
+                        init: (p) => {
+                            p.vx = (Math.random() - 0.5) * 0.5;
+                            p.vy = -1 - Math.random() * 1;
+                        },
+                        update: (p, t) => {
+                            p.x += p.vx;
+                            p.y += p.vy;
+                            p.vy -= 0.02;
+                            if (p.y < 0) p.y = this.canvas.height;
+                            if (p.x < 0 || p.x > this.canvas.width) {
+                                p.x = Math.random() * this.canvas.width;
+                                p.y = this.canvas.height;
+                            }
+                        }
+                    }
+                };
+
+                const preset = presets[name];
+                for (let i = 0; i < preset.count; i++) {
+                    const p = {
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        size: preset.size()
+                    };
+                    preset.init(p);
+                    this.particles.push(p);
+                }
+
+                this.updateFn = preset.update;
+                this.colorFn = preset.color;
+            }
+
+            animate(t) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                this.ctx.globalCompositeOperation = 'lighter';
+                this.ctx.fillStyle = this.colorFn;
+                this.ctx.shadowBlur = 8;
+                this.ctx.shadowColor = this.colorFn;
+
+                for (let p of this.particles) {
+                    this.updateFn(p, t);
+                    this.ctx.fillRect(p.x, p.y, p.size, p.size);
+                }
+
+                this.ctx.globalCompositeOperation = 'source-over';
+                this.ctx.shadowBlur = 0;
+            }
+        }
+
+        // ==================== BREATHING ====================
+        class BreathingAnimation {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.setupCanvas();
+                this.phaseIndex = 0;
+                this.phaseTime = 0;
+                this.phaseDuration = 4000;
+                this.phases = ['Inhale', 'Hold', 'Exhale', 'Hold'];
+                this.scale = 0.5;
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.canvas.offsetWidth;
+                this.canvas.height = this.canvas.offsetHeight;
+            }
+
+            animate(t, phaseIndex, phaseTime, phaseDuration) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const cx = this.canvas.width / 2;
+                const cy = this.canvas.height / 2;
+                const baseSize = 60;
+                const progress = phaseTime / phaseDuration;
+
+                let scale = 0.5;
+                if (phaseIndex === 0) scale = 0.5 + progress * 0.5;
+                else if (phaseIndex === 1) scale = 1;
+                else if (phaseIndex === 2) scale = 1 - progress * 0.5;
+                else scale = 0.5;
+
+                const size = baseSize * scale;
+
+                this.ctx.strokeStyle = 'rgba(122,184,154,0.3)';
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeRect(cx - size, cy - size, size * 2, size * 2);
+
+                const perimeter = size * 8;
+                const dotPos = (progress * perimeter) % perimeter;
+                let dx = cx, dy = cy;
+
+                if (dotPos < size * 2) {
+                    dx = cx - size + dotPos;
+                    dy = cy - size;
+                } else if (dotPos < size * 4) {
+                    dx = cx + size;
+                    dy = cy - size + (dotPos - size * 2);
+                } else if (dotPos < size * 6) {
+                    dx = cx + size - (dotPos - size * 4);
+                    dy = cy + size;
+                } else {
+                    dx = cx - size;
+                    dy = cy + size - (dotPos - size * 6);
+                }
+
+                this.ctx.fillStyle = 'rgba(122,184,154,0.8)';
+                this.ctx.beginPath();
+                this.ctx.arc(dx, dy, 6, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = 'rgba(245,240,232,0.5)';
+                this.ctx.font = 'italic 14px "Crimson Pro", serif';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(this.phases[phaseIndex], cx, cy);
+
+                const remaining = Math.ceil((phaseDuration - phaseTime) / 1000);
+                this.ctx.fillStyle = 'rgba(245,240,232,0.25)';
+                this.ctx.font = '10px "Cinzel", sans-serif';
+                this.ctx.fillText(remaining + 's', cx, cy + 50);
+            }
+        }
+
+        // ==================== AURA ORB ====================
+        class AuraOrb {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.setupCanvas();
+                this.scale = 1;
+                this.targetScale = 1;
+                this.mode = 'idle';
+                this.phaseIndex = 0;
+                this.phaseTime = 0;
+                this.color = 'mushin';
+                this.colorMap = {
+                    seed: 'rgba(150,150,160,',
+                    ember: 'rgba(220,180,100,',
+                    mushin: 'rgba(122,184,154,',
+                    flow: 'rgba(141,164,192,'
+                };
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.canvas.offsetWidth;
+                this.canvas.height = this.canvas.offsetHeight;
+            }
+
+            animate(t, mode, phaseIndex, phaseTime, phaseDuration) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                const cx = this.canvas.width / 2;
+                const cy = this.canvas.height / 2;
+                const baseRadius = 40;
+
+                if (mode === 'idle') {
+                    const idleScale = 0.95 + Math.sin(t * 0.0005) * 0.05;
+                    this.scale += (idleScale - this.scale) * 0.1;
+                } else {
+                    const progress = phaseTime / phaseDuration;
+                    let breathScale = 0.85;
+                    if (phaseIndex === 0) breathScale = 0.85 + progress * 0.3;
+                    else if (phaseIndex === 1) breathScale = 1.15;
+                    else if (phaseIndex === 2) breathScale = 1.15 - progress * 0.3;
+                    else breathScale = 0.85;
+                    this.scale += (breathScale - this.scale) * 0.15;
+                }
+
+                const colorBase = this.colorMap[this.color];
+
+                this.ctx.fillStyle = colorBase + '0.1)';
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, baseRadius * this.scale + 60, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = colorBase + '0.3)';
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, baseRadius * this.scale + 40, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = colorBase + '0.6)';
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, baseRadius * this.scale, 0, Math.PI * 2);
+                this.ctx.fill();
+
+                this.ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                this.ctx.beginPath();
+                this.ctx.arc(cx, cy, baseRadius * this.scale * 0.4, 0, Math.PI * 2);
+                this.ctx.fill();
+            }
+        }
+
+        // ==================== LAYERS CANVAS ====================
+        class LayersRenderer {
+            constructor(canvas) {
+                this.canvas = canvas;
+                this.ctx = canvas.getContext('2d');
+                this.setupCanvas();
+                this.particles = this.initParticles();
+            }
+
+            setupCanvas() {
+                this.canvas.width = this.canvas.offsetWidth;
+                this.canvas.height = this.canvas.offsetHeight;
+            }
+
+            initParticles() {
+                const particles = [];
+                for (let i = 0; i < 15; i++) {
+                    particles.push({
+                        x: Math.random() * this.canvas.width,
+                        y: Math.random() * this.canvas.height,
+                        vx: (Math.random() - 0.5) * 0.3,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        size: 1 + Math.random() * 1
+                    });
+                }
+                return particles;
+            }
+
+            animate(t, layers) {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+                if (layers.sky) {
+                    const grad = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                    grad.addColorStop(0, 'rgba(10,10,18,0.3)');
+                    grad.addColorStop(1, 'rgba(30,20,40,0.2)');
+                    this.ctx.fillStyle = grad;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                if (layers.hero) {
+                    const hx = this.canvas.width / 2;
+                    const hy = this.canvas.height / 2 + Math.sin(t * 0.0003) * 20;
+                    this.ctx.fillStyle = 'rgba(245,240,232,0.08)';
+                    this.ctx.beginPath();
+                    this.ctx.arc(hx, hy, 40, 0, Math.PI * 2);
+                    this.ctx.fill();
+                }
+
+                if (layers.warmth) {
+                    const warmGrad = this.ctx.createRadialGradient(
+                        this.canvas.width / 2, this.canvas.height / 2, 0,
+                        this.canvas.width / 2, this.canvas.height / 2, this.canvas.width
+                    );
+                    warmGrad.addColorStop(0, 'rgba(220,140,80,0.1)');
+                    warmGrad.addColorStop(1, 'rgba(220,140,80,0)');
+                    this.ctx.fillStyle = warmGrad;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                if (layers.texture) {
+                    this.ctx.fillStyle = 'rgba(100,100,100,0.02)';
+                    for (let i = 0; i < 20; i++) {
+                        const x = Math.random() * this.canvas.width;
+                        const y = Math.random() * this.canvas.height;
+                        this.ctx.fillRect(x, y, 2, 2);
+                    }
+                }
+
+                if (layers.vignette) {
+                    const vigGrad = this.ctx.createRadialGradient(
+                        this.canvas.width / 2, this.canvas.height / 2, 0,
+                        this.canvas.width / 2, this.canvas.height / 2, this.canvas.width * 0.8
+                    );
+                    vigGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                    vigGrad.addColorStop(1, 'rgba(0,0,0,0.3)');
+                    this.ctx.fillStyle = vigGrad;
+                    this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                }
+
+                if (layers.particles) {
+                    this.ctx.fillStyle = 'rgba(250,246,238,0.15)';
+                    this.ctx.globalCompositeOperation = 'lighter';
+                    for (let p of this.particles) {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                        if (p.x < 0 || p.x > this.canvas.width) p.vx *= -1;
+                        if (p.y < 0 || p.y > this.canvas.height) p.vy *= -1;
+                        this.ctx.fillRect(p.x, p.y, p.size, p.size);
+                    }
+                    this.ctx.globalCompositeOperation = 'source-over';
+                }
+
+                if (layers.breath) {
+                    const ox = this.canvas.width / 2;
+                    const oy = this.canvas.height / 2;
+                    const breathScale = 0.8 + Math.sin(t * 0.002) * 0.2;
+                    this.ctx.strokeStyle = 'rgba(122,184,154,0.2)';
+                    this.ctx.lineWidth = 1;
+                    this.ctx.beginPath();
+                    this.ctx.arc(ox, oy, 60 * breathScale, 0, Math.PI * 2);
+                    this.ctx.stroke();
+                }
+            }
+        }
+
+        // ==================== INITIALIZATION ====================
+        const particleCanvas = document.getElementById('particleCanvas');
+        const breathingCanvas = document.getElementById('breathingCanvas');
+        const auraCanvas = document.getElementById('auraCanvas');
+        const layersCanvas = document.getElementById('layersCanvas');
+
+        const particleSystem = new ParticleSystem(particleCanvas);
+        const breathingAnim = new BreathingAnimation(breathingCanvas);
+        const auraOrb = new AuraOrb(auraCanvas);
+        const layersRenderer = new LayersRenderer(layersCanvas);
+
+        particleSystem.initPreset('default');
+        updateComponentBg('particles');
+
+        let animationId;
+        let lastTime = 0;
+
+        function animate(timestamp) {
+            const dt = timestamp - lastTime;
+            lastTime = timestamp;
+
+            if (state.currentComponent === 'particles') {
+                particleSystem.animate(timestamp);
+            } else if (state.currentComponent === 'breathing') {
+                if (state.breathingState.running) {
+                    state.breathingState.phaseTime += dt;
+                    const phaseDuration = state.breathingState.speed * 1000;
+
+                    if (state.breathingState.phaseTime >= phaseDuration) {
+                        state.breathingState.phaseTime = 0;
+                        state.breathingState.phaseIndex = (state.breathingState.phaseIndex + 1) % 4;
+                        if (state.breathingState.phaseIndex === 0) {
+                            state.breathingState.round += 1;
+                        }
+                        if (state.breathingState.round > 3) {
+                            state.breathingState.running = false;
+                            state.breathingState.round = 1;
+                            state.breathingState.phaseIndex = 0;
+                            document.getElementById('breathStart').textContent = 'Start';
+                        }
+                    }
+                }
+                breathingAnim.animate(timestamp, state.breathingState.phaseIndex, state.breathingState.phaseTime, state.breathingState.speed * 1000);
+            } else if (state.currentComponent === 'aura') {
+                if (state.auraState.mode === 'breathing') {
+                    const phaseDuration = 4000;
+                    state.auraState.phaseTime = (state.auraState.phaseTime + dt) % (phaseDuration * 4);
+                    const phaseIndex = Math.floor(state.auraState.phaseTime / phaseDuration) % 4;
+                    const phaseTime = state.auraState.phaseTime % phaseDuration;
+                    auraOrb.animate(timestamp, state.auraState.mode, phaseIndex, phaseTime, phaseDuration);
+                } else {
+                    auraOrb.animate(timestamp, state.auraState.mode, 0, 0, 4000);
+                }
+            } else if (state.currentComponent === 'layers') {
+                layersRenderer.animate(timestamp, state.layersState);
+            }
+
+            animationId = requestAnimationFrame(animate);
+        }
+
+        animate(0);
+
+        // ==================== EVENT LISTENERS ====================
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const component = this.dataset.component;
+                const preset = this.dataset.preset;
+
+                document.querySelectorAll('.component-view').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+                document.getElementById('view-' + component).classList.add('active');
+                this.classList.add('active');
+
+                state.currentComponent = component;
+                updateComponentBg(component);
+                if (preset) {
+                    state.currentPreset = preset;
+                    particleSystem.initPreset(preset);
+                    document.querySelectorAll('#view-particles .btn').forEach(b => b.classList.remove('active'));
+                    document.querySelector(`#view-particles [data-preset="${preset}"]`).classList.add('active');
+                }
+            });
+        });
+
+        document.querySelectorAll('.device-toggle').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const frame = this.previousElementSibling.querySelector('.device-frame');
+                frame.classList.toggle('ipad');
+                this.textContent = frame.classList.contains('ipad') ? 'iPhone View' : 'iPad View';
+                particleCanvas.width = particleCanvas.offsetWidth;
+                particleCanvas.height = particleCanvas.offsetHeight;
+                breathingCanvas.width = breathingCanvas.offsetWidth;
+                breathingCanvas.height = breathingCanvas.offsetHeight;
+                auraCanvas.width = auraCanvas.offsetWidth;
+                auraCanvas.height = auraCanvas.offsetHeight;
+                layersCanvas.width = layersCanvas.offsetWidth;
+                layersCanvas.height = layersCanvas.offsetHeight;
+            });
+        });
+
+        // Particle presets
+        document.querySelectorAll('#view-particles .btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const preset = this.dataset.preset;
+                particleSystem.initPreset(preset);
+                document.querySelectorAll('#view-particles .btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Navigation title cycling
+        const navTitles = ['BREATHHOME', 'KAZE TECHNIQUES', 'GENTLE BREEZE', 'SESSION', 'SUMMARY'];
+        let titleIndex = 0;
+        setInterval(() => {
+            if (state.currentComponent === 'navigation') {
+                titleIndex = (titleIndex + 1) % navTitles.length;
+                document.getElementById('navTitle').textContent = navTitles[titleIndex];
+                document.getElementById('navTitle').style.transition = 'opacity 0.3s ease';
+            }
+        }, 3000);
+
+        // Breathing controls
+        document.getElementById('breathStart').addEventListener('click', function() {
+            state.breathingState.running = !state.breathingState.running;
+            this.textContent = state.breathingState.running ? 'Pause' : 'Start';
+        });
+
+        document.getElementById('breathReset').addEventListener('click', function() {
+            state.breathingState.running = false;
+            state.breathingState.round = 1;
+            state.breathingState.phaseIndex = 0;
+            state.breathingState.phaseTime = 0;
+            document.getElementById('breathStart').textContent = 'Start';
+        });
+
+        document.querySelectorAll('#view-breathing [data-speed]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const speed = parseInt(this.dataset.speed);
+                state.breathingState.speed = speed;
+                document.querySelectorAll('#view-breathing [data-speed]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Mood selector
+        document.querySelectorAll('.mood-card').forEach(card => {
+            card.addEventListener('click', function() {
+                document.querySelectorAll('.mood-card').forEach(c => {
+                    c.classList.remove('selected', 'unselected');
+                });
+                this.classList.add('selected');
+                document.querySelectorAll('.mood-card').forEach(c => {
+                    if (c !== this) c.classList.add('unselected');
+                });
+
+                setTimeout(() => {
+                    document.querySelector('.begin-text').classList.add('show');
+                }, 1500);
+            });
+        });
+
+        document.getElementById('moodReset').addEventListener('click', function() {
+            document.querySelectorAll('.mood-card').forEach(c => {
+                c.classList.remove('selected', 'unselected');
+            });
+            document.querySelector('.begin-text').classList.remove('show');
+        });
+
+        // Aura controls
+        document.getElementById('auraIdle').addEventListener('click', function() {
+            state.auraState.mode = 'idle';
+            document.getElementById('auraIdle').classList.add('active');
+            document.getElementById('auraBreathing').classList.remove('active');
+        });
+
+        document.getElementById('auraBreathing').addEventListener('click', function() {
+            state.auraState.mode = 'breathing';
+            state.auraState.phaseTime = 0;
+            document.getElementById('auraBreathing').classList.add('active');
+            document.getElementById('auraIdle').classList.remove('active');
+        });
+
+        document.querySelectorAll('#view-aura [data-color]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const color = this.dataset.color;
+                state.auraState.color = color;
+                document.querySelectorAll('#view-aura [data-color]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        // Layers toggles
+        document.querySelectorAll('.layer-item input').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const layer = this.id.replace('layer-', '');
+                state.layersState[layer] = this.checked;
+            });
+        });
+
+        // Window resize
+        window.addEventListener('resize', () => {
+            particleCanvas.width = particleCanvas.offsetWidth;
+            particleCanvas.height = particleCanvas.offsetHeight;
+            breathingCanvas.width = breathingCanvas.offsetWidth;
+            breathingCanvas.height = breathingCanvas.offsetHeight;
+            auraCanvas.width = auraCanvas.offsetWidth;
+            auraCanvas.height = auraCanvas.offsetHeight;
+            layersCanvas.width = layersCanvas.offsetWidth;
+            layersCanvas.height = layersCanvas.offsetHeight;
+        });
+    </script>
+</body>
+</html>
