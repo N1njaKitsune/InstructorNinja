@@ -127,6 +127,7 @@ These apply to every deliverable produced. Flag immediately if anything conflict
 | `CLAUDE.md` | This file — operating instructions, sync protocol, non-negotiable rules |
 | `NinjaLearning_WorkingDoc_v2.0.md` | Stage 1 master working doc — all decisions, schema, deliverables |
 | `NinjaLearning_MentalDojo_WorkingDoc_v1.1.md` | Stage 2 supplement — Mental Dojo decisions and deliverables |
+| `_COMPANY/Creative-Design-and-Ergonomics/visual-direction.md` | Mental Dojo visual direction — emotional target, atmospheric principles, the five visual layers. Read before any Mental Dojo visual or prototype work. |
 
 ---
 
