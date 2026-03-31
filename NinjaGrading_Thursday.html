@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Ninja Learning — Grading</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f4f4f0;--surf:#fff;--surf2:#f8f8f5;
+  --bdr:#e0e0d8;--bdr2:#ccc;
+  --tx:#1a1a2e;--tx2:#555;--tx3:#999;
+  --dk:#1a1a2e;--dk2:#0A0A0A;
+  --gold:#B8720F;--gb:#FAEEDA;--gt:#5C3205;
+  --grn:#1B4D2E;--gnb:#E0F0E8;--gnt:#1B4D2E;
+  --red:#6B1A1A;--rb:#F5E0E0;--rt:#6B1A1A;
+  --blu:#0C447C;--bb:#E6F1FB;--bt:#0C447C;
+  --r:10px;--rs:6px;
+}
+html{background:#0A0A0A;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;
+  background:#0A0A0A;color:var(--tx);font-size:15px;line-height:1.5;
+  display:flex;justify-content:center;min-height:100vh;
+}
+#app{
+  width:100%;max-width:640px;
+  display:flex;flex-direction:column;
+  background:var(--bg);min-height:100vh;
+  position:relative;
+}
+
+/* ── Topbar ── */
+.topbar{
+  background:var(--dk2);padding:13px 16px;
+  display:flex;align-items:center;gap:12px;
+  position:sticky;top:0;z-index:50;flex-shrink:0;
+}
+.tb-back{
+  background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);
+  border-radius:7px;padding:6px 14px;font-size:12px;font-weight:600;
+  color:rgba(255,255,255,0.7);cursor:pointer;white-space:nowrap;flex-shrink:0;
+}
+.tb-back:active{background:rgba(255,255,255,0.14);}
+.tb-title{font-size:15px;font-weight:700;color:#f0f0f0;}
+.tb-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:1px;}
+.tb-badge{
+  background:#B8720F;color:#fff;font-size:11px;font-weight:700;
+  border-radius:12px;padding:3px 9px;flex-shrink:0;
+}
+
+/* ── Screens ── */
+.scr{display:none;flex-direction:column;flex:1;}
+.scr.on{display:flex;}
+.body{flex:1;overflow-y:auto;padding:16px;}
+
+/* ── Typography / Utility ── */
+.sec-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.08em;color:var(--tx3);margin-bottom:9px;
+  padding-bottom:6px;border-bottom:0.5px solid var(--bdr);
+}
+.card{
+  background:var(--surf);border:0.5px solid var(--bdr);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:12px;
+}
+.irow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 0;border-bottom:0.5px solid var(--bdr);
+}
+.irow:last-child{border-bottom:none;}
+.il{font-size:12px;color:var(--tx3);}
+.iv{font-size:13px;font-weight:600;color:var(--tx);}
+
+/* ── Buttons ── */
+.btn{
+  padding:11px 18px;border-radius:var(--rs);border:none;
+  font-size:14px;font-weight:700;cursor:pointer;transition:background .12s;
+  display:inline-block;text-align:center;
+}
+.btn-full{width:100%;padding:15px;font-size:15px;}
+.btn-gold{background:#854f0b;border:0.5px solid var(--gold);color:#fac775;}
+.btn-gold:active{background:var(--gold);}
+.btn-grn{background:#2a6010;border:0.5px solid #3b6d11;color:#c0dd97;}
+.btn-grn:active{background:#3b6d11;}
+.btn-blu{background:#0C447C;border:0.5px solid #185FA5;color:#E6F1FB;}
+.btn-blu:active{background:#185FA5;}
+.btn-gh{background:transparent;border:0.5px solid var(--bdr2);color:var(--tx2);}
+.btn-gh:active{background:var(--surf2);}
+.btn-red{background:transparent;border:0.5px solid #F09595;color:var(--rt);}
+.btn:disabled{opacity:.35;cursor:default;}
+
+/* ── Belt pip ── */
+.bp{border-radius:2px;display:inline-block;position:relative;overflow:hidden;flex-shrink:0;}
+.bps{position:absolute;top:25%;left:0;right:0;height:50%;}
+
+/* ── Tier headers ── */
+.thdr{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 16px 6px;background:var(--dk);
+}
+.tlbl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,0.35);}
+.tline{flex:1;height:0.5px;background:rgba(255,255,255,0.1);}
+.tcnt{font-size:10px;color:rgba(255,255,255,0.25);}
+
+/* ── Register rows ── */
+.rrow{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:0.5px solid rgba(255,255,255,0.06);
+  background:var(--dk);
+}
+.rrow:last-child{border-bottom:none;}
+.rname{font-size:14px;font-weight:600;color:#f0f0f0;flex:1;}
+.rbeltsub{font-size:11px;color:rgba(255,255,255,0.35);margin-top:2px;}
+.att-toggle{display:flex;border-radius:var(--rs);overflow:hidden;border:0.5px solid rgba(255,255,255,0.15);}
+.att-btn{
+  padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;
+  border:none;background:transparent;color:rgba(255,255,255,0.35);
+}
+.att-btn.P.on{background:#1B5E20;color:#C8E6C9;}
+.att-btn.A.on{background:#7B1A1A;color:#FFCDD2;}
+.rrow.P{background:rgba(27,94,32,0.88);}
+.rrow.P .rname{color:#C8E6C9;}
+.rrow.P .rbeltsub{color:rgba(160,220,110,0.5);}
+.rrow.A{background:rgba(123,26,26,0.88);}
+.rrow.A .rname{color:#FFCDD2;}
+.rrow.A .rbeltsub{color:rgba(235,160,160,0.5);}
+
+/* ── Stats bar ── */
+.stats-bar{
+  background:var(--dk2);padding:11px 16px;
+  display:flex;gap:22px;align-items:flex-start;
+  border-top:0.5px solid rgba(255,255,255,0.08);flex-shrink:0;
+}
+.sbv{font-size:18px;font-weight:700;color:#f0f0f0;}
+.sbl{font-size:10px;color:rgba(255,255,255,0.3);text-transform:uppercase;letter-spacing:.05em;margin-top:1px;}
+.sbv.grn{color:#c0dd97;}
+.sbv.red{color:#f7c1c1;}
+
+/* ── Bulk bar ── */
+.bulk-bar{
+  display:flex;gap:7px;padding:9px 14px;
+  background:var(--dk);border-bottom:0.5px solid rgba(255,255,255,0.07);
+  align-items:center;flex-wrap:wrap;flex-shrink:0;
+}
+.bulk-btn{
+  padding:6px 13px;font-size:11px;font-weight:700;border-radius:var(--rs);
+  border:0.5px solid rgba(255,255,255,0.15);background:transparent;
+  color:rgba(255,255,255,0.5);cursor:pointer;
+}
+.bulk-btn.grn{border-color:rgba(76,175,80,0.4);color:#C8E6C9;}
+.bulk-btn.red{border-color:rgba(211,47,47,0.4);color:#FFCDD2;}
+.bulk-btn.gold{border-color:rgba(186,117,23,0.4);color:#fac775;}
+.bulk-lbl{font-size:10px;color:rgba(255,255,255,0.3);margin-left:auto;}
+
+/* ── Roster rows ── */
+.grow{
+  display:flex;align-items:center;gap:12px;
+  padding:12px 16px;border-bottom:0.5px solid rgba(255,255,255,0.06);
+  cursor:pointer;background:var(--dk);
+}
+.grow:last-child{border-bottom:none;}
+.selbox{
+  width:20px;height:20px;border-radius:5px;
+  border:0.5px solid rgba(255,255,255,0.25);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.selbox.chk{background:#1B5E20;border-color:#2E7D32;}
+.chkmark{width:9px;height:6px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px);display:none;}
+.selbox.chk .chkmark{display:block;}
+.gname{font-size:14px;font-weight:600;color:#f0f0f0;}
+.gbelt{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.edots{display:flex;gap:4px;}
+.edot{width:18px;height:18px;border-radius:50%;position:relative;overflow:hidden;flex-shrink:0;}
+
+/* ── Grade screen cards ── */
+.gcard{
+  background:rgba(255,255,255,0.05);border:0.5px solid rgba(255,255,255,0.09);
+  border-radius:var(--r);padding:14px;margin-bottom:12px;
+}
+.stripe-btn{
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:11px 13px;border-radius:var(--rs);
+  border:0.5px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);cursor:pointer;
+  min-width:74px;transition:all .1s;
+}
+.stripe-btn:active{background:rgba(255,255,255,0.08);}
+.stripe-btn.sel{border-color:rgba(186,117,23,0.7);background:rgba(186,117,23,0.18);}
+.stripe-btn.stg{opacity:.4;cursor:default;}
+.sblbl{font-size:10px;color:rgba(255,255,255,0.5);text-align:center;line-height:1.4;}
+.stripe-btn.sel .sblbl{color:#fac775;}
+.no-elig{font-size:12px;color:rgba(255,255,255,0.3);font-style:italic;padding:6px 0;}
+.gfooter{
+  background:var(--dk2);padding:11px 16px;
+  border-top:0.5px solid rgba(255,255,255,0.08);
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  position:sticky;bottom:0;z-index:30;flex-shrink:0;
+}
+
+/* ── Summary ── */
+.el-sec{
+  background:var(--surf);border:0.5px solid var(--bdr);
+  border-radius:var(--r);overflow:hidden;margin-bottom:10px;
+}
+.el-hdr{padding:12px 14px;display:flex;align-items:center;gap:11px;border-bottom:0.5px solid var(--bdr);}
+.el-name{font-size:14px;font-weight:700;color:var(--tx);flex:1;}
+.el-pill{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.el-srow{display:flex;align-items:center;gap:11px;padding:10px 14px;border-bottom:0.5px solid var(--bdr);}
+.el-srow:last-child{border-bottom:none;}
+.el-sname{font-size:13px;font-weight:600;color:var(--tx);flex:1;}
+.stype{font-size:10px;font-weight:700;padding:2px 9px;border-radius:3px;}
+.rem-btn{
+  font-size:11px;color:var(--rt);background:var(--rb);
+  border:0.5px solid #F09595;border-radius:3px;padding:5px 10px;
+  cursor:pointer;flex-shrink:0;
+}
+.el-empty{padding:11px 14px;font-size:12px;color:var(--tx3);font-style:italic;}
+.tot-card{
+  background:var(--surf);border:0.5px solid var(--bdr);
+  border-radius:var(--r);padding:14px 16px;margin-bottom:12px;
+}
+.trow2{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--bdr);}
+.trow2:last-child{border-bottom:none;}
+.tlbl2{font-size:13px;color:var(--tx2);}
+.tval{font-size:20px;font-weight:700;color:var(--tx);}
+.grand{display:flex;justify-content:space-between;align-items:center;padding-top:12px;margin-top:4px;border-top:1px solid var(--bdr2);}
+.glbl2{font-size:13px;font-weight:700;}
+.gval2{font-size:26px;font-weight:800;}
+
+/* ── Call Out Mode ── */
+#scr-callout{background:#0A0A0A;}
+.callout-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:48px 28px;text-align:center;
+}
+.co-progress{
+  font-size:12px;color:rgba(255,255,255,0.3);font-weight:700;
+  letter-spacing:.07em;text-transform:uppercase;margin-bottom:36px;
+}
+.co-pip{margin-bottom:22px;}
+.co-name{
+  font-size:38px;font-weight:800;color:#f0f0f0;
+  line-height:1.15;margin-bottom:8px;
+}
+.co-beltname{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:36px;}
+.co-awarding-lbl{
+  font-size:10px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.09em;color:rgba(255,255,255,0.25);margin-bottom:16px;
+}
+.co-stripes{display:flex;gap:20px;justify-content:center;flex-wrap:wrap;margin-bottom:52px;}
+.co-stripe{display:flex;flex-direction:column;align-items:center;gap:10px;}
+.co-stripe-lbl{font-size:13px;font-weight:700;color:#fac775;}
+.co-next-btn{
+  width:100%;max-width:340px;padding:20px;border-radius:12px;
+  background:#1B5E20;border:none;font-size:19px;font-weight:800;
+  color:#c0dd97;cursor:pointer;letter-spacing:.01em;
+}
+.co-next-btn:active{background:#2a6010;}
+.co-finish-btn{
+  width:100%;max-width:340px;padding:20px;border-radius:12px;
+  background:#854f0b;border:0.5px solid var(--gold);
+  font-size:19px;font-weight:800;color:#fac775;cursor:pointer;
+}
+.co-finish-btn:active{background:var(--gold);}
+
+/* ── Prime Mode ── */
+.prime-row{
+  display:flex;align-items:flex-start;gap:13px;
+  padding:13px 16px;border-bottom:0.5px solid rgba(255,255,255,0.06);
+  background:var(--dk);
+}
+.prime-row:last-child{border-bottom:none;}
+.prime-name{font-size:14px;font-weight:600;color:#f0f0f0;}
+.prime-belt{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;}
+.prime-stripes{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;}
+.prime-btn{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:7px 9px;border-radius:var(--rs);min-width:56px;
+  border:0.5px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);cursor:pointer;transition:all .1s;
+}
+.prime-btn.half{border-color:rgba(186,117,23,0.65);background:rgba(186,117,23,0.14);}
+.prime-btn.full{border-color:rgba(76,175,80,0.6);background:rgba(27,94,32,0.25);}
+.prime-lbl{font-size:9px;color:rgba(255,255,255,0.4);text-align:center;}
+.prime-btn.half .prime-lbl{color:#fac775;}
+.prime-btn.full .prime-lbl{color:#c0dd97;}
+.prime-prog-bar{
+  background:var(--dk2);padding:9px 16px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:0.5px solid rgba(255,255,255,0.07);flex-shrink:0;
+}
+.prime-prog-txt{font-size:12px;color:rgba(255,255,255,0.4);}
+
+/* ── Import screen ── */
+.import-hero{text-align:center;padding:36px 16px 24px;}
+.import-logo{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--tx3);margin-bottom:12px;}
+.import-title{font-size:28px;font-weight:800;color:var(--tx);margin-bottom:8px;}
+.import-sub{font-size:15px;color:var(--tx2);}
+.upload-area{
+  border:2px dashed var(--bdr2);border-radius:var(--r);
+  padding:32px 20px;text-align:center;cursor:pointer;
+  background:var(--surf);margin-bottom:12px;transition:border-color .12s;
+}
+.upload-area:active{border-color:var(--dk);background:var(--surf2);}
+.upload-icon{font-size:36px;margin-bottom:10px;}
+.upload-title{font-size:15px;font-weight:700;color:var(--tx);margin-bottom:5px;}
+.upload-sub{font-size:12px;color:var(--tx3);}
+.parse-ok{
+  background:var(--gnb);border:0.5px solid #3B6D11;
+  border-radius:var(--rs);padding:13px 15px;margin-bottom:12px;
+}
+.parse-err-box{
+  background:var(--rb);border:0.5px solid #F09595;
+  border-radius:var(--rs);padding:13px 15px;margin-bottom:12px;
+}
+.parse-ttl{font-size:13px;font-weight:700;margin-bottom:4px;}
+.parse-ok .parse-ttl{color:var(--grn);}
+.parse-err-box .parse-ttl{color:var(--rt);}
+.parse-det{font-size:12px;line-height:1.7;}
+.parse-ok .parse-det{color:#1B4D2E;}
+.parse-err-box .parse-det{color:#6B1A1A;}
+
+/* ── Modals ── */
+.mov{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,0.65);z-index:200;
+  align-items:flex-end;justify-content:center;padding:0;
+}
+.mov.op{display:flex;}
+.mbox{
+  background:var(--surf);border-radius:var(--r) var(--r) 0 0;
+  width:100%;max-width:640px;overflow:hidden;
+  max-height:85vh;display:flex;flex-direction:column;
+}
+.mtop{background:var(--dk);padding:18px 20px;flex-shrink:0;}
+.mtitle{font-size:17px;font-weight:700;color:#fff;}
+.msub{font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;}
+.mbody{padding:16px 20px;overflow-y:auto;}
+.mlist{display:flex;flex-direction:column;gap:7px;margin-bottom:16px;}
+.mitem{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  background:var(--surf2);border-radius:var(--rs);border:0.5px solid var(--bdr);
+}
+.cbtns{display:flex;gap:9px;}
+.ccancel{
+  flex:1;padding:13px;background:transparent;
+  border:0.5px solid var(--bdr2);border-radius:var(--rs);
+  font-size:14px;color:var(--tx2);cursor:pointer;
+}
+.ccancel:active{background:var(--surf2);}
+.cconfirm{
+  flex:1;padding:13px;background:#2a6010;border:none;
+  border-radius:var(--rs);font-size:14px;font-weight:700;
+  color:#c0dd97;cursor:pointer;
+}
+.cconfirm:active{background:#3b6d11;}
+.cconfirm-gold{
+  flex:1;padding:13px;background:#854f0b;
+  border:0.5px solid var(--gold);border-radius:var(--rs);
+  font-size:14px;font-weight:700;color:#fac775;cursor:pointer;
+}
+.cconfirm-gold:active{background:var(--gold);}
+
+/* ── Receipt ── */
+.receipt-hdr{text-align:center;padding:28px 16px 16px;}
+.receipt-logo{font-size:22px;font-weight:800;color:var(--tx);}
+.receipt-date{font-size:13px;color:var(--tx3);margin-top:4px;}
+
+/* ── Print ── */
+@media print{
+  html,body{background:#fff;}
+  #app{max-width:100%;box-shadow:none;}
+  .print-hide,.topbar,.stats-bar,.bulk-bar,.gfooter{display:none!important;}
+  .scr{display:none!important;}
+  #scr-receipt{display:block!important;}
+  .body{padding:0;}
+  .mov{display:none!important;}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 1 — IMPORT
+════════════════════════════════════════════════ -->
+<div id="scr-import" class="scr on">
+  <div class="topbar">
+    <div style="flex:1">
+      <div class="tb-title">Ninja Learning</div>
+      <div class="tb-sub">Grading Tool</div>
+    </div>
+  </div>
+  <div class="body">
+    <div class="import-hero">
+      <div class="import-logo">Ninja School Ltd</div>
+      <div class="import-title">Grading Session</div>
+      <div class="import-sub">Upload your student list to begin</div>
+    </div>
+
+    <button class="btn btn-grn btn-full" style="font-size:17px;padding:20px;margin-bottom:12px;border-radius:var(--r);" onclick="loadPreloaded()">
+      ▶ Load Thursday's class (40 students)
+    </button>
+
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+      <div style="flex:1;height:0.5px;background:var(--bdr);"></div>
+      <div style="font-size:11px;color:var(--tx3);">or upload a different CSV</div>
+      <div style="flex:1;height:0.5px;background:var(--bdr);"></div>
+    </div>
+
+    <label for="file-input" class="upload-area" id="upload-area">
+      <div class="upload-icon">📋</div>
+      <div class="upload-title">Tap to upload CSV</div>
+      <div class="upload-sub">name, age, belt · or name, age, belt, air, earth, water, fire</div>
+    </label>
+    <input type="file" id="file-input" accept=".csv,.txt" style="display:none" onchange="handleFile(this)">
+
+    <div id="parse-feedback" style="display:none;"></div>
+
+    <div class="card">
+      <div class="sec-lbl" style="margin-bottom:10px;">Session details</div>
+      <label style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tx3);">Instructor name</label>
+      <input id="instructor-name" type="text" value="Harry Bovill"
+        style="width:100%;margin-top:5px;height:42px;border:0.5px solid var(--bdr2);border-radius:var(--rs);padding:0 12px;font-size:14px;color:var(--tx);background:var(--surf);">
+    </div>
+
+    <button class="btn btn-gh btn-full" style="margin-bottom:8px;font-size:13px;" onclick="downloadTemplate()">↓ Download blank template</button>
+
+    <div id="import-actions" style="display:none;flex-direction:column;gap:9px;">
+      <button id="btn-prime" class="btn btn-gold btn-full" onclick="startPrime()">Prime student stripes →</button>
+      <button id="btn-grade" class="btn btn-grn btn-full" onclick="startGrade()" disabled>Start grading session →</button>
+      <div id="import-hint" style="font-size:12px;color:var(--tx3);text-align:center;padding:4px 0;line-height:1.5;"></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 2 — PRIME MODE
+════════════════════════════════════════════════ -->
+<div id="scr-prime" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen('import')">‹ Back</button>
+    <div style="flex:1">
+      <div class="tb-title">Prime Stripes</div>
+      <div class="tb-sub">Mark what each student already has</div>
+    </div>
+  </div>
+  <div class="prime-prog-bar">
+    <div class="prime-prog-txt">Tap to cycle: <span style="color:rgba(255,255,255,0.6);">none → ½ → full → none</span></div>
+    <button class="bulk-btn gold" onclick="exportPrimedCSV()">Export CSV ↓</button>
+  </div>
+  <div id="prime-body" style="flex:1;overflow-y:auto;background:var(--dk);"></div>
+  <div class="stats-bar">
+    <div>
+      <div class="sbv" id="prime-touched">0</div>
+      <div class="sbl">Primed</div>
+    </div>
+    <div>
+      <div class="sbv" id="prime-total">0</div>
+      <div class="sbl">Students</div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;">
+      <button class="btn btn-gold" onclick="exportPrimedCSV()">Export CSV ↓</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 3 — REGISTER
+════════════════════════════════════════════════ -->
+<div id="scr-register" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen('import')">‹ Back</button>
+    <div style="flex:1">
+      <div class="tb-title" id="reg-title">Register</div>
+      <div class="tb-sub" id="reg-date"></div>
+    </div>
+    <div class="tb-badge" id="reg-badge" style="display:none;"></div>
+  </div>
+  <div class="bulk-bar">
+    <button class="bulk-btn grn" onclick="regBulk('P')">All present</button>
+    <button class="bulk-btn red" onclick="regBulk('A')">All absent</button>
+    <button class="bulk-btn" onclick="regBulk('U')">Clear</button>
+    <div class="bulk-lbl" id="reg-progress">0 / 0 marked</div>
+  </div>
+  <div id="reg-body" style="flex:1;overflow-y:auto;background:var(--dk);"></div>
+  <div class="stats-bar">
+    <div><div class="sbv grn" id="reg-P">0</div><div class="sbl">Present</div></div>
+    <div><div class="sbv red" id="reg-A">0</div><div class="sbl">Absent</div></div>
+    <div><div class="sbv" id="reg-U">0</div><div class="sbl">Unmarked</div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;">
+      <button class="btn btn-grn" id="btn-confirm-reg" onclick="confirmRegister()">Confirm →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 4 — GRADING ROSTER
+════════════════════════════════════════════════ -->
+<div id="scr-roster" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="showScreen('register')">‹ Register</button>
+    <div style="flex:1">
+      <div class="tb-title">Grade Students</div>
+      <div class="tb-sub" id="roster-sub"></div>
+    </div>
+    <div class="tb-badge" id="roster-badge" style="display:none;"></div>
+  </div>
+  <div class="bulk-bar">
+    <button class="bulk-btn grn" onclick="rosterSelectAll()">Select all</button>
+    <button class="bulk-btn" onclick="rosterDeselectAll()">Deselect all</button>
+    <button class="bulk-btn gold" style="margin-left:auto;" onclick="goSummary()">Summary (<span id="roster-staged-cnt">0</span>)</button>
+  </div>
+  <div id="roster-body" style="flex:1;overflow-y:auto;background:var(--dk);"></div>
+  <div class="stats-bar">
+    <div><div class="sbv" id="sel-cnt">0</div><div class="sbl">Selected</div></div>
+    <div><div class="sbv grn" id="roster-present-cnt">0</div><div class="sbl">Present</div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:flex-end;">
+      <button class="btn btn-gold" id="btn-go-grade" onclick="showGradeScreen()" disabled>Grade →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 5 — GRADE SCREEN
+════════════════════════════════════════════════ -->
+<div id="scr-grade" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="goRoster()">‹ Roster</button>
+    <div style="flex:1">
+      <div class="tb-title">Award Stripes</div>
+      <div class="tb-sub" id="grade-sub"></div>
+    </div>
+  </div>
+  <div id="grade-body" style="flex:1;overflow-y:auto;padding:14px;background:var(--dk2);"></div>
+  <div class="gfooter">
+    <div style="font-size:13px;color:rgba(255,255,255,0.4);">Pending: <span id="award-cnt" style="color:#fac775;font-weight:700;">0</span></div>
+    <button class="btn btn-gold" id="btn-submit" onclick="openStageConf()" disabled>Add to summary →</button>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 6 — SUMMARY
+════════════════════════════════════════════════ -->
+<div id="scr-summary" class="scr">
+  <div class="topbar">
+    <button class="tb-back" onclick="goRoster()">‹ Roster</button>
+    <div style="flex:1">
+      <div class="tb-title">Session Summary</div>
+      <div class="tb-sub" id="sum-sub"></div>
+    </div>
+  </div>
+  <div id="sum-body" class="body"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 7 — CALL OUT MODE
+════════════════════════════════════════════════ -->
+<div id="scr-callout" class="scr">
+  <div id="callout-body" class="callout-wrap"></div>
+</div>
+
+
+<!-- ════════════════════════════════════════════════
+     SCREEN 8 — RECEIPT
+════════════════════════════════════════════════ -->
+<div id="scr-receipt" class="scr">
+  <div class="topbar print-hide">
+    <div style="flex:1">
+      <div class="tb-title">Grading Receipt</div>
+      <div class="tb-sub" id="rec-date-sub"></div>
+    </div>
+  </div>
+  <div id="rec-body" class="body"></div>
+</div>
+
+</div><!-- /app -->
+
+
+<!-- ════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════ -->
+
+<!-- Confirm stage -->
+<div class="mov" id="modal-stage">
+  <div class="mbox">
+    <div class="mtop">
+      <div class="mtitle">Add to summary?</div>
+      <div class="msub">These will be staged for this session</div>
+    </div>
+    <div class="mbody">
+      <div class="mlist" id="stage-list"></div>
+      <div class="cbtns">
+        <button class="ccancel" onclick="closeModal('modal-stage')">Cancel</button>
+        <button class="cconfirm-gold" onclick="confirmStage()">Add to summary</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Award all -->
+<div class="mov" id="modal-award">
+  <div class="mbox">
+    <div class="mtop">
+      <div class="mtitle">Award all stripes?</div>
+      <div class="msub">This completes the session and generates the receipt</div>
+    </div>
+    <div class="mbody">
+      <div class="mlist" id="award-list"></div>
+      <div class="cbtns">
+        <button class="ccancel" onclick="closeModal('modal-award')">Cancel</button>
+        <button class="cconfirm" onclick="finalAward()">Award all ✓</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CSV export fallback -->
+<div class="mov" id="modal-csv">
+  <div class="mbox">
+    <div class="mtop">
+      <div class="mtitle">Primed CSV</div>
+      <div class="msub">Save this file — import it on Thursday to grade</div>
+    </div>
+    <div class="mbody">
+      <div id="csv-modal-hint" style="font-size:12px;margin-bottom:10px;line-height:1.5;color:var(--gnt);"></div>
+      <textarea id="csv-modal-text" readonly
+        style="width:100%;height:180px;border:0.5px solid var(--bdr2);border-radius:var(--rs);padding:10px;font-size:11px;font-family:monospace;resize:none;background:var(--surf2);color:var(--tx);"
+        onclick="this.select()"></textarea>
+      <div style="font-size:11px;color:var(--tx3);margin:8px 0 14px;">Tap the text above to select all, then copy and paste into a new file called <strong>ninja-primed.csv</strong></div>
+      <div class="cbtns">
+        <button class="ccancel" onclick="closeModal('modal-csv')">Close</button>
+        <button class="cconfirm-gold" onclick="document.getElementById('csv-modal-text').select();document.execCommand('copy');this.textContent='Copied ✓';">Copy all</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- New session -->
+<div class="mov" id="modal-new">
+  <div class="mbox">
+    <div class="mtop">
+      <div class="mtitle">Start new session?</div>
+      <div class="msub">All current data will be cleared</div>
+    </div>
+    <div class="mbody">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:18px;line-height:1.6;">Make sure you have saved or printed the receipt before starting a new session.</div>
+      <div class="cbtns">
+        <button class="ccancel" onclick="closeModal('modal-new')">Cancel</button>
+        <button class="cconfirm-gold" onclick="resetSession()">New session</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// Error surface — catches silent iOS JS crashes
+window.onerror = function(msg, src, line, col, err) {
+  var el = document.getElementById('js-err-banner');
+  if (!el) { el = document.createElement('div'); el.id='js-err-banner'; el.style.cssText='position:fixed;top:0;left:0;right:0;background:#c00;color:#fff;font-size:13px;padding:10px 14px;z-index:9999;font-family:monospace;'; document.body.appendChild(el); }
+  el.textContent = 'JS ERROR (line ' + line + '): ' + msg;
+  return false;
+};
+
+// ─────────────────────────────────────────────
+// DATA
+// ─────────────────────────────────────────────
+
+const BD = [
+  {n:'Shiro Belt',     c:'#e8e8e8', s:null},
+  {n:'Kiiro Belt',     c:'#f0c830', s:null},
+  {n:'Taiyo Belt',     c:'#e8702a', s:null},
+  {n:'Kazan Belt',     c:'#e8702a', s:'#cc2222'},
+  {n:'Honoo Belt',     c:'#c42020', s:null},
+  {n:'Shin Honoo Belt',c:'#c42020', s:'#888888'},
+  {n:'Mori Belt',      c:'#1B4D2E', s:null},
+  {n:'Shin Mori Belt', c:'#1B4D2E', s:'#888888'},
+  {n:'Kage Belt',      c:'#888888', s:null},
+  {n:'Shin Kage Belt', c:'#888888', s:'#1a1a1a'},
+  {n:'Mushin Belt',    c:'#1a1a1a', s:'#f0f0f0'}
+];
+
+const EL = [
+  {n:'Air',  f:'#2a2a3a', st:'#ffffff', lf:'#f0f0f8', ls:'#3a3a6a', pb:'#EEEDFE', pt:'#3C3489', sym:'air'},
+  {n:'Earth',f:'#1a4010', st:'#5acd30', lf:'#E0F0E8', ls:'#3B6D11', pb:'#E0F0E8', pt:'#1B4D2E', sym:'earth'},
+  {n:'Water',f:'#0e2260', st:'#4488ff', lf:'#E6F1FB', ls:'#185FA5', pb:'#E6F1FB', pt:'#0C447C', sym:'water'},
+  {n:'Fire', f:'#6a1a05', st:'#ff6a20', lf:'#FAECE7', ls:'#993C1D', pb:'#FAECE7', pt:'#712B13', sym:'fire'}
+];
+
+const TIERS = [
+  {key:'b', label:'Shokyu — Beginner',     test: s => s.bi <= 3},
+  {key:'i', label:'Chukyu — Intermediate', test: s => s.bi >= 4 && s.bi <= 7},
+  {key:'a', label:'Jokyu — Advanced',      test: s => s.bi >= 8}
+];
+
+// Build belt name lookup (lowercase, trimmed)
+const BELT_MAP = {};
+BD.forEach((b, i) => { BELT_MAP[b.n.toLowerCase()] = i; });
+
+// Avatar colour pools
+const AV_BG = ['#E6F1FB','#E0F0E8','#FAEEDA','#FAECE7','#EEEDFE'];
+const AV_TX = ['#0C447C','#1B4D2E','#5C3205','#712B13','#3C3489'];
+
+
+// ─────────────────────────────────────────────
+// SESSION STATE
+// ─────────────────────────────────────────────
+
+let STUDS    = [];
+let regSt    = {};      // {id: 'P'|'A'|'U'}
+let grSel    = new Set();
+let staged   = [];      // [{studId, name, elIdx, isHalf, key}]
+let pending  = [];
+let instrName = 'Harry Bovill';
+let coIdx    = 0;
+let coList   = [];
+
+
+// ─────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────
+
+function showScreen(name) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('scr-' + name).classList.add('on');
+  window.scrollTo(0, 0);
+}
+
+function openModal(id)  { document.getElementById(id).classList.add('op'); }
+function closeModal(id) { document.getElementById(id).classList.remove('op'); }
+
+function today() {
+  const d = new Date();
+  const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  return `${days[d.getDay()]} ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`;
+}
+
+function pip(c, s, w=22, h=8) {
+  return `<div class="bp" style="width:${w}px;height:${h}px;background:${c};">${s ? `<div class="bps" style="background:${s};"></div>` : ''}</div>`;
+}
+
+function esvg(sym, stroke, sz, op) {
+  const sw = 1.6; let i = '';
+  if (sym==='air')   i = `<path d="M8 14 Q14 9 20 14 Q14 19 8 14Z" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/><path d="M10 19 Q16 14 22 19" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op*0.6}"/><circle cx="16" cy="14" r="1.2" fill="${stroke}" opacity="${op}"/>`;
+  else if(sym==='earth') i = `<polygon points="16,8 24,22 8,22" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/><line x1="10" y1="18" x2="22" y2="18" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/>`;
+  else if(sym==='water') i = `<path d="M16 8 C16 8 22 15 22 19 C22 22.3 19.3 25 16 25 C12.7 25 10 22.3 10 19 C10 15 16 8 16 8Z" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/><path d="M12 20 Q16 17 20 20" fill="none" stroke="${stroke}" stroke-width="${sw*0.8}" opacity="${op*0.7}"/>`;
+  else if(sym==='fire')  i = `<path d="M16 7 C16 7 21 13 21 18 C21 21.3 18.8 24 16 24 C13.2 24 11 21.3 11 18 C11 15 13 12 13 12 C13 12 14 15 16 15 C16 15 14 11 16 7Z" fill="none" stroke="${stroke}" stroke-width="${sw}" opacity="${op}"/>`;
+  return `<svg width="${sz}" height="${sz}" viewBox="0 0 32 32">${i}</svg>`;
+}
+
+function eico(ei, sz, half, lt) {
+  const e = EL[ei];
+  const f = lt ? e.lf : e.f, s = lt ? e.ls : e.st;
+  if (half) return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;border:1.5px solid ${s};position:relative;overflow:hidden;flex-shrink:0;"><div style="position:absolute;left:0;top:0;width:50%;height:100%;background:${f};"></div><div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${esvg(e.sym,s,sz*0.72,0.85)}</div></div>`;
+  return `<div style="width:${sz}px;height:${sz}px;border-radius:50%;border:1.5px solid ${s};background:${f};flex-shrink:0;display:flex;align-items:center;justify-content:center;">${esvg(e.sym,s,sz*0.72,0.9)}</div>`;
+}
+
+function edot(ei, elig, half) {
+  const e = EL[ei];
+  if (elig) return `<div class="edot" style="border:1.5px solid ${e.st};background:${half?'transparent':e.f};display:flex;align-items:center;justify-content:center;">${half?`<div style="position:absolute;left:0;top:0;width:50%;height:100%;background:${e.f};z-index:1;"></div>`:''}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;">${esvg(e.sym,e.st,12,0.9)}</div></div>`;
+  return `<div class="edot" style="border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);">${esvg(e.sym,'rgba(255,255,255,0.15)',12,0.5)}</div>`;
+}
+
+function getTier(s) { return s.bi <= 3 ? 'b' : s.bi <= 7 ? 'i' : 'a'; }
+
+function eligSet(s) {
+  const t = getTier(s), e = new Set();
+  if (t==='b') { for(let i=0;i<4;i++) if(s.str[i]<1) e.add(i); }
+  else if (t==='i') { const ah=s.str.every(v=>v>=0.5); if(!ah){for(let i=0;i<4;i++)if(s.str[i]<0.5)e.add(i);}else{for(let i=0;i<4;i++)if(s.str[i]<1)e.add(i);} }
+  else { for(let i=0;i<4;i++){if(s.str[i]<1){e.add(i);break;}} }
+  return e;
+}
+
+function eligList(s) {
+  const t = getTier(s), r = [];
+  if (t==='b') { for(let i=0;i<4;i++) if(s.str[i]<1) r.push({ei:i,half:false,key:`${i}-f`}); }
+  else if (t==='i') { const ah=s.str.every(v=>v>=0.5); if(!ah){for(let i=0;i<4;i++)if(s.str[i]<0.5)r.push({ei:i,half:true,key:`${i}-h`});}else{for(let i=0;i<4;i++)if(s.str[i]<1)r.push({ei:i,half:false,key:`${i}-f`});} }
+  else { for(let i=0;i<4;i++){if(s.str[i]<1){r.push({ei:i,half:false,key:`a-${i}`});break;}} }
+  return r;
+}
+
+function ubadges() {
+  const t = staged.length;
+  const rb = document.getElementById('reg-badge');
+  const rsb = document.getElementById('roster-badge');
+  const rsc = document.getElementById('roster-staged-cnt');
+  if (rb)  { rb.textContent  = t; rb.style.display  = t ? '' : 'none'; }
+  if (rsb) { rsb.textContent = t; rsb.style.display = t ? '' : 'none'; }
+  if (rsc)  rsc.textContent = t;
+}
+
+
+// ─────────────────────────────────────────────
+// CSV PARSER
+// ─────────────────────────────────────────────
+
+function parseCSV(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length < 2) return { students:[], errors:['File must have a header row plus at least one student'], hasStripes:false };
+
+  // Parse header
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/[^a-z]/g,''));
+  const col = h => headers.indexOf(h);
+  const ni=col('name'), ai=col('age'), bi=col('belt');
+  if (ni<0||ai<0||bi<0) return { students:[], errors:['CSV must have columns: name, age, belt'], hasStripes:false };
+
+  const airI=col('air'), earI=col('earth'), watI=col('water'), firI=col('fire');
+  const hasStripes = airI>=0 && earI>=0 && watI>=0 && firI>=0;
+
+  const students=[], errors=[];
+
+  lines.slice(1).forEach((line, idx) => {
+    if (!line.trim()) return;
+    // Simple CSV split (handles quoted fields)
+    const cols = [];
+    let cur='', inQ=false;
+    for (let c=0; c<line.length; c++) {
+      if (line[c]==='"') { inQ=!inQ; }
+      else if (line[c]===',' && !inQ) { cols.push(cur.trim()); cur=''; }
+      else cur += line[c];
+    }
+    cols.push(cur.trim());
+
+    const name = (cols[ni]||'').replace(/^"|"$/g,'').trim();
+    const age  = parseInt(cols[ai]) || 0;
+    const belt = (cols[bi]||'').replace(/^"|"$/g,'').trim();
+
+    if (!name) { errors.push(`Row ${idx+2}: missing name`); return; }
+    const beltIdx = BELT_MAP[belt.toLowerCase()];
+    if (beltIdx === undefined) { errors.push(`Row ${idx+2} (${name}): unknown belt "${belt}"`); return; }
+
+    let str = [0,0,0,0];
+    if (hasStripes) {
+      [airI,earI,watI,firI].forEach((ci, si) => {
+        if (ci >= 0 && cols[ci] !== undefined) {
+          const v = parseFloat(cols[ci]);
+          str[si] = [0, 0.5, 1].includes(v) ? v : 0;
+        }
+      });
+    }
+
+    const ai2 = students.length % AV_BG.length;
+    students.push({ id:students.length, name, age, bi:beltIdx, str, ab:AV_BG[ai2], at:AV_TX[ai2] });
+  });
+
+  return { students, errors, hasStripes };
+}
+
+
+// ─────────────────────────────────────────────
+// IMPORT SCREEN
+// ─────────────────────────────────────────────
+
+function handleFile(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => processCSV(e.target.result);
+  reader.readAsText(file);
+}
+
+function processCSV(text) {
+  const { students, errors, hasStripes } = parseCSV(text);
+  const fb = document.getElementById('parse-feedback');
+  const ia = document.getElementById('import-actions');
+  fb.style.display = 'block';
+
+  if (!students.length) {
+    fb.innerHTML = `<div class="parse-err-box"><div class="parse-ttl">Could not load CSV</div><div class="parse-det">${errors.join('<br>')}</div></div>`;
+    ia.style.display = 'none';
+    return;
+  }
+
+  // Belt distribution summary
+  const dist = {};
+  students.forEach(s => { const n=BD[s.bi].n; dist[n]=(dist[n]||0)+1; });
+  const distStr = Object.entries(dist).map(([n,c])=>`${n}: ${c}`).join(' · ');
+
+  fb.innerHTML = `<div class="parse-ok">
+    <div class="parse-ttl">✓ ${students.length} students loaded</div>
+    <div class="parse-det">${distStr}${errors.length ? `<br><span style="color:#854F0B;">Note: ${errors.join('; ')}</span>` : ''}</div>
+  </div>`;
+
+  STUDS = students;
+  ia.style.display = 'flex';
+
+  const btnGrade = document.getElementById('btn-grade');
+  const hint     = document.getElementById('import-hint');
+
+  if (hasStripes) {
+    btnGrade.disabled = false;
+    hint.textContent = 'Stripe data found — you can prime again or go straight to grading.';
+    document.getElementById('btn-prime').textContent = 'Update stripe priming →';
+  } else {
+    btnGrade.disabled = true;
+    hint.textContent = 'No stripe data yet. Prime students first, export, then re-import to grade.';
+    document.getElementById('btn-prime').textContent = 'Prime student stripes →';
+  }
+}
+
+function downloadTemplate() {
+  const csv = 'name,age,belt\n';
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'ninja-students-template.csv';
+  a.click();
+}
+
+
+// ─────────────────────────────────────────────
+// PRIME MODE
+// ─────────────────────────────────────────────
+
+function startPrime() {
+  instrName = document.getElementById('instructor-name').value || 'Harry Bovill';
+  showScreen('prime');
+  renderPrime();
+}
+
+function renderPrime() {
+  const body = document.getElementById('prime-body');
+  body.innerHTML = '';
+  document.getElementById('prime-total').textContent = STUDS.length;
+
+  TIERS.forEach(t => {
+    const ts = STUDS.filter(t.test).sort((a,b) => a.bi - b.bi || a.name.localeCompare(b.name));
+    if (!ts.length) return;
+
+    const hdr = document.createElement('div');
+    hdr.className = 'thdr';
+    hdr.innerHTML = `<span class="tlbl">${t.label}</span><div class="tline"></div><span class="tcnt">${ts.length}</span>`;
+    body.appendChild(hdr);
+
+    ts.forEach(s => {
+      const b = BD[s.bi];
+      const isInter = s.bi >= 4 && s.bi <= 7;
+      const row = document.createElement('div');
+      row.className = 'prime-row';
+
+      let btns = '';
+      [0,1,2,3].forEach(ei => {
+        const v = s.str[ei];
+        const cls = v===1 ? 'full' : v===0.5 ? 'half' : '';
+        const lbl = v===1 ? 'Full' : v===0.5 ? '½' : '—';
+        btns += `<button class="prime-btn ${cls}" id="pb-${s.id}-${ei}" onclick="cyclePrime(${s.id},${ei},${isInter})">${eico(ei,22,v===0.5,false)}<div class="prime-lbl">${lbl}</div></button>`;
+      });
+
+      row.innerHTML = `${pip(b.c,b.s,26,10)}<div style="flex:1"><div class="prime-name">${s.name}</div><div class="prime-belt">${b.n} · Age ${s.age}</div><div class="prime-stripes">${btns}</div></div>`;
+      body.appendChild(row);
+    });
+  });
+
+  updatePrimeTouched();
+}
+
+function cyclePrime(id, ei, isInter) {
+  const s = STUDS.find(x => x.id === id);
+  if (!s) return;
+  const cur = s.str[ei];
+  s.str[ei] = !isInter ? (cur===0 ? 1 : 0) : (cur===0 ? 0.5 : cur===0.5 ? 1 : 0);
+
+  const v = s.str[ei];
+  const btn = document.getElementById(`pb-${id}-${ei}`);
+  btn.className = 'prime-btn' + (v===1 ? ' full' : v===0.5 ? ' half' : '');
+  btn.innerHTML = eico(ei,22,v===0.5,false) + `<div class="prime-lbl">${v===1?'Full':v===0.5?'½':'—'}</div>`;
+  updatePrimeTouched();
+}
+
+function updatePrimeTouched() {
+  const n = STUDS.filter(s => s.str.some(v => v > 0)).length;
+  document.getElementById('prime-touched').textContent = n;
+}
+
+function buildPrimedCSV() {
+  let csv = 'name,age,belt,air,earth,water,fire\n';
+  STUDS.forEach(s => {
+    csv += `"${s.name}",${s.age},"${BD[s.bi].n}",${s.str[0]},${s.str[1]},${s.str[2]},${s.str[3]}\n`;
+  });
+  return csv;
+}
+
+function exportPrimedCSV() {
+  const csv = buildPrimedCSV();
+  const filename = `ninja-primed-${new Date().toISOString().slice(0,10)}.csv`;
+  let downloaded = false;
+
+  // Method 1: Blob + createObjectURL (works in Chrome, Firefox, Edge)
+  try {
+    const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1500);
+    downloaded = true;
+  } catch(e) { downloaded = false; }
+
+  // Always show the copy modal as a reliable fallback
+  document.getElementById('csv-modal-text').value = csv;
+  document.getElementById('csv-modal-hint').textContent = downloaded
+    ? 'Download started. If it didn\'t appear, copy the text below and save it as a .csv file.'
+    : 'Download blocked by browser. Copy the text below and save it as ninja-primed.csv';
+  document.getElementById('csv-modal-hint').style.color = downloaded ? 'var(--gnt)' : 'var(--gt)';
+  openModal('modal-csv');
+}
+
+
+// ─────────────────────────────────────────────
+// REGISTER
+// ─────────────────────────────────────────────
+
+function startGrade() {
+  instrName = document.getElementById('instructor-name').value || 'Harry Bovill';
+  regSt = {}; grSel.clear(); staged = []; pending = [];
+  STUDS.forEach(s => regSt[s.id] = 'U');
+  document.getElementById('reg-title').textContent = `Register · ${STUDS.length} students`;
+  document.getElementById('reg-date').textContent = today();
+  showScreen('register');
+  renderReg();
+}
+
+function renderReg() {
+  const body = document.getElementById('reg-body');
+  body.innerHTML = '';
+  let P=0, A=0, U=0;
+  STUDS.forEach(s => { const st=regSt[s.id]; if(st==='P')P++; else if(st==='A')A++; else U++; });
+  document.getElementById('reg-P').textContent = P;
+  document.getElementById('reg-A').textContent = A;
+  document.getElementById('reg-U').textContent = U;
+  document.getElementById('reg-progress').textContent = `${P+A} / ${STUDS.length} marked`;
+
+  TIERS.forEach(t => {
+    const ts = STUDS.filter(t.test).sort((a,b) => a.bi - b.bi || a.name.localeCompare(b.name));
+    if (!ts.length) return;
+    const hdr = document.createElement('div');
+    hdr.className = 'thdr';
+    hdr.innerHTML = `<span class="tlbl">${t.label}</span><div class="tline"></div><span class="tcnt">${ts.length}</span>`;
+    body.appendChild(hdr);
+
+    ts.forEach(s => {
+      const b = BD[s.bi], st = regSt[s.id] || 'U';
+      const row = document.createElement('div');
+      row.className = `rrow${st==='P'?' P':st==='A'?' A':''}`;
+      row.innerHTML = `${pip(b.c,b.s,24,9)}<div style="flex:1"><div class="rname">${s.name}</div><div class="rbeltsub">${b.n} · Age ${s.age}</div></div><div class="att-toggle"><button class="att-btn P${st==='P'?' on':''}" onclick="markAtt(${s.id},'P')">Present</button><button class="att-btn A${st==='A'?' on':''}" onclick="markAtt(${s.id},'A')">Absent</button></div>`;
+      body.appendChild(row);
+    });
+  });
+  ubadges();
+}
+
+function markAtt(id, val) { regSt[id] = regSt[id]===val ? 'U' : val; renderReg(); }
+function regBulk(val)     { STUDS.forEach(s => regSt[s.id] = val); renderReg(); }
+
+function confirmRegister() {
+  showScreen('roster');
+  renderRoster();
+}
+
+
+// ─────────────────────────────────────────────
+// GRADING ROSTER
+// ─────────────────────────────────────────────
+
+function goRoster() {
+  grSel.clear();
+  pending = [];
+  showScreen('roster');
+  renderRoster();
+}
+
+function renderRoster() {
+  const ps = STUDS.filter(s => regSt[s.id] === 'P');
+  document.getElementById('roster-sub').textContent = `${ps.length} present`;
+  document.getElementById('roster-present-cnt').textContent = ps.length;
+
+  const body = document.getElementById('roster-body');
+  body.innerHTML = '';
+
+  TIERS.forEach(t => {
+    const ts = ps.filter(t.test).sort((a,b) => a.bi - b.bi || a.name.localeCompare(b.name));
+    if (!ts.length) return;
+    const hdr = document.createElement('div');
+    hdr.className = 'thdr';
+    hdr.innerHTML = `<span class="tlbl">${t.label}</span><div class="tline"></div><span class="tcnt">${ts.length}</span>`;
+    body.appendChild(hdr);
+
+    ts.forEach(s => {
+      const b = BD[s.bi], isSel = grSel.has(s.id);
+      const es = eligSet(s);
+      const ah = s.bi>=4 && s.bi<=7 && s.str.every(v=>v>=0.5);
+      const dots = [0,1,2,3].map(i => edot(i, es.has(i), s.bi>=4&&s.bi<=7&&!ah&&s.str[i]<0.5)).join('');
+      const row = document.createElement('div');
+      row.className = 'grow';
+      row.onclick = () => { grSel.has(s.id) ? grSel.delete(s.id) : grSel.add(s.id); renderRoster(); };
+      row.innerHTML = `<div class="selbox${isSel?' chk':''}"><div class="chkmark"></div></div>${pip(b.c,b.s,26,9)}<div style="flex:1"><div class="gname">${s.name}</div><div class="gbelt">${b.n}</div></div><div class="edots">${dots}</div>`;
+      body.appendChild(row);
+    });
+  });
+
+  document.getElementById('sel-cnt').textContent = grSel.size;
+  document.getElementById('btn-go-grade').disabled = grSel.size === 0;
+  ubadges();
+}
+
+function rosterSelectAll()   { STUDS.filter(s=>regSt[s.id]==='P').forEach(s=>grSel.add(s.id)); renderRoster(); }
+function rosterDeselectAll() { grSel.clear(); renderRoster(); }
+function goSummary()         { showSummary(); }
+
+
+// ─────────────────────────────────────────────
+// GRADE SCREEN
+// ─────────────────────────────────────────────
+
+function showGradeScreen() {
+  pending = [];
+  document.getElementById('grade-sub').textContent = grSel.size + ' student' + (grSel.size!==1?'s':'');
+  showScreen('grade');
+  renderGrade();
+}
+
+function renderGrade() {
+  const body = document.getElementById('grade-body');
+  body.innerHTML = '';
+
+  grSel.forEach(sid => {
+    const s = STUDS.find(x => x.id === sid);
+    const b = BD[s.bi];
+    const elist = eligList(s);
+    const card = document.createElement('div');
+    card.className = 'gcard';
+
+    let ctrl = '';
+    if (!elist.length) {
+      ctrl = `<div class="no-elig">All stripes complete — nothing to award</div>`;
+    } else {
+      const t = getTier(s), ah = t==='i' && s.str.every(v=>v>=0.5);
+      const note = t==='i' && !ah ? `<div style="font-size:11px;color:#B8720F;margin-top:9px;">Full stripes unlock once all first halves are earned</div>` : '';
+      const btns = elist.map(e => {
+        const el = EL[e.ei];
+        const isSel = pending.some(p => p.studId===sid && p.key===e.key);
+        const inStg = staged.some(a => a.studId===sid && a.key===e.key);
+        const safeKey = e.key.replace(/'/g, "\\'");
+        const onclick = inStg ? '' : `tgPend(${sid},'${safeKey}',${e.ei},${e.half})`;
+        return `<div class="stripe-btn${isSel?' sel':''}${inStg?' stg':''}" onclick="${onclick}">
+          ${eico(e.ei,34,e.half,false)}
+          <div class="sblbl">${e.half ? el.n+'<br>½ stripe' : el.n}${inStg ? '<br><span style="color:#c0dd97;font-size:9px;">Staged</span>' : isSel ? '<br><span style="color:#fac775;font-size:9px;">Pending</span>' : ''}</div>
+        </div>`;
+      }).join('');
+      ctrl = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:rgba(255,255,255,0.3);margin-bottom:10px;">Eligible to award</div><div style="display:flex;gap:8px;flex-wrap:wrap;">${btns}</div>${note}`;
+    }
+
+    card.innerHTML = `<div style="display:flex;align-items:center;gap:12px;margin-bottom:13px;">${pip(b.c,b.s,28,10)}<div><div style="font-size:15px;font-weight:700;color:#f0f0f0;">${s.name}</div><div style="font-size:12px;color:rgba(255,255,255,0.4);">${b.n} · Age ${s.age}</div></div></div>${ctrl}`;
+    body.appendChild(card);
+  });
+
+  document.getElementById('award-cnt').textContent = pending.length;
+  document.getElementById('btn-submit').disabled = pending.length === 0;
+}
+
+function tgPend(sid, key, ei, isHalf) {
+  const idx = pending.findIndex(p => p.studId===sid && p.key===key);
+  if (idx >= 0) pending.splice(idx, 1);
+  else { const s = STUDS.find(x=>x.id===sid); pending.push({studId:sid, name:s.name, elIdx:ei, isHalf:!!isHalf, key}); }
+  renderGrade();
+}
+
+function openStageConf() {
+  const list = document.getElementById('stage-list');
+  list.innerHTML = '';
+  pending.forEach(a => {
+    const el = EL[a.elIdx];
+    const item = document.createElement('div');
+    item.className = 'mitem';
+    item.innerHTML = `${eico(a.elIdx,20,a.isHalf,false)}<span style="font-size:13px;flex:1;font-weight:700;">${a.name}</span><span style="font-size:12px;color:var(--gt);">${el.n}${a.isHalf?' — ½ stripe':' stripe'}</span>`;
+    list.appendChild(item);
+  });
+  openModal('modal-stage');
+}
+
+function confirmStage() {
+  closeModal('modal-stage');
+  staged.push(...pending);
+  pending = [];
+  grSel.clear();
+  ubadges();
+  showScreen('roster');
+  renderRoster();
+}
+
+
+// ─────────────────────────────────────────────
+// SUMMARY
+// ─────────────────────────────────────────────
+
+function showSummary() {
+  const body = document.getElementById('sum-body');
+  body.innerHTML = '';
+  const byEl = [0,1,2,3].map(() => ({full:[], half:[]}));
+  staged.forEach(a => { (a.isHalf ? byEl[a.elIdx].half : byEl[a.elIdx].full).push(a); });
+
+  document.getElementById('sum-sub').textContent = staged.length
+    ? `${staged.length} stripe${staged.length!==1?'s':''} staged`
+    : 'No stripes staged yet';
+
+  [0,1,2,3].forEach(i => {
+    const el = EL[i], data = byEl[i];
+    const sec = document.createElement('div');
+    sec.className = 'el-sec';
+    const pills = [
+      data.full.length ? `<span class="el-pill" style="background:${el.pb};color:${el.pt};">${data.full.length} full</span>` : '',
+      data.half.length ? `<span class="el-pill" style="background:${el.pb};color:${el.pt};opacity:.75;">${data.half.length} half</span>` : '',
+      (!data.full.length && !data.half.length) ? `<span style="font-size:11px;color:var(--tx3);">None staged</span>` : ''
+    ].join('');
+
+    let rows = '';
+    [...data.full, ...data.half].forEach(a => {
+      rows += `<div class="el-srow">${eico(i,22,a.isHalf,true)}<div class="el-sname">${a.name}</div><span class="stype" style="background:${el.pb};color:${el.pt};">${a.isHalf?'½ stripe':'Full'}</span><button class="rem-btn" onclick="removeStaged(${a.studId},'${a.key}')">Remove</button></div>`;
+    });
+    if (!rows) rows = `<div class="el-empty">None staged</div>`;
+    sec.innerHTML = `<div class="el-hdr">${eico(i,28,false,true)}<div class="el-name">${el.n} Stripes</div><div style="display:flex;gap:5px;flex-wrap:wrap;">${pills}</div></div>${rows}`;
+    body.appendChild(sec);
+  });
+
+  const tF = staged.filter(a=>!a.isHalf).length;
+  const tH = staged.filter(a=>a.isHalf).length;
+  const tot = document.createElement('div');
+  tot.className = 'tot-card';
+  tot.innerHTML = `<div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:var(--tx3);margin-bottom:10px;">Session totals</div><div class="trow2"><div class="tlbl2">Full stripes staged</div><div class="tval">${tF}</div></div><div class="trow2"><div class="tlbl2">Half stripes staged</div><div class="tval">${tH}</div></div><div class="grand"><div class="glbl2">Total staged</div><div class="gval2">${tF+tH}</div></div>`;
+  body.appendChild(tot);
+
+  const acts = document.createElement('div');
+  acts.style.cssText = 'display:flex;flex-direction:column;gap:9px;';
+  if (staged.length > 0) {
+    acts.innerHTML = `
+      <button class="btn btn-blu btn-full" onclick="startCallOut()">📣 Call Out Mode</button>
+      <button class="btn btn-grn btn-full" onclick="openAwardAll()">Award all ${staged.length} stripe${staged.length!==1?'s':''} →</button>
+      <button class="btn btn-gh btn-full" onclick="goRoster()">Back to grading</button>`;
+  } else {
+    acts.innerHTML = `
+      <div style="font-size:13px;color:var(--tx3);text-align:center;padding:16px;background:var(--surf);border:0.5px solid var(--bdr);border-radius:var(--r);">No stripes staged yet. Go back to grading to select and award stripes.</div>
+      <button class="btn btn-gh btn-full" onclick="goRoster()">Back to grading</button>`;
+  }
+  body.appendChild(acts);
+  showScreen('summary');
+}
+
+function removeStaged(sid, key) {
+  staged = staged.filter(a => !(a.studId===sid && a.key===key));
+  ubadges();
+  showSummary();
+}
+
+function openAwardAll() {
+  const list = document.getElementById('award-list');
+  list.innerHTML = '';
+  staged.forEach(a => {
+    const el = EL[a.elIdx];
+    const item = document.createElement('div');
+    item.className = 'mitem';
+    item.innerHTML = `${eico(a.elIdx,18,a.isHalf,false)}<span style="font-size:13px;flex:1;font-weight:600;">${a.name}</span><span style="font-size:11px;color:var(--gt);">${el.n}${a.isHalf?' — ½':''}</span>`;
+    list.appendChild(item);
+  });
+  openModal('modal-award');
+}
+
+function finalAward() {
+  closeModal('modal-award');
+  buildReceipt();
+}
+
+
+// ─────────────────────────────────────────────
+// CALL OUT MODE
+// ─────────────────────────────────────────────
+
+function startCallOut() {
+  // Group awards by student
+  const map = {};
+  staged.forEach(a => {
+    if (!map[a.studId]) map[a.studId] = { studId:a.studId, name:a.name, awards:[] };
+    map[a.studId].awards.push(a);
+  });
+  coList = Object.values(map);
+  coIdx = 0;
+  showScreen('callout');
+  renderCallOut();
+}
+
+function renderCallOut() {
+  const body = document.getElementById('callout-body');
+  body.innerHTML = '';
+
+  // All done
+  if (coIdx >= coList.length) {
+    body.innerHTML = `
+      <div class="co-progress">All students called out ✓</div>
+      <div style="font-size:64px;margin-bottom:28px;">🎖️</div>
+      <div class="co-name" style="font-size:30px;margin-bottom:10px;">Session complete</div>
+      <div class="co-beltname" style="margin-bottom:48px;">${coList.length} student${coList.length!==1?'s':''} to receive stripes</div>
+      <button class="co-finish-btn" onclick="openAwardAll()">Award all stripes →</button>
+    `;
+    return;
+  }
+
+  const entry = coList[coIdx];
+  const s = STUDS.find(x => x.id === entry.studId);
+  const b = BD[s.bi];
+
+  const stripesHtml = entry.awards.map(a =>
+    `<div class="co-stripe">${eico(a.elIdx, 56, a.isHalf, false)}<div class="co-stripe-lbl">${EL[a.elIdx].n}${a.isHalf ? ' ½' : ''}</div></div>`
+  ).join('');
+
+  const isLast = coIdx >= coList.length - 1;
+
+  body.innerHTML = `
+    <div class="co-progress">${coIdx + 1} of ${coList.length}</div>
+    <div class="co-pip">${pip(b.c, b.s, 90, 32)}</div>
+    <div class="co-name">${s.name}</div>
+    <div class="co-beltname">${b.n}</div>
+    <div class="co-awarding-lbl">Receiving</div>
+    <div class="co-stripes">${stripesHtml}</div>
+    <button class="${isLast ? 'co-finish-btn' : 'co-next-btn'}" onclick="nextCallOut()">
+      ${isLast ? 'All called out →' : 'Next student →'}
+    </button>
+  `;
+}
+
+function nextCallOut() { coIdx++; renderCallOut(); }
+
+
+// ─────────────────────────────────────────────
+// RECEIPT
+// ─────────────────────────────────────────────
+
+function buildReceipt() {
+  const d = today();
+  const byEl = [0,1,2,3].map(() => ({full:[], half:[]}));
+  staged.forEach(a => { (a.isHalf ? byEl[a.elIdx].half : byEl[a.elIdx].full).push(a.name); });
+  const tF = staged.filter(a=>!a.isHalf).length;
+  const tH = staged.filter(a=>a.isHalf).length;
+  const presentCount = Object.values(regSt).filter(v=>v==='P').length;
+
+  document.getElementById('rec-date-sub').textContent = d;
+
+  const elSections = [0,1,2,3].map(i => {
+    const el = EL[i], dd = byEl[i];
+    if (!dd.full.length && !dd.half.length) return '';
+    const rows = [
+      ...dd.full.map(n => `<div class="el-srow">${eico(i,20,false,true)}<div class="el-sname">${n}</div><span class="stype" style="background:${el.pb};color:${el.pt};">Full stripe</span></div>`),
+      ...dd.half.map(n => `<div class="el-srow">${eico(i,20,true,true)}<div class="el-sname">${n}</div><span class="stype" style="background:${el.pb};color:${el.pt};opacity:.8;">½ stripe</span></div>`)
+    ].join('');
+    return `<div class="el-sec"><div class="el-hdr">${eico(i,26,false,true)}<div class="el-name">${el.n} Stripes</div><div style="display:flex;gap:5px;">${dd.full.length?`<span class="el-pill" style="background:${el.pb};color:${el.pt};">${dd.full.length} full</span>`:''}${dd.half.length?`<span class="el-pill" style="background:${el.pb};color:${el.pt};opacity:.75;">${dd.half.length} half</span>`:''}</div></div>${rows}</div>`;
+  }).join('');
+
+  document.getElementById('rec-body').innerHTML = `
+    <div class="receipt-hdr">
+      <div class="receipt-logo">Ninja Learning</div>
+      <div class="receipt-date">Grading Receipt · ${d}</div>
+    </div>
+    <div class="card">
+      <div class="irow"><span class="il">Date</span><span class="iv">${d}</span></div>
+      <div class="irow"><span class="il">Instructor</span><span class="iv">${instrName}</span></div>
+      <div class="irow"><span class="il">Students present</span><span class="iv">${presentCount}</span></div>
+      <div class="irow"><span class="il">Total stripes awarded</span><span class="iv" style="color:var(--grn);font-size:18px;font-weight:800;">${tF+tH}</span></div>
+    </div>
+    ${elSections}
+    <div class="tot-card">
+      <div class="trow2"><div class="tlbl2">Full stripes awarded</div><div class="tval">${tF}</div></div>
+      <div class="trow2"><div class="tlbl2">Half stripes awarded</div><div class="tval">${tH}</div></div>
+      <div class="grand"><div class="glbl2">Total awarded</div><div class="gval2">${tF+tH}</div></div>
+    </div>
+    <div style="background:var(--gnb);border:0.5px solid #3B6D11;border-radius:var(--r);padding:13px 15px;margin-bottom:20px;font-size:13px;color:var(--grn);">
+      ✓ Session complete · ${instrName} · ${d}
+    </div>
+    <div style="display:flex;flex-direction:column;gap:9px;" class="print-hide">
+      <button class="btn btn-grn btn-full" onclick="window.print()">🖨 Print / Save as PDF</button>
+      <button class="btn btn-gh btn-full" onclick="downloadReceipt()">↓ Download receipt</button>
+      <button class="btn btn-red btn-full" onclick="openModal('modal-new')">New session</button>
+    </div>
+  `;
+
+  showScreen('receipt');
+}
+
+function downloadReceipt() {
+  const d = today();
+  const tF = staged.filter(a=>!a.isHalf).length;
+  const tH = staged.filter(a=>a.isHalf).length;
+  const lines = staged.map(a => `${a.name} — ${EL[a.elIdx].n}${a.isHalf?' (½ stripe)':' stripe'}`).join('\n');
+  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Ninja Grading Receipt</title>
+<style>body{font-family:-apple-system,Arial,sans-serif;max-width:600px;margin:40px auto;padding:20px;color:#1a1a2e;}
+h1{font-size:22px;margin-bottom:6px;}h2{font-size:16px;margin:20px 0 8px;border-bottom:1px solid #e0e0d8;padding-bottom:6px;}
+p{color:#555;margin-bottom:16px;}.row{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid #f0f0ec;}
+.row:last-child{border-bottom:none;}.lbl{color:#999;}.val{font-weight:700;}pre{background:#f8f8f5;padding:14px;border-radius:6px;font-size:13px;line-height:1.7;}
+</style></head><body>
+<h1>Ninja Learning — Grading Receipt</h1>
+<p>${d} · ${instrName}</p>
+<div>
+<div class="row"><span class="lbl">Full stripes awarded</span><span class="val">${tF}</span></div>
+<div class="row"><span class="lbl">Half stripes awarded</span><span class="val">${tH}</span></div>
+<div class="row"><span class="lbl">Total</span><span class="val">${tF+tH}</span></div>
+</div>
+<h2>All awards</h2>
+<pre>${lines}</pre>
+</body></html>`;
+
+  const a = document.createElement('a');
+  a.href = 'data:text/html;charset=utf-8,' + encodeURIComponent(html);
+  a.download = `ninja-receipt-${new Date().toISOString().slice(0,10)}.html`;
+  a.click();
+}
+
+function resetSession() {
+  closeModal('modal-new');
+  STUDS=[]; regSt={}; grSel.clear(); staged=[]; pending=[];
+  document.getElementById('parse-feedback').style.display = 'none';
+  document.getElementById('import-actions').style.display = 'none';
+  document.getElementById('file-input').value = '';
+  showScreen('import');
+}
+
+// ─────────────────────────────────────────────
+// PRE-LOADED CLASS DATA (Thursday 3 April 2026)
+// ─────────────────────────────────────────────
+
+// Pre-loaded student data — no parsing needed
+const PRELOADED = [
+  {name:"Andrei Tedstone",        age:5,  bi:0, str:[1,1,1,0]},
+  {name:"Azaiah Hadis Muhammad",  age:5,  bi:0, str:[0,1,1,1]},
+  {name:"Eris Sisman",            age:6,  bi:1, str:[0,0,0,0]},
+  {name:"Emory Klinck",           age:9,  bi:1, str:[0,0,0,0]},
+  {name:"Juno Coleman",           age:6,  bi:1, str:[1,0,1,1]},
+  {name:"Nathaniel Robin",        age:9,  bi:2, str:[0,0,0,0]},
+  {name:"Jasmine Jackson",        age:9,  bi:2, str:[0,1,0,0]},
+  {name:"Arlen Hampson-Green",    age:7,  bi:3, str:[0,0,0,1]},
+  {name:"Arthur Harrington",      age:8,  bi:3, str:[1,0,0,1]},
+  {name:"Eli Achilli",            age:7,  bi:3, str:[1,0,1,1]},
+  {name:"Freddie Wilson",         age:8,  bi:3, str:[1,1,0,1]},
+  {name:"Kacper Sroka",           age:7,  bi:3, str:[0,1,1,1]},
+  {name:"Kai Pickel",             age:7,  bi:3, str:[0,0,0,1]},
+  {name:"Killian Ark",            age:10, bi:3, str:[0,0,0,0]},
+  {name:"Louis O'Brien",          age:6,  bi:3, str:[0,0,0,1]},
+  {name:"Ollie Cass",             age:9,  bi:3, str:[0,1,1,1]},
+  {name:"Oscar van Peppen",       age:8,  bi:3, str:[1,1,0,1]},
+  {name:"Stanislaw Dziamski",     age:7,  bi:3, str:[0,0,0,0]},
+  {name:"Adlai Ewen",             age:8,  bi:4, str:[1,0.5,1,0.5]},
+  {name:"Ashton Wong",            age:8,  bi:4, str:[0.5,0.5,0.5,0]},
+  {name:"Hugo Moseley-Jones",     age:10, bi:4, str:[0,0,0,0]},
+  {name:"Milo Roche",             age:11, bi:4, str:[1,0.5,0.5,1]},
+  {name:"Oliver Ponder",          age:7,  bi:4, str:[0.5,0,0.5,0]},
+  {name:"Reuben Sumption",        age:9,  bi:4, str:[1,1,0.5,0.5]},
+  {name:"Samuel Robin",           age:6,  bi:4, str:[0,0,0,0]},
+  {name:"Theo Sherfield",         age:8,  bi:4, str:[0,0,0,0]},
+  {name:"Zaida Ewen",             age:8,  bi:4, str:[1,0.5,1,0.5]},
+  {name:"Eva Ponder",             age:10, bi:5, str:[0.5,0.5,0,0.5]},
+  {name:"Hugo Stritzel",          age:9,  bi:5, str:[0,0,0,0]},
+  {name:"Ivy Caffrey",            age:9,  bi:5, str:[0.5,0.5,0.5,0.5]},
+  {name:"Xavier Degraft",         age:9,  bi:5, str:[0.5,0,0.5,0.5]},
+  {name:"Daniel Stapleton",       age:9,  bi:6, str:[0.5,0.5,0.5,0.5]},
+  {name:"Luke Woning Sepulveda",  age:11, bi:6, str:[0.5,0.5,0.5,0.5]},
+  {name:"Noah Jordan",            age:9,  bi:6, str:[0.5,0.5,0.5,0.5]},
+  {name:"Tadhg Taylor",           age:9,  bi:6, str:[0.5,0,0.5,0]},
+  {name:"Benjamin Coleman",       age:9,  bi:7, str:[0,0,0,0]},
+  {name:"Benjamin Mercea",        age:10, bi:7, str:[0.5,0,0.5,0]},
+  {name:"Jamie Cartwright",       age:9,  bi:7, str:[0,0,0,0]},
+  {name:"Kipp Caffrey",           age:9,  bi:7, str:[0,0,0,0]},
+  {name:"Leo Chu",                age:10, bi:8, str:[0,0,0,0]}
+];
+
+function loadPreloaded() {
+  try {
+    var AV_BG = ['#E6F1FB','#E0F0E8','#FAEEDA','#FAECE7','#EEEDFE'];
+    var AV_TX = ['#0C447C','#1B4D2E','#5C3205','#712B13','#3C3489'];
+    STUDS = PRELOADED.map(function(s, i) { return Object.assign({}, s, {id:i, ab:AV_BG[i%5], at:AV_TX[i%5]}); });
+    instrName = (document.getElementById('instructor-name').value || 'Harry Bovill');
+    regSt = {};
+    grSel = new Set();
+    staged = [];
+    pending = [];
+    STUDS.forEach(function(s) { regSt[s.id] = 'U'; });
+    document.getElementById('reg-title').textContent = 'Register \u00b7 ' + STUDS.length + ' students';
+    document.getElementById('reg-date').textContent = today();
+    showScreen('register');
+    renderReg();
+  } catch(e) {
+    alert('Load error: ' + e.message + ' (line: ' + (e.lineNumber || '?') + ')');
+  }
+}
+
+// Init
+showScreen('import');
+</script>
+</body>
+</html>
