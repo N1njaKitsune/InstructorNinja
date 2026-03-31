@@ -1,0 +1,25 @@
+{
+  "name": "StudentNinja",
+  "short_name": "StudentNinja",
+  "description": "Nendō — the StudentNinja mindfulness curriculum",
+  "start_url": "/StudentNinja/prototypes/StudentProfile_v4.1.html",
+  "scope": "/StudentNinja/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#0A0A12",
+  "theme_color": "#0A0A12",
+  "icons": [
+    {
+      "src": "/StudentNinja/assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/StudentNinja/assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
