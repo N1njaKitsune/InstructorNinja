@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>StudentNinja</title>
 
 <!-- PWA: iOS -->
@@ -356,7 +356,42 @@ body {
   border-color: rgba(255,255,255,0.45);
   color: rgba(255,255,255,0.90);
 }
+
+/* ── DEV MODE ────────────────────────────────────────────────────────────────
+   Activate by opening any screen with ?dev in the URL, e.g.
+     StudentProfile_v4.1.html?dev
+   Dev mode persists across all screens for the tab session.
+   In demo mode (default): frame fills the viewport, dev controls hidden.
+──────────────────────────────────────────────────────────────────────────── */
+html:not(.dev-mode) .device-toggle,
+html:not(.dev-mode) .switcher-bar { display: none !important; }
+
+html:not(.dev-mode) .frame {
+  width:  100vw !important;
+  height: 100vh !important;
+  border-radius: 0 !important;
+  border: none !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+html:not(.dev-mode) body {
+  padding: 0 !important;
+  align-items: flex-start !important;
+  justify-content: flex-start !important;
+  min-height: 100vh !important;
+}
+/* ─────────────────────────────────────────────────────────────────────────── */
 </style>
+<script>
+/* DEV MODE — StudentNinja · set class on <html> before first paint */
+(function () {
+  var isDev = new URLSearchParams(location.search).has('dev');
+  if (isDev) sessionStorage.setItem('ninja_dev', '1');
+  if (isDev || sessionStorage.getItem('ninja_dev') === '1') {
+    document.documentElement.classList.add('dev-mode');
+  }
+}());
+</script>
 </head>
 <body>
 
