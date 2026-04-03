@@ -1,0 +1,1337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BreathEngine v2.6 — Integration Ready</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0E0E16;
+    --surface: #16161F;
+    --border:  #2A2A3A;
+    --text:    #D8D4C8;
+    --muted:   #6B6880;
+    --danger:  #C96E6E;
+    --green:   #6EBF9A;
+    --accent:  #C9A96E;
+    --el:      #8BB8D4;
+    --el-glow: rgba(139,184,212,0.35);
+    --el-dim:  rgba(139,184,212,0.16);
+    --el-core: rgba(139,184,212,0.30);
+    --el-halo: rgba(139,184,212,0.15);
+    --el-atmo: rgba(139,184,212,0.04);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px 60px;
+  }
+
+  /* ─── Header ─────────────────────────────────────────────────── */
+  .page-header { text-align: center; margin-bottom: 20px; }
+  .page-header h1 { font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.28em; color:var(--muted); text-transform:uppercase; margin-bottom:3px; }
+  .page-header .version { font-size:10px; color:var(--muted); opacity:0.45; letter-spacing:0.1em; }
+
+  /* ─── Element tabs ────────────────────────────────────────────── */
+  .el-tabs { display:flex; gap:6px; margin-bottom:20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:6px; }
+  .el-tab {
+    font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.15em;
+    padding:9px 20px; border-radius:7px; border:1px solid transparent;
+    background:none; color:var(--muted); cursor:pointer; transition:all 0.25s ease;
+    display:flex; align-items:center; gap:7px;
+  }
+  .el-tab:hover { color:var(--text); border-color:var(--border); }
+  .el-tab.active { color:var(--el); border-color:var(--el-dim); background:var(--el-dim); }
+  .el-tab .el-emoji { font-size:14px; line-height:1; }
+
+  /* ─── Dev Panel ───────────────────────────────────────────────── */
+  .dev-panel {
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:12px 16px; width:100%; max-width:920px; margin-bottom:24px;
+    display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+  }
+  .dev-label { font-size:10px; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; white-space:nowrap; }
+  .dev-section { display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .dev-family-block { display:flex; align-items:center; gap:5px; padding:5px 9px; background:rgba(255,255,255,0.025); border:1px solid var(--border); border-radius:6px; }
+  .dev-family-name { font-size:11px; color:var(--el); min-width:26px; font-family:'Cinzel',serif; }
+  .dev-btn { background:none; border:1px solid var(--border); color:var(--muted); font-family:'Crimson Pro',serif; font-size:11px; padding:3px 9px; border-radius:4px; cursor:pointer; transition:all 0.15s; letter-spacing:0.04em; }
+  .dev-btn:hover { border-color:var(--el); color:var(--el); }
+  .dev-btn.active { background:var(--el); border-color:var(--el); color:var(--bg); }
+  .dev-divider { width:1px; height:22px; background:var(--border); flex-shrink:0; }
+  .dev-session-block { display:flex; align-items:center; gap:6px; }
+  .dev-restart-btn { background:none; border:1px solid var(--border); color:var(--danger); font-family:'Crimson Pro',serif; font-size:11px; padding:4px 12px; border-radius:4px; cursor:pointer; transition:all 0.15s; margin-left:auto; }
+  .dev-restart-btn:hover { border-color:var(--danger); background:rgba(201,110,110,0.08); }
+
+  /* ─── Main layout ─────────────────────────────────────────────── */
+  .engine-wrap { display:grid; grid-template-columns:210px 1fr 210px; gap:22px; width:100%; max-width:920px; align-items:start; }
+
+  /* ─── Left panel ──────────────────────────────────────────────── */
+  .panel-left { display:flex; flex-direction:column; gap:12px; }
+  .technique-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; }
+  .technique-card .kanji { font-family:'Cinzel',serif; font-size:26px; color:var(--el); line-height:1; margin-bottom:8px; }
+  .technique-card .ninja-name { font-family:'Cinzel',serif; font-size:13px; color:var(--text); margin-bottom:2px; }
+  .technique-card .real-name { font-size:12px; color:var(--muted); margin-bottom:10px; font-style:italic; }
+  .tier-badge { display:inline-block; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; padding:3px 8px; border-radius:3px; border:1px solid; margin-bottom:12px; }
+  .tier-badge.beginner     { color:var(--green);  border-color:rgba(110,191,154,0.28); }
+  .tier-badge.intermediate { color:var(--accent); border-color:rgba(201,169,110,0.28); }
+  .tier-badge.advanced     { color:var(--el);     border-color:var(--el-dim); }
+  .tier-badge.expert       { color:var(--danger); border-color:rgba(201,110,110,0.28); }
+  .pattern-display { font-size:12px; color:var(--muted); letter-spacing:0.04em; }
+  .pattern-display span { color:var(--el); }
+  .level-dots { display:flex; gap:6px; align-items:center; margin-top:10px; }
+  .level-dot { width:7px; height:7px; border-radius:50%; background:var(--border); transition:background 0.3s; }
+  .level-dot.filled { background:var(--el); }
+  .level-dot-label { font-size:10px; color:var(--muted); margin-left:4px; letter-spacing:0.08em; }
+  .technique-cue { font-size:12.5px; line-height:1.55; color:var(--muted); font-style:italic; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+  .caution-flag { display:none; font-size:10px; color:var(--danger); letter-spacing:0.08em; margin-top:6px; }
+  .caution-flag.visible { display:block; }
+
+  /* ── BREATH ENGINE CORE ── */
+
+  /* ─── Centre panel ────────────────────────────────────────────── */
+  .panel-centre { display:flex; flex-direction:column; align-items:center; gap:16px; padding-top:4px; }
+
+  /* Circle area wraps stage + fill bar side by side */
+  .circle-area { display:flex; align-items:center; gap:12px; }
+
+  .circle-stage {
+    position:relative; width:240px; height:240px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer;
+  }
+
+  /* Element atmosphere — subtle vignette behind circle */
+  .circle-atmosphere {
+    position:absolute; width:360px; height:360px; border-radius:50%;
+    background:radial-gradient(circle, var(--el-atmo) 0%, transparent 70%);
+    pointer-events:none; z-index:0;
+    transition:background 0.8s ease;
+  }
+
+  /* Outer guide ring — idles and rest-holds */
+  .breath-ring {
+    position:absolute; width:228px; height:228px; border-radius:50%;
+    border:1px solid rgba(255,255,255,0.06); pointer-events:none;
+    transition:box-shadow 0.8s ease, border-color 0.8s ease;
+  }
+  @keyframes idle-pulse {
+    0%,100% { border-color:var(--el-dim); box-shadow:none; }
+    50%      { border-color:var(--el-glow); box-shadow:0 0 16px 4px var(--el-dim); }
+  }
+  @keyframes rest-hold-pulse {
+    0%,100% { box-shadow:none; border-color:rgba(201,169,110,0.2); }
+    50%      { box-shadow:0 0 14px 3px rgba(201,169,110,0.18); border-color:rgba(201,169,110,0.4); }
+  }
+  .breath-ring.idle      { animation:idle-pulse 4s ease-in-out infinite; }
+  .breath-ring.rest-hold { animation:rest-hold-pulse 2.5s ease-in-out infinite; }
+
+  /* SVG arc */
+  .arc-svg { position:absolute; width:240px; height:240px; transform:rotate(-90deg); pointer-events:none; opacity:0; transition:opacity 0.5s ease; }
+  .arc-svg.visible { opacity:1; }
+  .arc-track    { fill:none; stroke:rgba(255,255,255,0.04); stroke-width:2; }
+  .arc-progress { fill:none; stroke:var(--el); stroke-width:2; stroke-linecap:round; }
+
+  /* Breath orb — layered inner glow */
+  .breath-circle {
+    position:relative; width:110px; height:110px; border-radius:50%;
+    background:
+      radial-gradient(circle at 50% 48%, var(--el-core) 0%, transparent 45%),
+      radial-gradient(circle at 50% 50%, var(--el-halo) 0%, transparent 70%);
+    border:1.5px solid var(--el-dim); z-index:2;
+    transition:box-shadow 0.6s ease;
+  }
+  @keyframes hold-pulse {
+    0%,100% { box-shadow:0 0 18px var(--el-glow), inset 0 0 20px var(--el-halo); }
+    50%     { box-shadow:0 0 30px var(--el-glow), inset 0 0 35px var(--el-core); }
+  }
+  .breath-circle.hold-pulsing { animation:hold-pulse 2s ease-in-out infinite; }
+  .breath-circle.rest-dim { box-shadow:none !important; border-color:rgba(255,255,255,0.06); }
+
+  /* Depth ring — faint solid ring with element glow */
+  .depth-ring {
+    position:absolute; border-radius:50%; border:1px solid rgba(255,255,255,0.05);
+    box-shadow:0 0 8px var(--el-dim);
+    pointer-events:none; z-index:1;
+    transition:opacity 0.5s ease;
+    opacity:0;
+  }
+  .depth-ring.visible { opacity:0.7; }
+  .depth-ring.fading  { opacity:0; transition:opacity 1.2s ease; }
+  .depth-ring.sizing  { transition:none; }
+
+  /* Text overlay — phase label + timer + quality cue */
+  .circle-text { position:absolute; display:flex; flex-direction:column; align-items:center; gap:2px; pointer-events:none; z-index:10; }
+  .phase-label-inner { font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.22em; color:var(--el); opacity:0.7; text-transform:uppercase; min-height:14px; transition:opacity 0.3s; }
+  .timer-inner { font-family:'Cinzel',serif; font-size:28px; color:var(--el); line-height:1; min-width:40px; text-align:center; transition:opacity 0.3s; }
+  .timer-inner.muted { opacity:0.25; font-size:20px; }
+  .phase-cue { font-family:'Crimson Pro',serif; font-style:italic; font-size:11px; color:var(--muted); letter-spacing:0.08em; opacity:0; transition:opacity 0.3s ease; min-height:14px; text-align:center; }
+  .phase-cue.visible { opacity:0.55; }
+  .phase-cue.fading { opacity:0; transition:opacity 0.15s ease; }
+
+  /* ── Fill Bar (vertical, beside circle) ── */
+  .fill-bar {
+    width:8px; height:80px;
+    display:flex; flex-direction:column-reverse; gap:3px;
+    opacity:0; transition:opacity 0.4s ease;
+    flex-shrink:0;
+  }
+  .fill-bar.visible { opacity:1; }
+  .fill-seg {
+    flex:1; border-radius:3px;
+    background:var(--border);
+    border:1px solid rgba(255,255,255,0.04);
+    transition:background 0.18s ease, box-shadow 0.18s ease;
+  }
+  .fill-seg.filled  { background:var(--el-dim); border-color:var(--el-dim); }
+  .fill-seg.active  { background:var(--el); border-color:var(--el); box-shadow:0 0 6px var(--el-glow); }
+  .fill-seg.pending { background:var(--border); }
+
+  /* ── Next-phase ghost hint ── */
+  .next-hint { font-size:11px; color:var(--muted); opacity:0; letter-spacing:0.12em; font-style:italic; transition:opacity 0.5s ease; height:14px; text-align:center; }
+  .next-hint.visible { opacity:0.4; }
+
+  /* ── Cycle dots ── */
+  .cycle-row-centre { display:flex; gap:14px; align-items:center; }
+  .cycle-dot-lg { width:11px; height:11px; border-radius:50%; background:var(--border); border:1px solid rgba(255,255,255,0.06); transition:background 0.5s ease, box-shadow 0.5s ease; }
+  .cycle-dot-lg.done { background:var(--el); box-shadow:0 0 8px var(--el-glow); border-color:var(--el); }
+
+  /* ── Continue button ── */
+  .continue-btn {
+    font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.22em; text-transform:uppercase;
+    background:none; border:1px solid var(--el); color:var(--el); padding:11px 32px; border-radius:5px; cursor:pointer;
+    opacity:0; pointer-events:none; transform:translateY(6px); box-shadow:none;
+    transition:opacity 0.7s ease, transform 0.7s ease, box-shadow 0.7s ease, background 0.2s, color 0.2s;
+  }
+  .continue-btn.visible { opacity:1; pointer-events:auto; transform:translateY(0); box-shadow:0 0 28px var(--el-glow); }
+  .continue-btn:hover { background:var(--el); color:var(--bg); }
+
+  .tap-hint { font-size:12px; color:var(--muted); letter-spacing:0.1em; font-style:italic; transition:opacity 0.4s ease; opacity:0.4; }
+  .tap-hint.hidden { opacity:0; pointer-events:none; }
+
+  /* ─── Right panel — Queue ─────────────────────────────────────── */
+  .panel-right { display:flex; flex-direction:column; gap:7px; }
+  .queue-label { font-size:10px; letter-spacing:0.18em; color:var(--muted); text-transform:uppercase; margin-bottom:2px; }
+  .queue-item { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:11px 13px; display:flex; flex-direction:column; gap:4px; opacity:0.35; transition:opacity 0.5s ease, border-color 0.5s ease; cursor:pointer; }
+  .queue-item:hover { opacity:0.7; }
+  .queue-item.active { opacity:1; border-color:var(--el-dim); cursor:default; }
+  .queue-item.active:hover { opacity:1; }
+  .queue-item.done   { opacity:0.18; }
+  .queue-item-head   { display:flex; justify-content:space-between; align-items:baseline; }
+  .queue-name   { font-family:'Cinzel',serif; font-size:11px; color:var(--text); }
+  .queue-level  { font-size:10px; color:var(--muted); letter-spacing:0.08em; }
+  .queue-pattern{ font-size:11px; color:var(--muted); font-style:italic; }
+  .queue-ldots  { display:flex; gap:4px; }
+  .queue-ldot   { width:5px; height:5px; border-radius:50%; background:var(--border); }
+  .queue-ldot.f { background:var(--el); }
+
+  /* ─── Session Summary ─────────────────────────────────────────── */
+  .complete-overlay { display:none; position:fixed; inset:0; background:rgba(14,14,22,0.95); z-index:100; flex-direction:column; align-items:center; justify-content:center; gap:16px; }
+  .complete-overlay.visible { display:flex; }
+  .complete-bg-kanji { font-size:120px; color:var(--el); opacity:0.06; position:absolute; top:50%; left:50%; transform:translate(-50%,-65%); pointer-events:none; line-height:1; }
+  .complete-title  { font-family:'Cinzel',serif; font-size:18px; letter-spacing:0.16em; color:var(--text); z-index:1; }
+  .complete-summary { display:flex; flex-direction:column; gap:8px; z-index:1; min-width:220px; }
+  .summary-row { display:flex; align-items:center; gap:10px; padding:6px 0; border-bottom:1px solid var(--border); }
+  .summary-row:last-child { border-bottom:none; }
+  .summary-name { font-family:'Cinzel',serif; font-size:12px; color:var(--text); flex:1; }
+  .summary-level { font-size:10px; color:var(--muted); letter-spacing:0.08em; }
+  .summary-cycles { font-size:10px; color:var(--muted); }
+  .summary-check { color:var(--el); font-size:13px; }
+  .complete-time { font-size:13px; color:var(--muted); letter-spacing:0.06em; z-index:1; margin-top:4px; }
+  .complete-quote { font-size:13px; color:var(--muted); font-style:italic; text-align:center; max-width:280px; z-index:1; margin-top:4px; line-height:1.5; }
+  .complete-buttons { display:flex; gap:12px; margin-top:12px; z-index:1; }
+  .complete-btn { font-family:'Cinzel',serif; font-size:11px; letter-spacing:0.18em; background:none; border:1px solid var(--el); color:var(--el); padding:10px 24px; border-radius:5px; cursor:pointer; transition:background 0.2s, color 0.2s; }
+  .complete-btn:hover { background:var(--el); color:var(--bg); }
+  .complete-btn.primary { box-shadow:0 0 24px var(--el-glow); }
+
+  /* ─── Technique Intro State ─────────────────────────────────── */
+  .intro-state {
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:10px; z-index:20;
+    background:var(--bg); opacity:1; transition:opacity 0.4s ease;
+    pointer-events:auto;
+  }
+  .intro-state.hidden { opacity:0; pointer-events:none; }
+  .intro-name { font-family:'Cinzel',serif; font-size:22px; color:var(--text); letter-spacing:0.08em; }
+  .intro-kanji { font-size:36px; color:var(--el); line-height:1; margin-bottom:2px; }
+  .intro-tier { display:inline-block; font-size:9px; letter-spacing:0.14em; text-transform:uppercase; padding:3px 8px; border-radius:3px; border:1px solid; }
+  .intro-tier.beginner     { color:var(--green);  border-color:rgba(110,191,154,0.28); }
+  .intro-tier.intermediate { color:var(--accent); border-color:rgba(201,169,110,0.28); }
+  .intro-tier.advanced     { color:var(--el);     border-color:var(--el-dim); }
+  .intro-tier.expert       { color:var(--danger); border-color:rgba(201,110,110,0.28); }
+  .intro-cue { font-size:13px; color:var(--muted); font-style:italic; text-align:center; max-width:220px; line-height:1.5; margin-top:4px; }
+  .intro-first-cue { font-size:11px; color:var(--el); letter-spacing:0.1em; margin-top:6px; display:flex; align-items:center; gap:6px; }
+  .intro-first-cue .arrow { font-size:14px; opacity:0.5; }
+
+  /* Rhythm diagram */
+  .rhythm-wrap { margin-top:10px; }
+  .rhythm-bar { display:flex; height:14px; max-width:200px; border-radius:4px; overflow:hidden; }
+  .rhythm-phase { position:relative; min-width:8px; }
+  .rhythm-phase:first-child { border-radius:4px 0 0 4px; }
+  .rhythm-phase:last-child  { border-radius:0 4px 4px 0; }
+  .rhythm-phase:first-child:last-child { border-radius:4px; }
+  .rhythm-divider { position:absolute; top:0; bottom:0; width:1px; background:rgba(14,14,22,0.6); }
+
+  /* Pulsing tap hint */
+  @keyframes tap-pulse {
+    0%,100% { opacity:0.3; }
+    50%     { opacity:0.7; }
+  }
+  .intro-tap { font-size:12px; color:var(--muted); letter-spacing:0.1em; font-style:italic; margin-top:12px; animation:tap-pulse 2.2s ease-in-out infinite; }
+
+  /* ── END BREATH ENGINE CORE ── */
+
+  .be-overlay { position:relative; z-index:10; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Nendō Breathwork Engine</h1>
+  <div class="version">v2.6 · Integration Ready</div>
+</div>
+
+<!-- Element tabs -->
+<div class="el-tabs">
+  <button class="el-tab active" id="tab-kaze" onclick="switchElement('kaze')"><span class="el-emoji">🌬️</span> Kaze</button>
+  <button class="el-tab"        id="tab-chi"  onclick="switchElement('chi')"> <span class="el-emoji">🌍</span> Chi</button>
+  <button class="el-tab"        id="tab-mizu" onclick="switchElement('mizu')"><span class="el-emoji">🌊</span> Mizu</button>
+  <button class="el-tab"        id="tab-hi"   onclick="switchElement('hi')" ><span class="el-emoji">🔥</span> Hi</button>
+</div>
+
+  <!-- DEV PANEL START -->
+<!-- Dev Panel -->
+<div class="dev-panel">
+  <span class="dev-label">Levels</span>
+  <div class="dev-section" id="dev-levels-section"></div>
+  <div class="dev-divider"></div>
+  <div class="dev-session-block">
+    <span class="dev-label">Session</span>
+    <button class="dev-btn" id="btn-standard" onclick="setSessionLength(3)">Standard · 3</button>
+    <button class="dev-btn" id="btn-expert"   onclick="setSessionLength(4)">Expert · 4</button>
+  </div>
+  <div class="dev-divider"></div>
+  <div class="dev-session-block">
+    <span class="dev-label">Jump</span>
+    <button class="dev-btn" onclick="jumpRelative(-1)">← Prev</button>
+    <button class="dev-btn" onclick="jumpRelative(1)">Next →</button>
+  </div>
+  <div class="dev-divider"></div>
+  <button class="dev-restart-btn" onclick="restartSession()">↺ Restart</button>
+</div>
+  <!-- DEV PANEL END -->
+
+<!-- Engine -->
+<div class="engine-wrap be-overlay">
+
+  <!-- LEFT -->
+  <div class="panel-left">
+    <div class="technique-card">
+      <div class="kanji"       id="info-kanji">風息</div>
+      <div class="ninja-name"  id="info-name">Kaze no Iki</div>
+      <div class="real-name"   id="info-real">Equal Breath</div>
+      <div class="tier-badge"  id="info-tier">Beginner</div>
+      <div class="pattern-display" id="info-pattern">Pattern: <span>—</span></div>
+      <div class="level-dots"  id="info-ldots"></div>
+      <div class="caution-flag" id="caution-flag">⚠️ Supervise younger students</div>
+      <div class="technique-cue" id="info-cue"></div>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="panel-centre" style="position:relative;">
+
+    <!-- Technique intro overlay -->
+    <div class="intro-state" id="intro-state" onclick="handleCircleTap()" style="cursor:pointer;">
+      <div class="intro-kanji" id="intro-kanji"></div>
+      <div class="intro-name" id="intro-name"></div>
+      <div class="intro-tier" id="intro-tier"></div>
+      <div class="rhythm-wrap"><div class="rhythm-bar" id="intro-rhythm"></div></div>
+      <div class="intro-cue" id="intro-cue"></div>
+      <div class="intro-first-cue" id="intro-first-cue"><span class="arrow">↓</span> <span id="intro-first-word"></span></div>
+      <div class="intro-tap">tap to begin</div>
+    </div>
+
+    <div class="circle-area">
+      <div class="circle-stage" onclick="handleCircleTap()">
+        <div class="circle-atmosphere" id="circle-atmosphere"></div>
+        <div class="breath-ring idle" id="breath-ring"></div>
+        <svg class="arc-svg" id="arc-svg" viewBox="0 0 240 240">
+          <circle class="arc-track"    cx="120" cy="120" r="113"/>
+          <circle class="arc-progress" id="arc-progress" cx="120" cy="120" r="113"
+                  stroke-dasharray="709.9" stroke-dashoffset="709.9"/>
+        </svg>
+        <!-- Depth target ring -->
+        <div class="depth-ring" id="depth-ring"></div>
+        <div class="breath-circle" id="breath-circle"></div>
+        <div class="circle-text">
+          <div class="phase-label-inner" id="phase-label">—</div>
+          <div class="timer-inner muted" id="timer-text">·</div>
+          <div class="phase-cue" id="phase-cue"></div>
+        </div>
+      </div>
+
+      <!-- Fill bar — vertical lung-level indicator -->
+      <div class="fill-bar" id="fill-bar">
+        <div class="fill-seg" id="fs0"></div>
+        <div class="fill-seg" id="fs1"></div>
+        <div class="fill-seg" id="fs2"></div>
+        <div class="fill-seg" id="fs3"></div>
+        <div class="fill-seg" id="fs4"></div>
+      </div>
+    </div>
+
+    <div class="next-hint" id="next-hint"></div>
+
+    <div class="cycle-row-centre">
+      <div class="cycle-dot-lg" id="cy0"></div>
+      <div class="cycle-dot-lg" id="cy1"></div>
+      <div class="cycle-dot-lg" id="cy2"></div>
+    </div>
+
+    <button class="continue-btn" id="continue-btn" onclick="advanceTechnique()">Continue →</button>
+    <div class="tap-hint" id="tap-hint">tap to begin</div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel-right">
+    <div class="queue-label">This Session</div>
+    <div id="queue-list"></div>
+  </div>
+
+</div>
+
+<!-- Session Summary -->
+<div class="complete-overlay" id="complete-overlay">
+  <div class="complete-bg-kanji" id="complete-bg-kanji">風</div>
+  <div class="complete-title">Session Complete</div>
+  <div class="complete-summary" id="complete-summary"></div>
+  <div class="complete-time" id="complete-time"></div>
+  <div class="complete-quote" id="complete-quote"></div>
+  <div class="complete-buttons">
+    <button class="complete-btn primary" onclick="restartSession()">Begin Again</button>
+    <button class="complete-btn" onclick="changeElement()">Change Element</button>
+  </div>
+</div>
+
+<script>
+/** @constant {boolean} When false, hides dev controls for production use */
+var BE_DEV_MODE = true;
+
+'use strict';
+
+// ─── ELEMENT DEFINITIONS ──────────────────────────────────────────────────────
+
+var BE_ELEMENTS = {
+  kaze: { key:'kaze', emoji:'🌬️', name:'Kaze', kanji:'風', color:'#8BB8D4', glow:'rgba(139,184,212,0.35)', dim:'rgba(139,184,212,0.16)', core:'rgba(139,184,212,0.30)', halo:'rgba(139,184,212,0.15)', atmo:'rgba(139,184,212,0.04)' },
+  chi:  { key:'chi',  emoji:'🌍', name:'Chi',  kanji:'地', color:'#9BBF82', glow:'rgba(155,191,130,0.35)', dim:'rgba(155,191,130,0.16)', core:'rgba(155,191,130,0.30)', halo:'rgba(155,191,130,0.15)', atmo:'rgba(155,191,130,0.04)' },
+  mizu: { key:'mizu', emoji:'🌊', name:'Mizu', kanji:'水', color:'#68A8C4', glow:'rgba(104,168,196,0.35)', dim:'rgba(104,168,196,0.16)', core:'rgba(104,168,196,0.30)', halo:'rgba(104,168,196,0.15)', atmo:'rgba(104,168,196,0.04)' },
+  hi:   { key:'hi',   emoji:'🔥', name:'Hi',   kanji:'火', color:'#D4916A', glow:'rgba(212,145,106,0.35)', dim:'rgba(212,145,106,0.16)', core:'rgba(212,145,106,0.30)', halo:'rgba(212,145,106,0.15)', atmo:'rgba(212,145,106,0.04)' }
+};
+
+// ─── DEPTH SCALING ────────────────────────────────────────────────────────────
+// Circle scale: BE_SCALE_FLOOR (fully exhaled) ↔ BE_SCALE_CEIL (fully inhaled)
+// Depth proportional to breath duration relative to BE_FULL_SECS ceiling.
+
+var BE_SCALE_CEIL    = 1.85;   // full lung expansion
+var BE_SCALE_FLOOR   = 0.78;   // full exhale contraction
+var BE_SCALE_NEUTRAL = 1.0;    // resting state
+var BE_FULL_SECS     = 6;      // seconds = "full" breath depth
+
+function inhaleTarget(secs) {
+  var ratio = Math.min(1.0, secs / BE_FULL_SECS);
+  return BE_SCALE_NEUTRAL + ratio * (BE_SCALE_CEIL - BE_SCALE_NEUTRAL);
+}
+
+function exhaleTarget(secs) {
+  var ratio = Math.min(1.0, secs / BE_FULL_SECS);
+  return BE_SCALE_NEUTRAL - ratio * (BE_SCALE_NEUTRAL - BE_SCALE_FLOOR);
+}
+
+// Convert circle scale to a pixel diameter for the depth-ring visual
+function scaleToPx(s) { return Math.round(s * 110); }
+
+// ─── ALL FAMILIES ─────────────────────────────────────────────────────────────
+// phaseCues: [inhale, hold(full), exhale, rest(empty)] — quality word per phase
+
+var BE_ALL_FAMILIES = {
+  kaze: [
+    { key:'K1', kanji:'風息', name:'Kaze no Iki', realName:'Equal Breath',     tier:'Beginner',     caution:false,
+      cue:'Steady as wind through tall grass.',
+      phaseCues:['Steady','','Release',''],
+      levels:[
+        {n:1, pattern:[3,0,3,0],               label:'3 – 0 – 3 – 0'},
+        {n:2, pattern:[4,0,4,0],               label:'4 – 0 – 4 – 0'},
+        {n:3, pattern:[5,0,5,0],               label:'5 – 0 – 5 – 0'}
+      ]},
+    { key:'K2', kanji:'然',   name:'Shizen',     realName:'Extended Exhale',   tier:'Intermediate', caution:false,
+      cue:'Let the breath slide out long and slow.',
+      phaseCues:['Gather','Hold','Long release',''],
+      levels:[
+        {n:1, pattern:[4,0,6,0],               label:'4 – 0 – 6 – 0'},
+        {n:2, pattern:[4,2,6,0],               label:'4 – 2 – 6 – 0'},
+        {n:3, pattern:[4,0,8,0],               label:'4 – 0 – 8 – 0'}
+      ]},
+    { key:'K3', kanji:'千里', name:'Senri',       realName:'Long Wave',         tier:'Advanced',     caution:false,
+      cue:'Far and unhurried. The path is long. The breath is longer.',
+      phaseCues:['Full breath','','Far release',''],
+      levels:[
+        {n:1, pattern:[5,0,8,0],               label:'5 – 0 – 8 – 0'},
+        {n:2, pattern:[7,0,11,0],              label:'7 – 0 – 11 – 0'},
+        {n:3, pattern:[8,0,13,0],              label:'8 – 0 – 13 – 0'}
+      ]},
+    { key:'K4', kanji:'大蛇', name:'Orochi',      realName:'Segmented Exhale',  tier:'Expert',       caution:false,
+      cue:'Fill up completely. Then let go in careful steps.',
+      phaseCues:['Full breath','','Step down',''],
+      levels:[
+        {n:1, pattern:[5,0,{segs:3,dur:1},0],  label:'5 – 0 – 3×1 – 0'},
+        {n:2, pattern:[6,0,{segs:4,dur:2},0],  label:'6 – 0 – 4×2 – 0'},
+        {n:3, pattern:[8,0,{segs:5,dur:2},0],  label:'8 – 0 – 5×2 – 0'}
+      ]}
+  ],
+  chi: [
+    { key:'C1', kanji:'中',   name:'Tanden',  realName:'Box Breath',        tier:'Beginner',     caution:false,
+      cue:'Equal in all directions. The foundation.',
+      phaseCues:['Deliberate','Hold firm','Controlled','Hold empty'],
+      levels:[
+        {n:1, pattern:[3,3,3,3],               label:'3 – 3 – 3 – 3'},
+        {n:2, pattern:[4,4,4,4],               label:'4 – 4 – 4 – 4'},
+        {n:3, pattern:[5,5,5,5],               label:'5 – 5 – 5 – 5'}
+      ]},
+    { key:'C2', kanji:'大地', name:'Daichi',  realName:'Extended Box',      tier:'Intermediate', caution:false,
+      cue:'Wide as the earth. Patient as stone. Hold your ground.',
+      phaseCues:['Deep','Hold firm','Ground','Hold'],
+      levels:[
+        {n:1, pattern:[5,3,5,3],               label:'5 – 3 – 5 – 3'},
+        {n:2, pattern:[6,4,6,4],               label:'6 – 4 – 6 – 4'},
+        {n:3, pattern:[7,5,7,5],               label:'7 – 5 – 7 – 5'}
+      ]},
+    { key:'C3', kanji:'昇',   name:'Noboru',  realName:'Staircase Inhale',  tier:'Advanced',     caution:false,
+      cue:'Four steps up. One long way down.',
+      phaseCues:['Sniff in','','Release',''],
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,5,0],  label:'3×1 – 0 – 5 – 0'},
+        {n:2, pattern:[{segs:4,dur:2},0,8,0],  label:'4×2 – 0 – 8 – 0'},
+        {n:3, pattern:[{segs:5,dur:2},0,10,0], label:'5×2 – 0 – 10 – 0'}
+      ]},
+    { key:'C4', kanji:'梯子', name:'Hashigo', realName:'Dual Staircase',    tier:'Expert',       caution:false,
+      cue:'Up in steps. Down in steps. The ladder runs both ways.',
+      phaseCues:['Sniff in','','Step down',''],
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,{segs:3,dur:1},0], label:'3×1 – 0 – 3×1 – 0'},
+        {n:2, pattern:[{segs:4,dur:2},0,{segs:4,dur:2},0], label:'4×2 – 0 – 4×2 – 0'},
+        {n:3, pattern:[{segs:5,dur:2},0,{segs:5,dur:2},0], label:'5×2 – 0 – 5×2 – 0'}
+      ]}
+  ],
+  mizu: [
+    { key:'M1', kanji:'水',   name:'Mizu',    realName:'Deep Equal',        tier:'Beginner',     caution:false,
+      cue:'Slow like the tide. Strong like the deep.',
+      phaseCues:['Deep','','Slow',''],
+      levels:[
+        {n:1, pattern:[5,0,5,0],               label:'5 – 0 – 5 – 0'},
+        {n:2, pattern:[6,0,6,0],               label:'6 – 0 – 6 – 0'},
+        {n:3, pattern:[7,0,7,0],               label:'7 – 0 – 7 – 0'}
+      ]},
+    { key:'M2', kanji:'月',   name:'Tsuki',   realName:'Hold & Release',    tier:'Intermediate', caution:false,
+      cue:'Slow and deep. The moon waits for no one.',
+      phaseCues:['Full','Hold','Slow release',''],
+      levels:[
+        {n:1, pattern:[4,4,6,0],               label:'4 – 4 – 6 – 0'},
+        {n:2, pattern:[4,7,8,0],               label:'4 – 7 – 8 – 0'},
+        {n:3, pattern:[5,7,9,0],               label:'5 – 7 – 9 – 0'}
+      ]},
+    { key:'M3', kanji:'波',   name:'Nami',    realName:'Wave Breath',       tier:'Advanced',     caution:false,
+      cue:'Breathe in, breathe out — then wait for the wave.',
+      phaseCues:['Full','','Slow','Wait'],
+      levels:[
+        {n:1, pattern:[5,0,7,2],               label:'5 – 0 – 7 – 2'},
+        {n:2, pattern:[6,0,8,3],               label:'6 – 0 – 8 – 3'},
+        {n:3, pattern:[7,0,9,4],               label:'7 – 0 – 9 – 4'}
+      ]},
+    { key:'M4', kanji:'沈み', name:'Shizumi', realName:'Exhale Hold',       tier:'Expert',       caution:false,
+      cue:'Empty completely. Then sink into the silence.',
+      phaseCues:['Deep','','Release','Sink'],
+      levels:[
+        {n:1, pattern:[4,0,6,4],               label:'4 – 0 – 6 – 4'},
+        {n:2, pattern:[5,0,7,5],               label:'5 – 0 – 7 – 5'},
+        {n:3, pattern:[6,0,8,6],               label:'6 – 0 – 8 – 6'}
+      ]}
+  ],
+  hi: [
+    { key:'H1', kanji:'火息',   name:'Hi no Iki', realName:'Activation Breath', tier:'Beginner',     caution:false,
+      cue:'Sharp and quick. Awaken the flame within.',
+      phaseCues:['Sharp','','Release',''],
+      levels:[
+        {n:1, pattern:[2,0,3,0],               label:'2 – 0 – 3 – 0'},
+        {n:2, pattern:[2,0,4,0],               label:'2 – 0 – 4 – 0'},
+        {n:3, pattern:[2,0,6,0],               label:'2 – 0 – 6 – 0'}
+      ]},
+    { key:'H2', kanji:'火山',   name:'Kazan',     realName:'Power Breath',      tier:'Intermediate', caution:true,
+      cue:'Quick and fierce. Fan every flame inside you.',
+      phaseCues:['Sharp','Contain','Release','Recover'],
+      levels:[
+        {n:1, pattern:[2,0,2,2],               label:'2 – 0 – 2 – 2'},
+        {n:2, pattern:[2,0,2,0],               label:'2 – 0 – 2 – 0'},
+        {n:3, pattern:[2,2,2,0],               label:'2 – 2 – 2 – 0'}
+      ]},
+    { key:'H3', kanji:'鷹の息', name:'Taka no Iki', realName:"Hawk's Breath",   tier:'Advanced',     caution:true,
+      cue:'Sharp and quick — gather everything. Then let it all go.',
+      phaseCues:['Sniff','','Long release',''],
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,6,0],  label:'3×1 – 0 – 6 – 0'},
+        {n:2, pattern:[{segs:4,dur:1},0,8,0],  label:'4×1 – 0 – 8 – 0'},
+        {n:3, pattern:[{segs:5,dur:1},0,10,0], label:'5×1 – 0 – 10 – 0'}
+      ]},
+    { key:'H4', kanji:'龍火',   name:'Ryuhi',     realName:'Dragon Fire',       tier:'Expert',       caution:true,
+      cue:'Take it in sharp. Hold the fire. Then let it burn out slowly.',
+      phaseCues:['Sharp','Hold fire','Burn slow',''],
+      levels:[
+        {n:1, pattern:[2,2,4,0],               label:'2 – 2 – 4 – 0'},
+        {n:2, pattern:[2,4,4,0],               label:'2 – 4 – 4 – 0'},
+        {n:3, pattern:[2,6,4,0],               label:'2 – 6 – 4 – 0'}
+      ]}
+  ]
+};
+
+var BE_PHASE_NAMES = ['Inhale','Hold','Exhale','Rest'];
+var BE_ARC_C = 2 * Math.PI * 113;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+var BE_activeElement   = 'kaze';
+var BE_studentLevels   = {K1:1,K2:1,K3:1,K4:1,C1:1,C2:1,C3:1,C4:1,M1:1,M2:1,M3:1,M4:1,H1:1,H2:1,H3:1,H4:1};
+var BE_sessionLength   = 3;
+var BE_sessionFamilies = [];
+var BE_familyIndex     = 0;
+var BE_cycleCount      = 0;
+var BE_running         = false;
+var BE_tickTimer       = null;
+var BE_phaseIndex      = 0;
+var BE_segStep         = 0;
+var BE_awaitingAdvance = false;
+var BE_circleScale     = BE_SCALE_NEUTRAL;
+var BE_kfIdx          = 0;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  if (!BE_DEV_MODE) document.querySelector('.dev-panel').style.display = 'none';
+  applyElementTheme('kaze');
+  buildDevLevels();
+  buildSession();
+  renderQueue();
+  renderTechniqueInfo();
+  renderCycleDots();
+  hideFillBar();
+  resetContinueBtn();
+  showTapHint(false);
+  setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint('');
+  clearArc(); syncCircleToRest(); setRingState('idle');
+  updateDepthRing(0, false);
+  showIntroState();
+}
+
+// ─── ELEMENT THEME ────────────────────────────────────────────────────────────
+
+function applyElementTheme(key) {
+  var el = BE_ELEMENTS[key];
+  var rs = document.documentElement.style;
+  rs.setProperty('--el',      el.color);
+  rs.setProperty('--el-glow', el.glow);
+  rs.setProperty('--el-dim',  el.dim);
+  rs.setProperty('--el-core', el.core);
+  rs.setProperty('--el-halo', el.halo);
+  rs.setProperty('--el-atmo', el.atmo);
+  var bc = document.getElementById('breath-circle');
+  bc.style.background = 'radial-gradient(circle at 50% 48%, ' + el.core + ' 0%, transparent 45%), radial-gradient(circle at 50% 50%, ' + el.halo + ' 0%, transparent 70%)';
+  bc.style.borderColor = el.dim;
+  bc.className = 'breath-circle'; // reset hold/rest state
+  document.getElementById('arc-progress').style.stroke = el.color;
+  document.getElementById('complete-bg-kanji').textContent = el.kanji;
+}
+
+/**
+ * Switches to a different element (kaze/chi/mizu/hi), resets session.
+ * @param {string} key - Element key (kaze, chi, mizu, or hi)
+ */
+function switchElement(key) {
+  if (key === BE_activeElement) return;
+  stopIfRunning();
+  BE_activeElement = key;
+  applyElementTheme(key);
+  ['kaze','chi','mizu','hi'].forEach(function(k) {
+    document.getElementById('tab-' + k).className = 'el-tab' + (k === key ? ' active' : '');
+  });
+  BE_familyIndex = 0; BE_cycleCount = 0;
+  buildSession(); buildDevLevels(); renderQueue(); renderTechniqueInfo();
+  renderCycleDots(); hideFillBar(); resetContinueBtn(); BE_awaitingAdvance = false;
+  showTapHint(false); setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint('');
+  clearArc(); syncCircleToRest(); setRingState('idle');
+  updateDepthRing(0, false);
+  showIntroState();
+}
+
+// ─── DEV PANEL ────────────────────────────────────────────────────────────────
+
+function buildDevLevels() {
+  var sec = document.getElementById('dev-levels-section'); sec.innerHTML = '';
+  BE_ALL_FAMILIES[BE_activeElement].forEach(function(fam) {
+    var block = document.createElement('div');
+    block.className = 'dev-family-block';
+    var nm = document.createElement('span');
+    nm.className = 'dev-family-name'; nm.textContent = fam.key;
+    block.appendChild(nm);
+    [1,2,3].forEach(function(lv) {
+      var btn = document.createElement('button');
+      btn.className = 'dev-btn' + (BE_studentLevels[fam.key] === lv ? ' active' : '');
+      btn.id = 'dlv-' + fam.key + '-' + lv;
+      btn.textContent = 'L' + lv;
+      btn.onclick = (function(k,v){ return function(){ setLevel(k,v); }; })(fam.key, lv);
+      block.appendChild(btn);
+    });
+    sec.appendChild(block);
+  });
+  document.getElementById('btn-standard').className = 'dev-btn' + (BE_sessionLength === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (BE_sessionLength === 4 ? ' active' : '');
+}
+
+function setLevel(key, lv) {
+  stopIfRunning(); BE_studentLevels[key] = lv;
+  [1,2,3].forEach(function(v) { var b = document.getElementById('dlv-' + key + '-' + v); if (b) b.className = 'dev-btn' + (v === lv ? ' active' : ''); });
+  var cf = BE_sessionFamilies[BE_familyIndex];
+  if (cf && cf.key === key) {
+    BE_cycleCount = 0; BE_awaitingAdvance = false;
+    resetContinueBtn(); renderTechniqueInfo(); renderCycleDots(); hideFillBar();
+    clearArc(); syncCircleToRest(); showTapHint(false);
+    setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint(''); setRingState('idle');
+    updateDepthRing(0, false);
+    showIntroState();
+  }
+  renderQueue();
+}
+
+function setSessionLength(n) {
+  if (!BE_DEV_MODE) return;
+  stopIfRunning(); BE_sessionLength = n;
+  document.getElementById('btn-standard').className = 'dev-btn' + (n === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (n === 4 ? ' active' : '');
+  restartSession();
+}
+
+// ─── SESSION ──────────────────────────────────────────────────────────────────
+
+function buildSession() {
+  BE_sessionFamilies = BE_ALL_FAMILIES[BE_activeElement].slice(0, BE_sessionLength);
+  BE_familyIndex = 0; BE_cycleCount = 0; BE_awaitingAdvance = false;
+}
+
+/**
+ * Restarts the entire session from the first technique.
+ */
+function restartSession() {
+  stopIfRunning();
+  document.getElementById('complete-overlay').className = 'complete-overlay';
+  buildSession(); buildDevLevels();
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); hideFillBar();
+  resetContinueBtn(); showTapHint(false);
+  setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint('');
+  clearArc(); syncCircleToRest(); setRingState('idle'); BE_awaitingAdvance = false;
+  updateDepthRing(0, false);
+  showIntroState();
+}
+
+/**
+ * Jumps to a specific technique family by index in the session.
+ * @param {number} idx - Family index in the current session
+ */
+function jumpToFamily(idx) {
+  if (idx < 0 || idx >= BE_sessionFamilies.length) return;
+  stopIfRunning(); resetContinueBtn(); BE_awaitingAdvance = false;
+  BE_familyIndex = idx; BE_cycleCount = 0; BE_phaseIndex = 0; BE_segStep = 0;
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); hideFillBar();
+  setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint('');
+  clearArc(); syncCircleToRest(); showTapHint(false); setRingState('idle');
+  updateDepthRing(0, false);
+  showIntroState();
+}
+
+function jumpRelative(d) { jumpToFamily(BE_familyIndex + d); }
+function advanceTechnique() { jumpToFamily(BE_familyIndex + 1); }
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function currentFamily()  { return BE_sessionFamilies[BE_familyIndex]; }
+function currentPattern() { var f = currentFamily(), lv = BE_studentLevels[f.key] || 1; return f.levels[lv-1].pattern; }
+function currentLevelData() { var f = currentFamily(), lv = BE_studentLevels[f.key] || 1; return f.levels[lv-1]; }
+function isSegmented(ph)  { return ph !== null && typeof ph === 'object' && ph.segs; }
+function phaseDuration(ph){ return isSegmented(ph) ? ph.segs * ph.dur : ph; }
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function renderTechniqueInfo() {
+  var fam = currentFamily(), lvd = currentLevelData(), lv = BE_studentLevels[fam.key] || 1;
+  document.getElementById('info-kanji').textContent  = fam.kanji;
+  document.getElementById('info-name').textContent   = fam.name;
+  document.getElementById('info-real').textContent   = fam.realName;
+  document.getElementById('info-cue').textContent    = fam.cue;
+  document.getElementById('info-pattern').innerHTML  = 'Pattern: <span>' + lvd.label + '</span>';
+  var t = document.getElementById('info-tier');
+  t.textContent = fam.tier; t.className = 'tier-badge ' + fam.tier.toLowerCase();
+  var ld = document.getElementById('info-ldots'); ld.innerHTML = '';
+  for (var i = 1; i <= 3; i++) { var d = document.createElement('div'); d.className = 'level-dot' + (i <= lv ? ' filled' : ''); ld.appendChild(d); }
+  var lb = document.createElement('div'); lb.className = 'level-dot-label'; lb.textContent = 'L' + lv; ld.appendChild(lb);
+  document.getElementById('caution-flag').className = 'caution-flag' + (fam.caution ? ' visible' : '');
+}
+
+function renderCycleDots() {
+  for (var i = 0; i < 3; i++) { var d = document.getElementById('cy' + i); if (d) d.className = 'cycle-dot-lg' + (i < BE_cycleCount ? ' done' : ''); }
+}
+
+function renderQueue() {
+  var list = document.getElementById('queue-list'); list.innerHTML = '';
+  BE_sessionFamilies.forEach(function(fam, idx) {
+    var lv = BE_studentLevels[fam.key] || 1, lvd = fam.levels[lv-1];
+    var item = document.createElement('div');
+    var cls = 'queue-item' + (idx === BE_familyIndex ? ' active' : idx < BE_familyIndex ? ' done' : '');
+    item.className = cls; item.title = 'Jump to ' + fam.name;
+    var dots = ''; for (var d = 1; d <= 3; d++) dots += '<div class="queue-ldot' + (d <= lv ? ' f' : '') + '"></div>';
+    item.innerHTML = '<div class="queue-item-head"><div class="queue-name">' + fam.name + '</div><div class="queue-level">L' + lv + '</div></div><div class="queue-pattern">' + lvd.label + '</div><div class="queue-ldots">' + dots + '</div>';
+    item.onclick = (function(i){ return function(){ jumpToFamily(i); }; })(idx);
+    list.appendChild(item);
+  });
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+
+function setPhaseLabel(t) { document.getElementById('phase-label').textContent = t; }
+function setTimerText(t, muted) { var e = document.getElementById('timer-text'); e.textContent = t; e.className = 'timer-inner' + (muted ? ' muted' : ''); }
+var BE_cueTimer = null;
+function setPhaseCue(t) {
+  var e = document.getElementById('phase-cue');
+  if (BE_cueTimer) { clearTimeout(BE_cueTimer); BE_cueTimer = null; }
+  if (!t) { e.className = 'phase-cue'; return; }
+  // If currently showing text, fade out first then swap
+  if (e.textContent && e.classList.contains('visible')) {
+    e.className = 'phase-cue fading';
+    BE_cueTimer = setTimeout(function() { e.textContent = t; e.className = 'phase-cue visible'; BE_cueTimer = null; }, 160);
+  } else {
+    e.textContent = t; e.className = 'phase-cue visible';
+  }
+}
+function setNextHint(t)   { var e = document.getElementById('next-hint'); if (t) { e.textContent = 'next: ' + t.toLowerCase(); e.className = 'next-hint visible'; } else { e.textContent = ''; e.className = 'next-hint'; } }
+function showTapHint(on)  { document.getElementById('tap-hint').className = 'tap-hint' + (on ? '' : ' hidden'); }
+function resetContinueBtn(){ document.getElementById('continue-btn').className = 'continue-btn'; }
+function showContinueBtn() { setTimeout(function(){ document.getElementById('continue-btn').className = 'continue-btn visible'; }, 400); }
+
+function setRingState(state) {
+  // state: 'idle' | 'rest-hold' | 'active' (no animation)
+  document.getElementById('breath-ring').className = 'breath-ring' + (state === 'idle' ? ' idle' : state === 'rest-hold' ? ' rest-hold' : '');
+}
+
+// ─── INTRO STATE ─────────────────────────────────────────────────────────────
+
+var BE_introVisible = false;
+
+function showIntroState() {
+  var fam = currentFamily(), lvd = currentLevelData(), lv = BE_studentLevels[fam.key] || 1;
+  var el = BE_ELEMENTS[BE_activeElement];
+
+  document.getElementById('intro-kanji').textContent = fam.kanji;
+  document.getElementById('intro-name').textContent = fam.name;
+  var tierEl = document.getElementById('intro-tier');
+  tierEl.textContent = fam.tier;
+  tierEl.className = 'intro-tier ' + fam.tier.toLowerCase();
+  document.getElementById('intro-cue').textContent = fam.cue;
+
+  // First phase cue word
+  var firstCue = fam.phaseCues[0] || 'Breathe';
+  document.getElementById('intro-first-word').textContent = firstCue;
+
+  // Build rhythm diagram
+  buildRhythmDiagram(lvd.pattern, el);
+
+  var intro = document.getElementById('intro-state');
+  intro.className = 'intro-state';
+  BE_introVisible = true;
+}
+
+function hideIntroState() {
+  document.getElementById('intro-state').className = 'intro-state hidden';
+  BE_introVisible = false;
+}
+
+function buildRhythmDiagram(pattern, el) {
+  var bar = document.getElementById('intro-rhythm');
+  bar.innerHTML = '';
+
+  // Calculate total duration for proportional widths
+  var totalDur = 0;
+  for (var i = 0; i < pattern.length; i++) {
+    var ph = pattern[i];
+    totalDur += isSegmented(ph) ? ph.segs * ph.dur : ph;
+  }
+  if (totalDur === 0) return;
+
+  var maxW = 200;
+  var phaseColors = [
+    el.color,                         // 0: inhale — element colour
+    'rgba(201,169,110,0.7)',          // 1: hold — gold
+    el.dim.replace('0.16','0.45'),    // 2: exhale — dim element
+    'rgba(107,104,128,0.4)'           // 3: rest — grey
+  ];
+
+  for (var p = 0; p < pattern.length; p++) {
+    var ph = pattern[p];
+    var dur = isSegmented(ph) ? ph.segs * ph.dur : ph;
+    if (dur === 0) continue;
+
+    var w = Math.max(8, Math.round((dur / totalDur) * maxW));
+    var block = document.createElement('div');
+    block.className = 'rhythm-phase';
+    block.style.width = w + 'px';
+    block.style.background = phaseColors[p];
+
+    // Add segment dividers for segmented phases
+    if (isSegmented(ph) && ph.segs > 1) {
+      for (var s = 1; s < ph.segs; s++) {
+        var div = document.createElement('div');
+        div.className = 'rhythm-divider';
+        div.style.left = Math.round((s / ph.segs) * 100) + '%';
+        block.appendChild(div);
+      }
+    }
+
+    bar.appendChild(block);
+  }
+}
+
+// ─── DEPTH RING ───────────────────────────────────────────────────────────────
+// Shows a dashed target ring at the depth the circle will reach
+
+var BE_depthFadeTimer = null;
+function updateDepthRing(targetScale, show) {
+  var dr = document.getElementById('depth-ring');
+  if (BE_depthFadeTimer) { clearTimeout(BE_depthFadeTimer); BE_depthFadeTimer = null; }
+  if (!show || targetScale <= 0) { dr.className = 'depth-ring'; return; }
+  var px = scaleToPx(targetScale);
+  // Size with transitions disabled to prevent visible resize
+  dr.className = 'depth-ring sizing';
+  dr.style.width  = px + 'px';
+  dr.style.height = px + 'px';
+  // Force layout, then fade in briefly then fade out
+  void dr.offsetWidth;
+  dr.className = 'depth-ring visible';
+  BE_depthFadeTimer = setTimeout(function() { dr.className = 'depth-ring fading'; }, 600);
+}
+
+// ─── FILL BAR ─────────────────────────────────────────────────────────────────
+
+function hideFillBar() {
+  document.getElementById('fill-bar').className = 'fill-bar';
+  for (var i = 0; i < 5; i++) { var s = document.getElementById('fs' + i); if (s) { s.className = 'fill-seg'; s.style.visibility = ''; } }
+}
+
+function initFillBar(n, isEx) {
+  // Show exactly n segments. For inhale: all pending. For exhale: all filled.
+  var bar = document.getElementById('fill-bar');
+  bar.className = 'fill-bar visible';
+  for (var i = 0; i < 5; i++) {
+    var s = document.getElementById('fs' + i);
+    if (!s) continue;
+    if (i >= n) { s.className = 'fill-seg'; s.style.visibility = 'hidden'; }
+    else {
+      s.style.visibility = 'visible';
+      s.className = 'fill-seg' + (isEx ? ' filled' : ' pending');
+    }
+  }
+}
+
+function updateFillBar(n, step, isEx) {
+  // n = total segs, step = current step index, isEx = exhale direction
+  // Inhale (isEx=false): fill from bottom (seg0) up. step 0 = seg0 active.
+  // Exhale (isEx=true): drain from top (segN-1) down. step 0 = segN-1 active.
+  for (var i = 0; i < n; i++) {
+    var s = document.getElementById('fs' + i);
+    if (!s) continue;
+    var cls;
+    if (!isEx) {
+      // Inhale: fill bottom to top. DOM 0 = visual bottom (col-reverse).
+      if (i < step)       cls = 'fill-seg filled';
+      else if (i === step) cls = 'fill-seg active';
+      else                 cls = 'fill-seg pending';
+    } else {
+      // Exhale: drain top to bottom. Top visual = highest index (col-reverse = DOM index n-1).
+      var topIdx = n - 1 - step; // the segment currently draining
+      if (i > topIdx)      cls = 'fill-seg pending'; // already released (above)
+      else if (i === topIdx) cls = 'fill-seg active'; // currently releasing
+      else                   cls = 'fill-seg filled'; // still full (below)
+    }
+    s.className = cls;
+  }
+}
+
+// ─── ARC ──────────────────────────────────────────────────────────────────────
+
+function clearArc() {
+  var a = document.getElementById('arc-progress');
+  a.style.strokeDashoffset = BE_ARC_C; a.style.transition = 'none';
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg');
+}
+
+function showArc(secs) {
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+  var a = document.getElementById('arc-progress');
+  a.style.transition = 'none'; a.style.strokeDashoffset = '0';
+  void a.getBoundingClientRect();
+  a.style.transition = 'stroke-dashoffset ' + secs + 's linear';
+  a.style.strokeDashoffset = BE_ARC_C;
+}
+
+function resetArcInstant() {
+  var a = document.getElementById('arc-progress');
+  a.style.transition = 'none'; a.style.strokeDashoffset = '0';
+}
+
+function setArcColour(c) { document.getElementById('arc-progress').style.stroke = c; }
+
+// ─── CIRCLE ANIMATION ─────────────────────────────────────────────────────────
+
+var BE_injectedStyles = [];
+function injectKF(a, b) {
+  // Clean up previous injected keyframe styles
+  while (BE_injectedStyles.length > 2) {
+    var old = BE_injectedStyles.shift();
+    if (old.parentNode) old.parentNode.removeChild(old);
+  }
+  var n = 'bf_' + (BE_kfIdx++), s = document.createElement('style');
+  s.textContent = '@keyframes ' + n + '{from{transform:scale(' + a + ')}to{transform:scale(' + b + ')}}';
+  document.head.appendChild(s);
+  BE_injectedStyles.push(s);
+  return n;
+}
+
+function glowForScale(s) {
+  var ratio = Math.max(0, (s - BE_SCALE_FLOOR) / (BE_SCALE_CEIL - BE_SCALE_FLOOR));
+  var outer = Math.round(ratio * 40);
+  var inner = Math.round(ratio * 30);
+  return '0 0 ' + outer + 'px var(--el-glow), inset 0 0 ' + inner + 'px var(--el-halo)';
+}
+
+function setCirclePhaseClass(cls) {
+  var el = document.getElementById('breath-circle');
+  el.classList.remove('hold-pulsing', 'rest-dim');
+  if (cls) el.classList.add(cls);
+}
+
+function animateSmooth(fromS, toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none'; void el.offsetWidth;
+  setCirclePhaseClass(null);
+  var n = injectKF(fromS, toS);
+  el.style.transform = 'scale(' + toS + ')';
+  el.style.animation = n + ' ' + durMs + 'ms linear forwards';
+  el.style.transition = 'box-shadow 0.6s ease';
+  BE_circleScale = toS;
+  el.style.boxShadow = glowForScale(toS);
+}
+
+function stepCircle(toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  setCirclePhaseClass(null);
+  el.style.transition = 'transform ' + durMs + 'ms linear, box-shadow ' + durMs + 'ms ease';
+  el.style.transform = 'scale(' + toS + ')';
+  BE_circleScale = toS;
+  el.style.boxShadow = glowForScale(toS);
+}
+
+function clearAnimation() {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none'; el.style.transition = 'none';
+  // Clean up all injected keyframe styles
+  BE_injectedStyles.forEach(function(s) { if (s.parentNode) s.parentNode.removeChild(s); });
+  BE_injectedStyles = [];
+}
+
+function syncCircleToRest() {
+  var el = document.getElementById('breath-circle');
+  // Read the current computed scale before clearing animation
+  var computed = window.getComputedStyle(el).transform;
+  el.style.animation = 'none';
+  // Apply the computed transform instantly to prevent snap
+  if (computed && computed !== 'none') {
+    el.style.transition = 'none';
+    el.style.transform = computed;
+    void el.offsetWidth; // force layout
+  }
+  // Now smoothly transition to neutral
+  setCirclePhaseClass(null);
+  el.style.transition = 'transform 0.8s ease, box-shadow 0.8s ease';
+  el.style.transform = 'scale(' + BE_SCALE_NEUTRAL + ')';
+  el.style.boxShadow = 'none';
+  BE_circleScale = BE_SCALE_NEUTRAL;
+}
+
+// ─── NEXT PHASE LABEL ─────────────────────────────────────────────────────────
+
+function getNextPhaseName(curIdx, pattern) {
+  for (var i = 1; i < pattern.length; i++) {
+    var ni = (curIdx + i) % pattern.length, ph = pattern[ni];
+    if (isSegmented(ph) || ph !== 0) return BE_PHASE_NAMES[ni];
+  }
+  return '';
+}
+
+// ─── ARC COLOUR PER ELEMENT + PHASE ──────────────────────────────────────────
+
+function arcColour(phaseIdx) {
+  var el = BE_ELEMENTS[BE_activeElement];
+  if (phaseIdx === 0) return el.color;
+  if (phaseIdx === 1) return 'rgba(201,169,110,0.75)';   // hold: warm gold
+  if (phaseIdx === 2) return el.dim.replace('0.16','0.6');
+  return 'rgba(107,104,128,0.45)';                        // rest: grey
+}
+
+// ─── ENGINE ───────────────────────────────────────────────────────────────────
+
+function handleCircleTap() {
+  if (BE_awaitingAdvance) return;
+  if (BE_introVisible) { hideIntroState(); startBreath(); return; }
+  BE_running ? stopBreath() : startBreath();
+}
+
+/**
+ * Begins the breathing cycle from the current technique.
+ */
+function startBreath() {
+  BE_running = true; BE_phaseIndex = 0; BE_segStep = 0;
+  showTapHint(false); setRingState('active');
+  runPhase();
+}
+
+/**
+ * Stops the current breathing cycle and resets to idle state.
+ */
+function stopBreath() {
+  BE_running = false; clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('—'); setTimerText('·', true); setPhaseCue(''); setNextHint('');
+  hideFillBar(); showTapHint(false); setRingState('idle'); updateDepthRing(0, false);
+  showIntroState();
+}
+
+function stopIfRunning() { if (BE_running) stopBreath(); }
+function clearTickTimer() { if (BE_tickTimer) { clearInterval(BE_tickTimer); BE_tickTimer = null; } }
+
+function runPhase() {
+  var pattern = currentPattern(), ph = pattern[BE_phaseIndex];
+  if (isSegmented(ph)) runSegmentedPhase(ph);
+  else if (ph === 0)   nextPhase();
+  else                 runSmoothPhase(BE_phaseIndex, ph);
+}
+
+function runSmoothPhase(pidx, secs) {
+  var fam = currentFamily();
+  var fromS = BE_circleScale, toS, isRestHold = false;
+
+  if (pidx === 0) {        // Inhale
+    toS = inhaleTarget(secs);
+    setPhaseLabel('Inhale');
+  } else if (pidx === 1) { // Hold (full lungs)
+    toS = BE_circleScale;
+    isRestHold = true;     // gold pulse on full-lung holds
+    setPhaseLabel('Hold');
+  } else if (pidx === 2) { // Exhale
+    toS = exhaleTarget(secs);
+    setPhaseLabel('Exhale');
+  } else {                 // Rest (empty lungs)
+    toS = exhaleTarget(secs) * 0.98; // hold at trough
+    isRestHold = true;
+    setPhaseLabel('Rest');
+  }
+
+  // Show depth ring for inhale/exhale phases only
+  updateDepthRing(toS, pidx === 0 || pidx === 2);
+
+  setPhaseCue(fam.phaseCues[pidx] || '');
+  setArcColour(arcColour(pidx));
+  showArc(secs);
+  hideFillBar();
+  animateSmooth(fromS, toS, secs * 1000);
+  // Circle visual state per phase
+  if (pidx === 1) setCirclePhaseClass('hold-pulsing');      // hold: slow inner pulse
+  else if (pidx === 3) setCirclePhaseClass('rest-dim');      // rest: glow nearly gone
+  setNextHint(getNextPhaseName(pidx, currentPattern()));
+  setRingState(isRestHold ? 'rest-hold' : 'active');
+
+  var elapsed = 0;
+  clearTickTimer();
+  BE_tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = secs - elapsed;
+    setTimerText(rem > 0 ? rem : '', false);
+    if (elapsed >= secs) { clearTickTimer(); nextPhase(); }
+  }, 1000);
+}
+
+function runSegmentedPhase(ph) {
+  var totalSegs = ph.segs, segDur = ph.dur;
+  var isEx = (BE_phaseIndex === 2 || BE_phaseIndex === 3);
+  var fam = currentFamily();
+  var totalSecs = totalSegs * segDur;
+
+  // Depth target for whole phase
+  var depthTarget = isEx ? exhaleTarget(totalSecs) : inhaleTarget(totalSecs);
+  updateDepthRing(depthTarget, true);
+
+  setPhaseLabel(isEx ? 'Exhale' : 'Inhale');
+  setPhaseCue(fam.phaseCues[BE_phaseIndex] || '');
+  setArcColour(arcColour(BE_phaseIndex));
+  setNextHint(getNextPhaseName(BE_phaseIndex, currentPattern()));
+  setRingState('active');
+
+  // Snap circle to phase start, then step through
+  var startS = isEx ? inhaleTarget(totalSecs) : exhaleTarget(totalSecs) * 0.98;
+  // Use current BE_circleScale unless first phase (start fresh)
+  if (BE_phaseIndex === 0) startS = BE_SCALE_NEUTRAL - 0.08; // small nudge down ready to inhale
+  if (BE_phaseIndex === 2) startS = BE_circleScale;           // exhale starts wherever inhale left off
+
+  stepCircle(startS, 80);
+  BE_circleScale = startS;
+
+  initFillBar(totalSegs, isEx);
+
+  var stepSize = isEx
+    ? (startS - depthTarget) / totalSegs
+    : (depthTarget - startS) / totalSegs;
+
+  BE_segStep = 0;
+  doSegStep(totalSegs, segDur, isEx, stepSize, depthTarget);
+}
+
+function doSegStep(totalSegs, segDur, isEx, stepSize, depthTarget) {
+  if (!BE_running) return;
+
+  updateFillBar(totalSegs, BE_segStep, isEx);
+  setTimerText(segDur, false);
+
+  // Per-segment arc
+  resetArcInstant();
+  void document.getElementById('arc-progress').getBoundingClientRect();
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'stroke-dashoffset ' + segDur + 's linear';
+  arc.style.strokeDashoffset = BE_ARC_C;
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+
+  // Step circle toward target
+  var targetS = isEx
+    ? Math.max(depthTarget, BE_circleScale - stepSize)
+    : Math.min(depthTarget, BE_circleScale + stepSize);
+  stepCircle(targetS, segDur * 1000 * 0.85);
+  BE_circleScale = targetS;
+
+  var elapsed = 0;
+  clearTickTimer();
+  BE_tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = segDur - elapsed;
+    if (rem > 0) setTimerText(rem, false);
+    if (elapsed >= segDur) {
+      clearTickTimer();
+      BE_segStep++;
+      if (BE_segStep >= totalSegs) nextPhase();
+      else doSegStep(totalSegs, segDur, isEx, stepSize, depthTarget);
+    }
+  }, 1000);
+}
+
+function nextPhase() {
+  if (!BE_running) return;
+  var pattern = currentPattern();
+  BE_phaseIndex++;
+  if (BE_phaseIndex >= pattern.length) {
+    BE_phaseIndex = 0; BE_cycleCount++;
+    renderCycleDots();
+    if (BE_cycleCount >= 3) onTechniqueDone();
+    else { BE_segStep = 0; runPhase(); }
+  } else { runPhase(); }
+}
+
+function onTechniqueDone() {
+  BE_running = false; clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('Complete'); setTimerText('', false);
+  setPhaseCue(''); setNextHint(''); hideFillBar(); BE_awaitingAdvance = true;
+  setRingState('idle'); updateDepthRing(0, false);
+  if (BE_familyIndex >= BE_sessionFamilies.length - 1) {
+    renderSessionSummary();
+    setTimeout(function(){ document.getElementById('complete-overlay').className = 'complete-overlay visible'; }, 700);
+  } else { showContinueBtn(); }
+}
+
+// ─── SESSION SUMMARY ─────────────────────────────────────────────────────────
+
+var BE_ELEMENT_QUOTES = {
+  kaze: 'The breath that releases is the breath that strengthens.',
+  chi:  'Stillness is not absence. It is presence.',
+  mizu: 'Depth is not distance. It is clarity.',
+  hi:   'Control is not restriction. It is mastery.'
+};
+
+function computeTechniqueTime(fam) {
+  var lv = BE_studentLevels[fam.key] || 1;
+  var pattern = fam.levels[lv - 1].pattern;
+  var cycleSecs = 0;
+  for (var i = 0; i < pattern.length; i++) {
+    var ph = pattern[i];
+    cycleSecs += isSegmented(ph) ? ph.segs * ph.dur : ph;
+  }
+  return cycleSecs * 3; // 3 cycles per technique
+}
+
+function renderSessionSummary() {
+  var summaryEl = document.getElementById('complete-summary');
+  summaryEl.innerHTML = '';
+
+  var totalSecs = 0;
+
+  BE_sessionFamilies.forEach(function(fam) {
+    var lv = BE_studentLevels[fam.key] || 1;
+    var techTime = computeTechniqueTime(fam);
+    totalSecs += techTime;
+
+    var row = document.createElement('div');
+    row.className = 'summary-row';
+    row.innerHTML =
+      '<span class="summary-name">' + fam.name + '</span>' +
+      '<span class="summary-level">L' + lv + '</span>' +
+      '<span class="summary-cycles">3 cycles</span>' +
+      '<span class="summary-check">✓</span>';
+    summaryEl.appendChild(row);
+  });
+
+  var mins = Math.floor(totalSecs / 60);
+  var secs = totalSecs % 60;
+  var timeStr = mins > 0 ? mins + ' min ' + secs + ' sec' : secs + ' sec';
+  document.getElementById('complete-time').textContent = timeStr;
+
+  document.getElementById('complete-quote').textContent = BE_ELEMENT_QUOTES[BE_activeElement] || '';
+}
+
+function changeElement() {
+  document.getElementById('complete-overlay').className = 'complete-overlay';
+  // Reset session state and let user pick a new element
+  restartSession();
+}
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

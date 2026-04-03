@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid — Geometry v0.4</title>
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #1a1a1a;
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    font-family: monospace;
+    color: #ccc;
+  }
+
+  /* ── Canvas side ── */
+  #canvas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    min-height: 100vh;
+  }
+  svg { display: block; overflow: visible; }
+
+  /* ── Controls panel ── */
+  #panel {
+    background: #111;
+    border-left: 1px solid #2a2a2a;
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #555;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #222;
+  }
+
+  .control-group { display: flex; flex-direction: column; gap: 18px; }
+
+  .control { display: flex; flex-direction: column; gap: 8px; }
+
+  .control-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .control-label { font-size: 11px; letter-spacing: 0.1em; color: #888; }
+  .control-value { font-size: 14px; color: #eee; min-width: 40px; text-align: right; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 2px;
+    background: #333;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: #eee;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  input[type=range]::-webkit-slider-thumb:hover { background: #fff; }
+
+  /* ── Count buttons ── */
+  .count-row {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 4px;
+  }
+  .count-btn {
+    aspect-ratio: 1;
+    border: 1px solid #333;
+    background: #1a1a1a;
+    color: #666;
+    font-family: monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .count-btn:hover { border-color: #555; color: #aaa; }
+  .count-btn.active { border-color: #888; background: #2a2a2a; color: #eee; }
+
+  /* ── Values readout ── */
+  .readout {
+    font-size: 10px;
+    color: #444;
+    line-height: 1.8;
+    border-top: 1px solid #222;
+    padding-top: 16px;
+  }
+  .readout span { color: #666; }
+
+  /* ── Copy button ── */
+  #copyBtn {
+    margin-top: auto;
+    padding: 10px;
+    border: 1px solid #333;
+    background: transparent;
+    color: #666;
+    font-family: monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  #copyBtn:hover { border-color: #666; color: #aaa; }
+  #copyBtn.copied { border-color: #4a8; color: #4a8; }
+</style>
+</head>
+<body>
+
+<div id="canvas"><svg id="svg"></svg></div>
+
+<div id="panel">
+  <div class="panel-title">HexGrid — Configuration</div>
+
+  <div class="control-group">
+
+    <div class="control">
+      <div class="control-header">
+        <span class="control-label">ITEM COUNT</span>
+      </div>
+      <div class="count-row" id="countRow"></div>
+    </div>
+
+    <div class="control">
+      <div class="control-header">
+        <span class="control-label">ITEM SIZE RATIO</span>
+        <span class="control-value" id="ratioVal">0.55</span>
+      </div>
+      <input type="range" id="ratioSlider" min="20" max="85" value="55" step="1">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;">
+        <span>tiny (0.20)</span><span>same size (0.85)</span>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="control-header">
+        <span class="control-label">GAP BETWEEN SIDES</span>
+        <span class="control-value" id="gapVal">6px</span>
+      </div>
+      <input type="range" id="gapSlider" min="0" max="40" value="6" step="1">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;">
+        <span>flush (0)</span><span>wide (40)</span>
+      </div>
+    </div>
+
+    <div class="control">
+      <div class="control-header">
+        <span class="control-label">MENU HEX SIZE</span>
+        <span class="control-value" id="menuRVal">100px</span>
+      </div>
+      <input type="range" id="menuRSlider" min="50" max="160" value="100" step="2">
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:#444;">
+        <span>small</span><span>large</span>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="readout" id="readout"></div>
+
+  <button id="copyBtn">COPY CONFIG</button>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   MATHS — three functions, never touched again
+   ═══════════════════════════════════════════════════════════════ */
+const SQRT3_OVER2 = Math.sqrt(3) / 2;
+const DEG         = Math.PI / 180;
+
+function hexVertices(cx, cy, R) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (-90 + 60 * i) * DEG;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+}
+
+function sideNormal(sideIndex) {
+  const a = (-60 + 60 * sideIndex) * DEG;
+  return { dx: Math.cos(a), dy: Math.sin(a) };
+}
+
+function itemCentre(menuR, itemR, sideIndex, gap) {
+  const d = (menuR + itemR) * SQRT3_OVER2 + gap;
+  const n = sideNormal(sideIndex);
+  return { x: n.dx * d, y: n.dy * d };
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FILL ORDER — clockwise from upper-right
+   ═══════════════════════════════════════════════════════════════ */
+const FILL_ORDER = [0, 1, 2, 3, 4, 5];
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+let cfg = { menuR: 100, itemRatio: 0.55, gap: 6, count: 6 };
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDERER — no maths
+   ═══════════════════════════════════════════════════════════════ */
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const svg    = document.getElementById('svg');
+
+function poly(verts, fill, stroke, sw) {
+  const el = document.createElementNS(SVG_NS, 'polygon');
+  el.setAttribute('points',       verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' '));
+  el.setAttribute('fill',         fill);
+  el.setAttribute('stroke',       stroke);
+  el.setAttribute('stroke-width', sw);
+  return el;
+}
+
+function render() {
+  svg.innerHTML = '';
+  const { menuR, itemRatio, gap, count } = cfg;
+  const itemR = menuR * itemRatio;
+
+  const menuVerts = hexVertices(0, 0, menuR);
+
+  const items = FILL_ORDER.slice(0, count).map(side => {
+    const c = itemCentre(menuR, itemR, side, gap);
+    return { verts: hexVertices(c.x, c.y, itemR) };
+  });
+
+  /* Bounding box */
+  const all  = [...menuVerts, ...items.flatMap(it => it.verts)];
+  const PAD  = 20;
+  const minX = Math.min(...all.map(v => v.x)) - PAD;
+  const minY = Math.min(...all.map(v => v.y)) - PAD;
+  const maxX = Math.max(...all.map(v => v.x)) + PAD;
+  const maxY = Math.max(...all.map(v => v.y)) + PAD;
+
+  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+  svg.setAttribute('width',  maxX - minX);
+  svg.setAttribute('height', maxY - minY);
+
+  /* Draw items first (behind menu) */
+  items.forEach(it => svg.appendChild(poly(it.verts, '#1a1a1a', '#555', 1.5)));
+  /* Draw menu on top */
+  svg.appendChild(poly(menuVerts, '#111', '#888', 2));
+
+  /* Readout */
+  const itemR_px  = itemR.toFixed(1);
+  const dist      = ((menuR + itemR) * SQRT3_OVER2 + gap).toFixed(1);
+  const apothem   = (menuR * SQRT3_OVER2).toFixed(1);
+  document.getElementById('readout').innerHTML =
+    `<span>menu R</span>      ${menuR}px\n` +
+    `<span>menu apothem</span> ${apothem}px\n` +
+    `<span>item R</span>      ${itemR_px}px\n` +
+    `<span>gap</span>         ${gap}px\n` +
+    `<span>centre dist</span> ${dist}px\n` +
+    `<span>count</span>       ${count}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTROLS
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Count buttons */
+const countRow = document.getElementById('countRow');
+for (let i = 1; i <= 6; i++) {
+  const btn = document.createElement('button');
+  btn.className = 'count-btn' + (i === 6 ? ' active' : '');
+  btn.textContent = i;
+  btn.dataset.n = i;
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    cfg.count = i;
+    render();
+  });
+  countRow.appendChild(btn);
+}
+
+/* Ratio slider */
+const ratioSlider = document.getElementById('ratioSlider');
+const ratioVal    = document.getElementById('ratioVal');
+ratioSlider.addEventListener('input', () => {
+  cfg.itemRatio = ratioSlider.value / 100;
+  ratioVal.textContent = cfg.itemRatio.toFixed(2);
+  render();
+});
+
+/* Gap slider */
+const gapSlider = document.getElementById('gapSlider');
+const gapVal    = document.getElementById('gapVal');
+gapSlider.addEventListener('input', () => {
+  cfg.gap = parseInt(gapSlider.value);
+  gapVal.textContent = cfg.gap + 'px';
+  render();
+});
+
+/* Menu R slider */
+const menuRSlider = document.getElementById('menuRSlider');
+const menuRVal    = document.getElementById('menuRVal');
+menuRSlider.addEventListener('input', () => {
+  cfg.menuR = parseInt(menuRSlider.value);
+  menuRVal.textContent = cfg.menuR + 'px';
+  render();
+});
+
+/* Copy config */
+document.getElementById('copyBtn').addEventListener('click', () => {
+  const out = `const MENU_R     = ${cfg.menuR};\nconst ITEM_RATIO = ${cfg.itemRatio.toFixed(2)};\nconst GAP        = ${cfg.gap};`;
+  navigator.clipboard.writeText(out).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.textContent = 'COPIED ✓';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'COPY CONFIG'; btn.classList.remove('copied'); }, 1500);
+  });
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid v3.1 — Dark &amp; Light Themes</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  min-height: 100vh;
+  font-family: monospace;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Split pane layout */
+.panes {
+  display: flex;
+  flex: 1;
+  min-height: 100vh;
+}
+
+.pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 32px;
+  gap: 48px;
+}
+
+.pane--dark  { background: #05050A; }
+.pane--light { background: #F0F0F0; border-left: 1px solid rgba(0,0,0,0.08); }
+
+/* Labels */
+.pane-label {
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+.pane--dark  .pane-label { color: rgba(255,255,255,0.2); }
+.pane--light .pane-label { color: rgba(0,0,0,0.25); }
+
+/* Count controls */
+.count-controls {
+  display: flex;
+  gap: 6px;
+}
+.count-btn {
+  font-family: monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.pane--dark .count-btn {
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: rgba(255,255,255,0.3);
+}
+.pane--dark .count-btn:hover  { border-color: rgba(255,255,255,0.28); color: rgba(255,255,255,0.7); }
+.pane--dark .count-btn.active { border-color: rgba(255,255,255,0.45); color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.04); }
+
+.pane--light .count-btn {
+  border: 1px solid rgba(0,0,0,0.15);
+  background: transparent;
+  color: rgba(0,0,0,0.35);
+}
+.pane--light .count-btn:hover  { border-color: rgba(0,0,0,0.3); color: rgba(0,0,0,0.7); }
+.pane--light .count-btn.active { border-color: rgba(0,0,0,0.5); color: rgba(0,0,0,0.9); background: rgba(0,0,0,0.04); }
+
+/* Divider line */
+.divider {
+  width: 1px;
+  background: linear-gradient(to bottom, transparent, rgba(128,128,128,0.3) 20%, rgba(128,128,128,0.3) 80%, transparent);
+}
+</style>
+</head>
+<body>
+
+<div class="panes">
+
+  <!-- DARK -->
+  <div class="pane pane--dark">
+    <div class="pane-label">Dark</div>
+    <div id="darkDemo"></div>
+    <div class="count-controls" id="darkControls"></div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- LIGHT -->
+  <div class="pane pane--light">
+    <div class="pane-label">Light</div>
+    <div id="lightDemo"></div>
+    <div class="count-controls" id="lightControls"></div>
+  </div>
+
+</div>
+
+<script>
+/* =====================================================================
+   HexGrid v3.1 — hex-grid.js inlined
+   ===================================================================== */
+
+const _MENU_R = 108;
+const _ITEM_R = _MENU_R * 0.59;
+const _GAP    = 51;
+const _S32    = Math.sqrt(3) / 2;
+const _DEG    = Math.PI / 180;
+const _FILL   = [0, 1, 2, 3, 4, 5];
+
+function _hex(cx, cy, R) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (-90 + 60 * i) * _DEG;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+}
+function _normal(s) {
+  const a = (-60 + 60 * s) * _DEG;
+  return { dx: Math.cos(a), dy: Math.sin(a) };
+}
+function _itemCentre(side) {
+  const d = (_MENU_R + _ITEM_R) * _S32 + _GAP;
+  const n = _normal(side);
+  return { x: n.dx * d, y: n.dy * d };
+}
+function _pts(verts) {
+  return verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' ');
+}
+
+const _VIEWBOXES = {};
+(function () {
+  const PAD = 40;
+  for (let count = 1; count <= 6; count++) {
+    const all = [..._hex(0, 0, _MENU_R)];
+    _FILL.slice(0, count).forEach(side => {
+      const c = _itemCentre(side);
+      _hex(c.x, c.y, _ITEM_R * 1.30).forEach(v => all.push(v));
+    });
+    const minX = Math.min(...all.map(v => v.x)) - PAD;
+    const minY = Math.min(...all.map(v => v.y)) - PAD;
+    const maxX = Math.max(...all.map(v => v.x)) + PAD;
+    const maxY = Math.max(...all.map(v => v.y)) + PAD;
+    _VIEWBOXES[count] = {
+      x: minX, y: minY,
+      w: maxX - minX,
+      h: maxY - minY,
+      aspect: (maxY - minY) / (maxX - minX),
+    };
+  }
+})();
+
+const THEMES = {
+  dark: {
+    hubFill:    '#000000',
+    hubStroke:  '#FFFFFF',
+    itemFill:   '#000000',
+    itemStroke: '#FFFFFF',
+    selRing:    '#8B1A1A',
+    dimOpacity: '0.30',
+  },
+  light: {
+    hubFill:    '#FFFFFF',
+    hubStroke:  '#000000',
+    itemFill:   '#FFFFFF',
+    itemStroke: '#000000',
+    selRing:    '#8B1A1A',
+    dimOpacity: '0.25',
+  },
+};
+
+const _NS = 'http://www.w3.org/2000/svg';
+function _el(tag, attrs) {
+  const e = document.createElementNS(_NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+
+function createHexGrid(container, config = {}) {
+  const root = typeof container === 'string'
+    ? document.querySelector(container) : container;
+  if (!root) throw new Error('HexGrid: container not found');
+
+  let _size    = config.size    ?? 400;
+  let _count   = Math.min(Math.max(config.count ?? 6, 1), 6);
+  let _items   = config.items   ?? [];
+  let _onGlobal = config.onItemClick ?? null;
+  let _C       = THEMES[config.theme] ?? THEMES.dark;
+
+  const _selected = new Set(
+    _items.map((it, i) => it.active ? i : -1).filter(i => i >= 0)
+  );
+
+  const svg = _el('svg');
+  svg.style.display = 'block';
+  root.appendChild(svg);
+
+  const _itemRefs = [];
+  let _satG = null;
+
+  function _render() {
+    svg.innerHTML = '';
+    _itemRefs.length = 0;
+    _satG = null;
+
+    const vb = _VIEWBOXES[_count];
+    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    svg.style.width  = _size + 'px';
+    svg.style.height = Math.round(_size * vb.aspect) + 'px';
+
+    /* Satellites */
+    const satG = _el('g');
+    _satG = satG;
+
+    _FILL.slice(0, _count).forEach((side, i) => {
+      const itemCfg  = _items[i] ?? {};
+      const selected = _selected.has(i);
+      const c        = _itemCentre(side);
+      const verts     = _hex(c.x, c.y, _ITEM_R);
+      const outerV    = _hex(c.x, c.y, _ITEM_R * 1.153);
+      const ringV     = _hex(c.x, c.y, _ITEM_R * 1.30);
+
+      const g = _el('g');
+      g.style.cursor     = 'pointer';
+      g.style.transition = 'opacity 0.2s ease';
+      if (itemCfg.disabled) { g.style.opacity = '0.3'; g.style.pointerEvents = 'none'; }
+
+      /* Selection ring only — no glow */
+      const ringEl = _el('polygon', {
+        points:          _pts(ringV),
+        fill:            'none',
+        stroke:          _C.selRing,
+        'stroke-width':  '8',
+        'stroke-opacity': selected ? '1' : '0',
+        style:           'transition: stroke-opacity 0.3s ease',
+      });
+
+      /* Outer border ring */
+      g.appendChild(_el('polygon', {
+        points:         _pts(outerV),
+        fill:           'none',
+        stroke:         _C.itemStroke,
+        'stroke-width': '0.75',
+      }));
+
+      /* Face */
+      const faceEl = _el('polygon', {
+        points:         _pts(verts),
+        fill:           _C.itemFill,
+        stroke:         _C.itemStroke,
+        'stroke-width': '3',
+      });
+
+      /* Hit area */
+      const hitEl = _el('polygon', { points: _pts(verts), fill: 'transparent' });
+
+      hitEl.addEventListener('click', e => {
+        if (itemCfg.disabled) return;
+        const wasSelected = _selected.has(i);
+
+        _selected.clear();
+        _itemRefs.forEach(ref => ref.ringEl.setAttribute('stroke-opacity', '0'));
+
+        if (!wasSelected) {
+          _selected.add(i);
+          ringEl.setAttribute('stroke-opacity', '1');
+        }
+
+        Array.from(satG.children).forEach((s, si) => {
+          s.style.opacity = _selected.size === 0 || _selected.has(si) ? '1' : _C.dimOpacity;
+        });
+
+        if (itemCfg.onClick) itemCfg.onClick(itemCfg, e);
+        if (_onGlobal)       _onGlobal(itemCfg, e);
+        if (itemCfg.href)    window.location.href = itemCfg.href;
+      });
+
+      g.appendChild(ringEl);
+      g.appendChild(faceEl);
+      g.appendChild(hitEl);
+      satG.appendChild(g);
+      _itemRefs.push({ ringEl, item: itemCfg, index: i });
+    });
+
+    svg.appendChild(satG);
+
+    /* Hub */
+    const hubG = _el('g');
+    hubG.appendChild(_el('polygon', {
+      points: _pts(_hex(0, 0, _MENU_R * 1.09)),
+      fill: 'none', stroke: _C.hubStroke, 'stroke-width': '0.75',
+    }));
+    hubG.appendChild(_el('polygon', {
+      points: _pts(_hex(0, 0, _MENU_R)),
+      fill: _C.hubFill, stroke: _C.hubStroke, 'stroke-width': '4.5',
+    }));
+    svg.appendChild(hubG);
+  }
+
+  _render();
+
+  return {
+    setSize(px) {
+      _size = px;
+      const vb = _VIEWBOXES[_count];
+      svg.style.width  = _size + 'px';
+      svg.style.height = Math.round(_size * vb.aspect) + 'px';
+    },
+    setCount(n) {
+      _count = Math.min(Math.max(n, 1), 6);
+      _selected.clear();
+      _render();
+    },
+    setTheme(themeName) {
+      _C = THEMES[themeName] ?? THEMES.dark;
+      _render();
+    },
+    setActive(index, active) {
+      const ref = _itemRefs[index];
+      if (!ref) return;
+      if (active) {
+        _selected.add(index);
+        ref.ringEl.setAttribute('stroke-opacity', '1');
+      } else {
+        _selected.delete(index);
+        ref.ringEl.setAttribute('stroke-opacity', '0');
+      }
+      if (_satG) {
+        Array.from(_satG.children).forEach((s, si) => {
+          s.style.opacity = _selected.size === 0 || _selected.has(si) ? '1' : _C.dimOpacity;
+        });
+      }
+    },
+    destroy() { root.removeChild(svg); },
+  };
+}
+
+/* =====================================================================
+   DEMO — Dark & Light side by side with count controls
+   ===================================================================== */
+
+function buildPane(containerId, controlsId, theme) {
+  let currentGrid = null;
+  let currentCount = 6;
+
+  function rebuild(n) {
+    currentCount = n;
+    document.getElementById(containerId).innerHTML = '';
+    currentGrid = createHexGrid('#' + containerId, {
+      size: 340, count: n, theme,
+      items: Array.from({ length: n }, (_, i) => ({ id: `item${i}` })),
+    });
+
+    document.querySelectorAll(`#${controlsId} .count-btn`).forEach(b =>
+      b.classList.toggle('active', parseInt(b.dataset.n) === n)
+    );
+  }
+
+  const controls = document.getElementById(controlsId);
+  for (let i = 1; i <= 6; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'count-btn' + (i === 6 ? ' active' : '');
+    btn.dataset.n = i;
+    btn.textContent = i;
+    btn.addEventListener('click', () => rebuild(i));
+    controls.appendChild(btn);
+  }
+
+  rebuild(6);
+}
+
+buildPane('darkDemo',  'darkControls',  'dark');
+buildPane('lightDemo', 'lightControls', 'light');
+</script>
+</body>
+</html>

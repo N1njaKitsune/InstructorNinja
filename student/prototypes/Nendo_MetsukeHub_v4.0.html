@@ -226,37 +226,85 @@ canvas.particles { position: absolute; inset: 0; z-index: 5; pointer-events: non
   letter-spacing: 0.12em; color: rgba(245,240,232,0.15); z-index: 90;
 }
 
-/* ── DEV MODE ────────────────────────────────────────────────────────────────
-   Activate by opening any screen with ?dev in the URL, e.g.
-     StudentProfile_v4.1.html?dev
-   Dev mode persists across all screens for the tab session.
-   In demo mode (default): frame fills the viewport, dev controls hidden.
-──────────────────────────────────────────────────────────────────────────── */
+/* ═══ Production (non-dev) ═══ */
 html:not(.dev-mode) .device-toggle,
-html:not(.dev-mode) .switcher-bar { display: none !important; }
+html:not(.dev-mode) .switcher-bar,
+html:not(.dev-mode) .version-label { display: none !important; }
 
-html:not(.dev-mode) .frame {
-  width:  100vw !important;
-  height: 100vh !important;
-  border-radius: 0 !important;
-  border: none !important;
-  max-width: none !important;
-  max-height: none !important;
+/* ── Mobile (actual device): full-screen ── */
+@media (max-width: 899px) {
+  html:not(.dev-mode) .frame {
+    width:  100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    border: none !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+  html:not(.dev-mode) body {
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+    height: 100vh !important;
+    min-height: 100vh !important;
+  }
 }
-html:not(.dev-mode) body {
-  padding: 0 !important;
-  align-items: flex-start !important;
-  justify-content: flex-start !important;
-  min-height: 100vh !important;
+
+/* ── Desktop: iPhone casing ── */
+@media (min-width: 900px) {
+  html:not(.dev-mode) body {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    min-height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    background: #06060C !important;
+  }
+  html:not(.dev-mode) .frame {
+    width:  844px !important;
+    height: 390px !important;
+    border-radius: 32px !important;
+    border: none !important;
+    max-width: none !important;
+    max-height: none !important;
+    overflow: hidden !important;
+    flex-shrink: 0;
+    box-shadow:
+      0 0 0 4px #111113,
+      0 0 0 7px #1c1c1e,
+      0 0 0 8.5px rgba(255,255,255,0.04),
+      0 0 0 9px #0a0a0c,
+      0 20px 60px rgba(0,0,0,0.55),
+      0 6px 20px rgba(0,0,0,0.35);
+  }
 }
+
 /* ─────────────────────────────────────────────────────────────────────────── */
 </style>
+<script>
+/* ═══ PWA Cold-Start Redirect ═══
+   iOS resumes the last-visited page in standalone PWAs.
+   On a fresh launch (no session flag), redirect to Student Profile. */
+(function(){
+  var isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  if (isStandalone && !sessionStorage.getItem('sn_active')) {
+    sessionStorage.setItem('sn_active','1');
+    window.location.replace('StudentProfile_v4.1.html');
+    return;
+  }
+  sessionStorage.setItem('sn_active','1');
+})();
+</script>
 <script>
 /* DEV MODE — StudentNinja · set class on <html> before first paint */
 (function () {
   var isDev = new URLSearchParams(location.search).has('dev');
-  if (isDev) sessionStorage.setItem('ninja_dev', '1');
-  if (isDev || sessionStorage.getItem('ninja_dev') === '1') {
+  if (isDev) {
     document.documentElement.classList.add('dev-mode');
   }
 }());

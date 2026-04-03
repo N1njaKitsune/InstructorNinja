@@ -45,8 +45,8 @@ These are available to this department in addition to the shared tools (`docx`, 
 
 | Output | Location |
 |--------|----------|
-| HTML prototypes | `student/prototypes/` and `student/prototypes/` |
-| UI spec documents | `student/UI-Specs/` and `student/ui-specs/` |
+| HTML prototypes | `student/prototypes/`, `parent/prototypes/`, `instructor/prototypes/` |
+| UI spec documents | `student/ui-specs/`, `parent/ui-specs/`, `instructor/ui-specs/` |
 | Design review decks | Created per-session as needed |
 
 ---

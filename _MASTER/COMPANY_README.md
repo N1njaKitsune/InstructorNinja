@@ -61,18 +61,27 @@ These will be stood up as the business grows. They are listed here for planning 
 
 ```
 Ninja App/
-├── _MASTER/                ← You are here. Permanent structure.
-│   ├── README.md            ← This file. Company overview.
+├── _MASTER/                ← You are here. Permanent structure + source of truth.
+│   ├── COMPANY_README.md    ← This file. Company overview.
+│   ├── CLAUDE.md            ← Operating rules, sync protocol
+│   ├── SESSION_PROMPT.md    ← New session onboarding
+│   ├── SYNC_PROMPT.md       ← Start-of-session sync (reads subfolder status)
+│   ├── ARCHITECTURE.md      ← High-level project architecture
+│   ├── STATUS.md            ← Master-level infrastructure status only
+│   ├── WORKFLOW.md          ← Master-level infrastructure tasks only
+│   ├── NinjaLearning_WorkingDoc_v2.0.md   ← Stage 1 working doc
+│   ├── NinjaLearning_Nendo_WorkingDoc_v1.1.md  ← Stage 2 working doc
 │   ├── UI-and-Prototypes/
 │   ├── Creative-Design-and-Ergonomics/
 │   ├── Backend-and-Deployment/
 │   └── Infrastructure-and-Security/
 │
-├── _MASTER/           ← Shared source of truth (CLAUDE.md, Working Docs)
 ├── _REPOS/                  ← Local clones of GitHub repos
-├── _SHARED/archive/                ← Superseded document versions
-├── student/     ← Phase work: prototypes, specs, deliverables
-└── student/     ← Phase work: Nendō prototypes and content
+├── _SHARED/                 ← Cross-section: design, infrastructure, integration, archive
+├── student/                 ← Student section (Nendō, Profile, Training, Techniques, Achievements)
+│                              Each section has: CLAUDE.md, STATUS.md, WORKFLOW.md, HANDOFF.md
+├── parent/                  ← Parent section (Family Portal, progress visibility)
+└── instructor/              ← Instructor section (Class management, grading, admin)
 ```
 
 Departments are permanent. Stage folders are temporary and will evolve as phases complete. The `_MASTER/CLAUDE.md` file remains the operational contract for the dual-Claude workflow — this company structure does not replace it, it sits alongside it.
@@ -89,4 +98,4 @@ All non-negotiable rules from `_MASTER/CLAUDE.md` apply across every department.
 
 ---
 
-*Ninja Learning — Company Structure — March 2026*
+*Ninja Learning — Company Structure — April 2026*

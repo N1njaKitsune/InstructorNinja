@@ -1,7 +1,7 @@
 # InstructorNinja — Architecture Map
-**Last updated:** 2026-03-30
+**Last updated:** 2026-03-31
 **Stage:** Stage 1 — Advanced Prototype
-**Version:** v4.1
+**Version:** v4.4
 
 ---
 
@@ -15,7 +15,10 @@ This document is the full inventory of the InstructorNinja section — what has 
 
 | File | Type | Status | Notes |
 |------|------|--------|-------|
-| `prototypes/NinjaLearning_InstructorApp_v4.1.html` | Prototype | ✅ Built | Current primary prototype — grading flow v2.0 |
+| `prototypes/NinjaLearning_InstructorApp_v4.4.html` | Prototype | ✅ Built | Current primary prototype — Admin tab added |
+| `prototypes/NinjaLearning_InstructorApp_v4.3.html` | Prototype | ✅ Built | Class management + context-aware nav — superseded by v4.4 |
+| `prototypes/NinjaLearning_InstructorApp_v4.2.html` | Prototype | ✅ Built | Student Manager — superseded by v4.3 |
+| `prototypes/NinjaLearning_InstructorApp_v4.1.html` | Prototype | ✅ Built | Grading flow v2.0 — superseded by v4.2 |
 | `prototypes/NinjaLearning_InstructorApp_v4.0.html` | Prototype | ✅ Built | Previous version — superseded by v4.1 |
 | `prototypes/NinjaLearning_Instructor.html` | Prototype | ✅ Built | Demo/repo version |
 | `ui-specs/NinjaLearning_InstructorApp_UISpec_v1.0.docx` | Spec | ✅ Built | UI spec v1.0 |
@@ -79,6 +82,8 @@ The core class management and grading area. Contains multiple nested sub-views.
 |---------|--------|-------|
 | Class header (name, mat, time, instructor) | ✅ Built | |
 | Student stats (present, capacity, attendance %) | ✅ Built | |
+| Enrolled student roster (tier-grouped, tap-through to Student Manager) | ✅ Built | Added in v4.3 |
+| Session history section | ✅ Built | Added in v4.3 |
 | Open register action | ✅ Built | |
 | Start grading action | ✅ Built | |
 
@@ -134,7 +139,7 @@ Whole-school student directory.
 | Search by name | ✅ Built | |
 | Sort: A–Z / Class / Belt / Age | ✅ Built | |
 | Student count display | ✅ Built | |
-| Individual student profile tap-through | ❌ Not built | Directory is a flat list — no full profile view yet |
+| Individual student profile tap-through | ✅ Built | Added in v4.2 — taps through to Student Manager |
 
 ---
 
@@ -151,6 +156,22 @@ Business-level data dashboard.
 | Retention metrics | ❌ Not built | Listed in ARCHITECTURE.md — not yet started |
 | Full business dashboard data design | 🔄 In progress | Data design needed — in WORKFLOW.md backlog |
 
+> **v4.4 Administration tab (2026-03-31):**
+> - Admin tab added as 5th nav item
+> - Schedule view: weekly timetable by day, capacity rings, instructor assignment, tap-through to class detail
+> - Billing view: collection rate, term target, payment breakdown by method, alerts for overdue/failed payments
+
+> **v4.3 Class management (2026-03-31):**
+> - Class detail: enrolled student roster (tier-grouped, tap-through to Student Manager with context-aware back nav)
+> - Class detail: session history section
+> - openSP() now context-aware — knows whether student was accessed from class or directory
+
+> **v4.2 Student Manager (2026-03-31):**
+> - Full-screen student profile tap-through from Directory
+> - Profile tab: belt rank, skills summary, attendance percentage, medical notes, parent contacts
+> - History tab: belt progression timeline + grading awards sourced from receipts
+> - Notes tab: timestamped instructor log entries with add-note flow
+
 > **v4.1 Grading flow changes (2026-03-30):**
 > - Register bulk actions: All present / All absent / Clear all
 > - Running Late indicator (parent app feed, display-only) with amber row tint and badge
@@ -166,29 +187,29 @@ Business-level data dashboard.
 
 ---
 
-### ❌ Student Manager (not yet started)
-Full individual student profile area.
+### ✅ Student Manager (`scr-student-manager`) — Built in v4.2
+Full individual student profile area. Accessible via tap-through from Directory or Class Detail enrolled roster.
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Student profile view (personal details, contact, notes) | ❌ Not built | |
-| Belt/stripe progression history | ❌ Not built | |
-| Attendance history | ❌ Not built | |
-| Instructor notes | ❌ Not built | |
-| Parent contact details | ❌ Not built | |
+| Profile tab (belt, skills, attendance, medical, contacts) | ✅ Built | Added in v4.2 |
+| History tab (belt progression timeline + grading awards) | ✅ Built | Added in v4.2 |
+| Notes tab (timestamped instructor log entries + add-note flow) | ✅ Built | Added in v4.2 |
+| Context-aware back nav (class vs directory origin) | ✅ Built | Added in v4.3 |
+| Parent contact details | ✅ Built | Within Profile tab |
 | Flag / alert system (per student) | ❌ Not built | |
 
 ---
 
-### ❌ Administration Section (not yet started)
-Scheduling, enrolment, and billing overview for Ninja School Ltd staff.
+### ✅ Administration Section (`scr-admin`) — Built in v4.4
+Admin tab (5th nav item) — scheduling overview and billing summary for Ninja School Ltd staff.
 
 | Feature | Status | Notes |
 |---------|--------|-------|
-| Class scheduling screens | ❌ Not built | In WORKFLOW.md backlog |
-| Enrolment management flow | ❌ Not built | In WORKFLOW.md backlog |
+| Weekly timetable (schedule view by day) | ✅ Built | Added in v4.4 — capacity rings, instructor, tap-through to class detail |
+| Billing summary (collection rate, term target, payment breakdown, alerts) | ✅ Built | Added in v4.4 |
+| Enrolment management flow | ❌ Not built | Next up per WORKFLOW.md |
 | New student onboarding | ❌ Not built | |
-| Billing overview | ❌ Not built | Listed in ARCHITECTURE.md |
 | Term / season management | ❌ Not built | |
 | Instructor assignment | ❌ Not built | |
 | Waitlist management | ❌ Not built | |
@@ -213,21 +234,20 @@ These are items that connect the instructor section to other parts of the wider 
 | Category | Built | In Progress | Not Started |
 |----------|-------|-------------|-------------|
 | Home | 7 | 0 | 0 |
-| Classes | 23 | 1 | 0 |
-| Directory | 4 | 0 | 1 |
+| Classes | 25 | 1 | 0 |
+| Directory | 5 | 0 | 0 |
 | Overview / Business | 4 | 1 | 2 |
-| Student Manager | 0 | 0 | 6 |
-| Administration | 0 | 0 | 7 |
+| Student Manager | 5 | 0 | 1 |
+| Administration | 2 | 0 | 5 |
 | Cross-section Integration | 0 | 1 | 3 |
-| **Total** | **38** | **3** | **19** |
+| **Total** | **48** | **3** | **11** |
 
 ---
 
 ## Priority Order (suggested)
 
-1. **Grading flow v2.0** — refinement of existing work (in progress, highest impact)
+1. **Enrolment management flow** — next Administration item per WORKFLOW.md
 2. **Grading → Student Profile push spec** — needed to unblock cross-section integration
-3. **Student profile tap-through from Directory** — low effort, high value for usability
-4. **Full Student Manager** — individual profiles, history, notes
-5. **Business dashboard data design** — flesh out Overview with real metrics
-6. **Administration section** — scheduling, enrolment, billing
+3. **Business dashboard data design** — flesh out Overview with revenue + retention metrics
+4. **Per-student flag / alert system** — last remaining Student Manager gap
+5. **Remaining Administration** — term management, instructor assignment, waitlist

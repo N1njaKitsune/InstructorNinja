@@ -98,7 +98,7 @@ Shin Kage Belt   Mushin Belt
 | Tier | Belts | Rule |
 |------|-------|------|
 | Beginner (Shokyu) | Shiro → Kazan | Any missing full stripe can be awarded |
-| Intermediate (Chukyu) | Honoo → Shin Mori | All 4 first-halves must be earned before full stripes unlock |
+| Intermediate (Chokyu) | Honoo → Shin Mori | All 4 first-halves must be earned before full stripes unlock |
 | Advanced (Jokyu) | Kage → Mushin | One stripe awarded per session (next incomplete only) |
 
 ---

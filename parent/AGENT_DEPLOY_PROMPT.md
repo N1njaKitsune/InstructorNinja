@@ -14,7 +14,7 @@ You have full access to the workspace folder. All work happens in the `parent/` 
 ## PROJECT CONTEXT
 
 **What exists:**
-- `parent/prototypes/NinjaLearning_ParentApp_v1.3.html` — the current Stage 1 prototype (6 screens, all hardcoded UI, no backend)
+- `parent/prototypes/NinjaLearning_ParentApp_v1.5.html` — the current Stage 1 prototype (Phase A complete, Phase B partial — Student Profile, attendance duplicate guard, make-up date picker)
 - `parent/prototypes/NinjaLearning_Parent.html` — demo/public repo version
 - `parent/ui-specs/NinjaLearning_FamilyProfile_UISpec_v1.0.docx` — detailed UI spec
 - `parent/ARCHITECTURE_MAP.md` — the master gap register and source of truth (plain text)
@@ -98,21 +98,21 @@ Each section must pass these checks before being marked ✅:
 
 ## BUILD ORDER (follow this sequence unless user directs otherwise)
 
-### Phase A — Foundation
-- [ ] **A1** — Define and implement empty states for all 6 existing screens `C4`
-- [ ] **A2** — Define and implement error states for all forms and actions `C5`
-- [ ] **A3** — Define and implement loading/skeleton states `C6`
-- [ ] **A4** — Add passcode lockout (N attempts → locked state with countdown) `C10`
+### Phase A — Foundation ✅ COMPLETE (v1.4, 2026-03-31)
+- [x] **A1** — Define and implement empty states for all 6 existing screens `C4`
+- [x] **A2** — Define and implement error states for all forms and actions `C5`
+- [x] **A3** — Define and implement loading/skeleton states `C6`
+- [x] **A4** — Add passcode lockout (N attempts → locked state with countdown) `C10`
 
-### Phase B — Core completeness
-- [ ] **B1** — Build Student Profile screen (all 8 components) `C3`
+### Phase B — Core completeness (IN PROGRESS)
+- [x] **B1** — Build Student Profile screen (all 8 components) `C3` ✅ v1.5
 - [ ] **B2** — Build Edit Guardian Details form (all fields + validation) `H1`
 - [ ] **B3** — Build Change Passcode flow `H2`
 - [ ] **B4** — Build Edit Student Details + Re-activate flow `H3, H4`
 - [ ] **B5** — Build Transfer pending/approved/rejected states `H5`
 - [ ] **B6** — Build Settings screen (all 7 components) `H13`
-- [ ] **B7** — Add Make-up date picker `C8`
-- [ ] **B8** — Add Attendance "already reported" guard `C7`
+- [x] **B7** — Add Make-up date picker `C8` ✅ v1.5
+- [x] **B8** — Add Attendance "already reported" guard `C7` ✅ v1.5
 
 ### Phase C — Live integration prep
 - [ ] **C1** — Add auth flow scaffolding (session token pattern, auto-lock) `C1, C2`
@@ -154,7 +154,7 @@ When deploying agents, use this pattern for each unit of work:
 ```
 AGENT 1 (Builder):
   - Read parent/ARCHITECTURE_MAP.md
-  - Read parent/prototypes/NinjaLearning_ParentApp_v1.3.html
+  - Read parent/prototypes/NinjaLearning_ParentApp_v1.5.html
   - Build [specific gap ID and description]
   - Save output to parent/prototypes/NinjaLearning_ParentApp_v[X.X].html
   - Design constraints: #1A1A2E dark hero, #F7F7FA light, #C9A84C gold, Inter + Cinzel fonts, mobile-first
@@ -180,7 +180,7 @@ Run Agent 1 and Agent 2 in parallel when they can operate independently (e.g. Ag
 
 ## IMPORTANT RULES
 
-1. **Never modify the original `NinjaLearning_ParentApp_v1.3.html`** — always create a new versioned file for significant changes
+1. **Never modify the original `NinjaLearning_ParentApp_v1.5.html`** — always create a new versioned file for significant changes
 2. **Always update both ARCHITECTURE_MAP.md AND ARCHITECTURE_MAP.html** when closing a gap — they must stay in sync
 3. **No git operations** of any kind
 4. **Hardcoded data is acceptable** for prototype stages — just comment it clearly with `<!-- HARDCODED: replace with [entity] API call -->`
@@ -194,11 +194,11 @@ Run Agent 1 and Agent 2 in parallel when they can operate independently (e.g. Ag
 
 Read the files, then ask the user:
 
-> "I've reviewed the architecture map. You're at **Stage 1 → Integration-Ready**. The next items in the build order are:
-> - **A1** — Empty states for all 6 screens (Critical, C4)
-> - **A2** — Error states for all forms (Critical, C5)
-> - **A3** — Loading/skeleton states (Critical, C6)
+> "I've reviewed the architecture map. You're at **Phase B — Core Completeness** (Phase A is complete). The next items in the build order are:
+> - **B2** — Edit Guardian Details form (H1)
+> - **B3** — Change Passcode flow (H2)
+> - **B4** — Edit Student Details + Re-activate flow (H3, H4)
 >
-> Would you like to start with Phase A foundation work, or jump to a specific screen or gap?"
+> Would you like to continue with Phase B, or jump to a specific screen or gap?"
 
 Then wait for direction before deploying any agents.

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid v3.0 — Scaling Demo</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #05050A;
+  min-height: 100vh;
+  font-family: monospace;
+  color: rgba(245,240,232,0.5);
+  padding: 48px 32px;
+}
+
+h1 {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.25);
+  margin-bottom: 40px;
+}
+
+.size-demo {
+  display: flex;
+  align-items: flex-end;
+  gap: 60px;
+  flex-wrap: wrap;
+  margin-bottom: 72px;
+}
+.demo-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
+.demo-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: rgba(245,240,232,0.2);
+}
+
+.count-section {
+  border-top: 1px solid rgba(245,240,232,0.06);
+  padding-top: 48px;
+}
+.count-section h2 {
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(245,240,232,0.2);
+  margin-bottom: 32px;
+}
+.count-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 40px;
+}
+.count-btn {
+  font-family: monospace;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  padding: 8px 16px;
+  border: 1px solid rgba(245,240,232,0.1);
+  background: transparent;
+  color: rgba(245,240,232,0.35);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.count-btn:hover  { border-color: rgba(245,240,232,0.25); color: rgba(245,240,232,0.7); }
+.count-btn.active { border-color: rgba(245,240,232,0.4);  color: rgba(245,240,232,0.9); background: rgba(245,240,232,0.04); }
+
+#countDemo { display: flex; align-items: center; }
+</style>
+</head>
+<body>
+
+<h1>HexGrid v3.0 — Component Demo</h1>
+
+<div class="size-demo">
+  <div class="demo-cell"><div id="size80"></div><div class="demo-label">80px</div></div>
+  <div class="demo-cell"><div id="size160"></div><div class="demo-label">160px</div></div>
+  <div class="demo-cell"><div id="size280"></div><div class="demo-label">280px</div></div>
+  <div class="demo-cell"><div id="size420"></div><div class="demo-label">420px</div></div>
+</div>
+
+<div class="count-section">
+  <h2>Item count — same component, same size</h2>
+  <div class="count-controls" id="countControls"></div>
+  <div id="countDemo"></div>
+</div>
+
+<script>
+/* =====================================================================
+   HexGrid — hex-grid.js inlined (file:// compatible)
+   ===================================================================== */
+
+const _MENU_R = 108;
+const _ITEM_R = _MENU_R * 0.59;
+const _GAP    = 51;   // (108 + 63.72) × √3/2 + 51 ≈ 200px centre distance
+const _S32    = Math.sqrt(3) / 2;
+const _DEG         = Math.PI / 180;
+const _FILL        = [0, 1, 2, 3, 4, 5];
+
+function _hex(cx, cy, R) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (-90 + 60 * i) * _DEG;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+}
+function _normal(s) {
+  const a = (-60 + 60 * s) * _DEG;
+  return { dx: Math.cos(a), dy: Math.sin(a) };
+}
+function _itemCentre(side) {
+  const d = (_MENU_R + _ITEM_R) * _S32 + _GAP;
+  const n = _normal(side);
+  return { x: n.dx * d, y: n.dy * d };
+}
+function _pts(verts) {
+  return verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' ');
+}
+
+const _VIEWBOXES = {};
+(function () {
+  const PAD = 40;
+  for (let count = 1; count <= 6; count++) {
+    const all = [..._hex(0, 0, _MENU_R)];
+    _FILL.slice(0, count).forEach(side => {
+      const c = _itemCentre(side);
+      _hex(c.x, c.y, _ITEM_R * 1.30).forEach(v => all.push(v));
+    });
+    const minX = Math.min(...all.map(v => v.x)) - PAD;
+    const minY = Math.min(...all.map(v => v.y)) - PAD;
+    const maxX = Math.max(...all.map(v => v.x)) + PAD;
+    const maxY = Math.max(...all.map(v => v.y)) + PAD;
+    _VIEWBOXES[count] = {
+      x: minX, y: minY, w: maxX - minX, h: maxY - minY,
+      aspect: (maxY - minY) / (maxX - minX),
+    };
+  }
+})();
+
+const _C = {
+  hubFill:    '#0D0D16',
+  hubStroke:  'rgba(245,240,232,0.15)',
+  itemFill:   '#0D0D16',
+  itemStroke: 'rgba(245,240,232,0.11)',
+  itemHover:  '#13131E',
+  selRing:    '#8B1A1A',
+  selGlow:    'rgba(139,26,26,0.38)',
+};
+
+const _NS = 'http://www.w3.org/2000/svg';
+function _el(tag, attrs) {
+  const e = document.createElementNS(_NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+
+function createHexGrid(container, config = {}) {
+  const root = typeof container === 'string'
+    ? document.querySelector(container) : container;
+  if (!root) throw new Error('HexGrid: container not found');
+
+  let _size     = config.size        ?? 400;
+  let _count    = Math.min(Math.max(config.count ?? 6, 1), 6);
+  let _items    = config.items       ?? [];
+  let _onGlobal = config.onItemClick ?? null;
+
+  const _selected = new Set(
+    _items.map((it, i) => it.active ? i : -1).filter(i => i >= 0)
+  );
+
+  const svg = _el('svg');
+  svg.style.display = 'block';
+  root.appendChild(svg);
+
+  const _itemRefs = [];
+
+  function _render() {
+    svg.innerHTML = '';
+    _itemRefs.length = 0;
+
+    /* Glow filter */
+    const defs = _el('defs');
+    const uid  = 'g' + Math.random().toString(36).slice(2, 6);
+    const f    = _el('filter', { id: uid, x: '-50%', y: '-50%', width: '200%', height: '200%' });
+    f.appendChild(_el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '7' }));
+    defs.appendChild(f);
+    svg.appendChild(defs);
+
+    const vb = _VIEWBOXES[_count];
+    svg.setAttribute('viewBox', `${vb.x} ${vb.y} ${vb.w} ${vb.h}`);
+    svg.style.width  = _size + 'px';
+    svg.style.height = Math.round(_size * vb.aspect) + 'px';
+
+    /* Satellites */
+    const satG = _el('g');
+
+    _FILL.slice(0, _count).forEach((side, i) => {
+      const itemCfg  = _items[i] ?? {};
+      const selected = _selected.has(i);
+      const c        = _itemCentre(side);
+      const verts    = _hex(c.x, c.y, _ITEM_R);
+      const ringV    = _hex(c.x, c.y, _ITEM_R * 1.30);
+      const glowV    = _hex(c.x, c.y, _ITEM_R * 1.28);
+
+      const g = _el('g');
+      g.style.cursor     = 'pointer';
+      g.style.transition = 'opacity 0.2s ease';
+      if (itemCfg.disabled) { g.style.opacity = '0.3'; g.style.pointerEvents = 'none'; }
+
+      const glowEl = _el('polygon', {
+        points: _pts(glowV), fill: _C.selGlow,
+        filter: `url(#${uid})`, opacity: selected ? '1' : '0',
+        style: 'transition:opacity 0.3s ease',
+      });
+      const ringEl = _el('polygon', {
+        points: _pts(ringV), fill: 'none',
+        stroke: _C.selRing, 'stroke-width': '2.5',
+        'stroke-opacity': selected ? '1' : '0',
+        style: 'transition:stroke-opacity 0.3s ease',
+      });
+      const faceEl = _el('polygon', {
+        points: _pts(verts), fill: _C.itemFill,
+        stroke: _C.itemStroke, 'stroke-width': '1',
+      });
+      const hitEl = _el('polygon', { points: _pts(verts), fill: 'transparent' });
+
+      hitEl.addEventListener('click', e => {
+        if (itemCfg.disabled) return;
+        const wasSelected = _selected.has(i);
+
+        /* Clear all selections first */
+        _selected.clear();
+        _itemRefs.forEach(ref => {
+          ref.ringEl.setAttribute('stroke-opacity', '0');
+          ref.glowEl.setAttribute('opacity', '0');
+        });
+
+        /* Select this item unless it was already selected (toggle off) */
+        if (!wasSelected) {
+          _selected.add(i);
+          ringEl.setAttribute('stroke-opacity', '1');
+          glowEl.setAttribute('opacity', '1');
+        }
+
+        /* Dim all non-selected; restore all if nothing selected */
+        Array.from(satG.children).forEach((s, si) => {
+          s.style.opacity = _selected.size === 0 || _selected.has(si) ? '1' : '0.35';
+        });
+
+        if (itemCfg.onClick) itemCfg.onClick(itemCfg, e);
+        if (_onGlobal)       _onGlobal(itemCfg, e);
+        if (itemCfg.href)    window.location.href = itemCfg.href;
+      });
+
+      g.appendChild(glowEl);
+      g.appendChild(ringEl);
+      g.appendChild(faceEl);
+      g.appendChild(hitEl);
+      satG.appendChild(g);
+      _itemRefs.push({ ringEl, glowEl, index: i });
+    });
+
+    svg.appendChild(satG);
+
+    /* Hub */
+    const hubG = _el('g');
+    hubG.appendChild(_el('polygon', {
+      points: _pts(_hex(0, 0, _MENU_R * 1.03)),
+      fill: 'none', stroke: _C.hubStroke, 'stroke-width': '0.75',
+    }));
+    hubG.appendChild(_el('polygon', {
+      points: _pts(_hex(0, 0, _MENU_R)),
+      fill: _C.hubFill, stroke: _C.hubStroke, 'stroke-width': '1.5',
+    }));
+    svg.appendChild(hubG);
+  }
+
+  _render();
+
+  return {
+    setSize(px) {
+      _size = px;
+      const vb = _VIEWBOXES[_count];
+      svg.style.width  = _size + 'px';
+      svg.style.height = Math.round(_size * vb.aspect) + 'px';
+    },
+    setCount(n) {
+      _count = Math.min(Math.max(n, 1), 6);
+      _selected.clear();
+      _render();
+    },
+    setActive(index, active) {
+      const ref = _itemRefs[index];
+      if (!ref) return;
+      if (active) {
+        _selected.add(index);
+        ref.ringEl.setAttribute('stroke-opacity', '1');
+        ref.glowEl.setAttribute('opacity', '1');
+      } else {
+        _selected.delete(index);
+        ref.ringEl.setAttribute('stroke-opacity', '0');
+        ref.glowEl.setAttribute('opacity', '0');
+      }
+    },
+    destroy() { root.removeChild(svg); },
+  };
+}
+
+/* =====================================================================
+   DEMO
+   ===================================================================== */
+const baseCfg = {
+  count: 6,
+  items: Array.from({ length: 6 }, (_, i) => ({ id: `item${i}` })),
+};
+
+createHexGrid('#size80',  { ...baseCfg, size: 80  });
+createHexGrid('#size160', { ...baseCfg, size: 160 });
+createHexGrid('#size280', { ...baseCfg, size: 280 });
+createHexGrid('#size420', { ...baseCfg, size: 420 });
+
+/* Count demo */
+function buildCountDemo(n) {
+  document.getElementById('countDemo').innerHTML = '';
+  createHexGrid('#countDemo', {
+    size: 380, count: n,
+    items: Array.from({ length: n }, (_, i) => ({ id: `item${i}` })),
+  });
+  document.querySelectorAll('.count-btn').forEach(b =>
+    b.classList.toggle('active', parseInt(b.dataset.n) === n)
+  );
+}
+
+const controls = document.getElementById('countControls');
+for (let i = 1; i <= 6; i++) {
+  const btn = document.createElement('button');
+  btn.className = 'count-btn' + (i === 6 ? ' active' : '');
+  btn.dataset.n = i;
+  btn.textContent = i + ' item' + (i === 1 ? '' : 's');
+  btn.addEventListener('click', () => buildCountDemo(i));
+  controls.appendChild(btn);
+}
+
+buildCountDemo(6);
+</script>
+</body>
+</html>

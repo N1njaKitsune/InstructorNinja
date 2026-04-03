@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid Component — Ninja Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   HexGrid Component v1.0 — Ninja Learning
+   ============================================================
+   A configurable hexagonal button grid (1–6 items + centre hub).
+
+   PRODUCTION DEPLOYMENT NOTES:
+   ─────────────────────────────────────────────────────────────
+   For the full release app this component should be refactored to:
+   • A Web Component (Custom Element) OR React/Vue component
+   • CSS extracted into the shared design-token stylesheet
+   • Config passed via props / attributes / JSON endpoint
+   • SVG hexagons for crisp rendering at all DPIs (clip-path is
+     acceptable for prototype but SVG <polygon> is more reliable
+     cross-browser, especially older Android WebViews)
+   • Touch event handling with 300ms tap-delay mitigation
+   • ARIA roles: role="navigation", role="button", aria-label
+   ============================================================ */
+
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+:root {
+  /* ── Ninja Design Tokens ── */
+  --bg-deep:        #0A0A12;
+  --bg-frame:       #050508;
+  --text-primary:   rgba(245,240,232,0.92);
+  --text-dim:       rgba(245,240,232,0.55);
+  --border-subtle:  rgba(245,240,232,0.10);
+  --border-medium:  rgba(245,240,232,0.20);
+  --accent-red:     #8B2020;
+  --accent-red-glow:rgba(139,32,32,0.45);
+  --glass-bg:       rgba(10,10,18,0.85);
+  --glass-blur:     12px;
+
+  /* ── Hex Dimensions ── */
+  --hex-hub-size:   180px;
+  --hex-item-size:  120px;
+  --hex-orbit:      170px;   /* distance from centre to satellite centres */
+  --hex-border:     3px;
+
+  /* ── Fonts ── */
+  --font-heading:   'Cinzel', serif;
+  --font-body:      'Crimson Pro', serif;
+}
+
+body {
+  background: var(--bg-deep);
+  font-family: var(--font-body);
+  color: var(--text-primary);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+/* ── Page Title ── */
+.page-title {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 18px;
+  letter-spacing: 0.20em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 36px;
+  position: relative;
+}
+.page-title::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 48px;
+  height: 1px;
+  background: var(--border-medium);
+}
+
+/* ════════════════════════════════════════════════════════════
+   HEX GRID CONTAINER
+   ════════════════════════════════════════════════════════════ */
+.hex-grid {
+  position: relative;
+  width: calc(var(--hex-orbit) * 2 + var(--hex-item-size));
+  height: calc(var(--hex-orbit) * 2 + var(--hex-item-size));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HEXAGON BASE SHAPE
+   ════════════════════════════════════════════════════════════ */
+.hex {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Outer shell (border + shadow) */
+.hex-shell {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: var(--border-medium);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Inner face */
+.hex-face {
+  width: calc(100% - var(--hex-border) * 2);
+  height: calc(100% - var(--hex-border) * 2);
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  background: var(--bg-frame);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  transition: background 0.3s ease;
+}
+
+/* ── Active / Selected state (red ring) ── */
+.hex.active .hex-shell {
+  background: var(--accent-red);
+  filter: drop-shadow(0 0 18px var(--accent-red-glow));
+}
+
+/* ── Hover state ── */
+.hex:hover {
+  transform: var(--hover-transform, translateY(-4px) scale(1.06));
+  z-index: 10;
+}
+.hex:hover .hex-shell {
+  background: rgba(245,240,232,0.30);
+}
+.hex.active:hover .hex-shell {
+  background: #A52828;
+  filter: drop-shadow(0 0 24px var(--accent-red-glow));
+}
+
+/* ── Press state ── */
+.hex:active {
+  transform: scale(0.97) !important;
+  transition-duration: 0.1s;
+}
+
+/* ── Label text ── */
+.hex-label {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-align: center;
+  line-height: 1.3;
+  color: var(--text-primary);
+  pointer-events: none;
+}
+
+/* ── Icon slot ── */
+.hex-icon {
+  font-size: 22px;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+/* ════════════════════════════════════════════════════════════
+   HUB (CENTRE HEXAGON)
+   ════════════════════════════════════════════════════════════ */
+.hex.hub {
+  width: var(--hex-hub-size);
+  height: var(--hex-hub-size);
+  z-index: 5;
+  cursor: default;
+  --hover-transform: scale(1.02);
+}
+.hex.hub .hex-face {
+  background: var(--bg-frame);
+}
+.hex.hub .hex-label {
+  font-size: 15px;
+  letter-spacing: 0.12em;
+}
+.hex.hub .hex-icon {
+  font-size: 32px;
+  margin-bottom: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════
+   SATELLITE HEXAGONS
+   ════════════════════════════════════════════════════════════ */
+.hex.satellite {
+  width: var(--hex-item-size);
+  height: var(--hex-item-size);
+}
+
+/* ── Float animation ── */
+@keyframes hexFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.hex.satellite {
+  animation: hexFloat 4s ease-in-out infinite;
+}
+.hex.satellite:nth-child(2) { animation-delay: 0.0s; }
+.hex.satellite:nth-child(3) { animation-delay: 0.7s; }
+.hex.satellite:nth-child(4) { animation-delay: 1.4s; }
+.hex.satellite:nth-child(5) { animation-delay: 2.1s; }
+.hex.satellite:nth-child(6) { animation-delay: 2.8s; }
+.hex.satellite:nth-child(7) { animation-delay: 3.5s; }
+
+/* ── Entrance stagger ── */
+@keyframes hexEnter {
+  0%   { opacity:0; transform: scale(0.5) translateY(20px); }
+  100% { opacity:1; transform: scale(1)   translateY(0); }
+}
+.hex.satellite {
+  opacity: 0;
+  animation: hexEnter 0.5s cubic-bezier(0.34,1.56,0.64,1) forwards,
+             hexFloat 4s ease-in-out infinite;
+}
+.hex.satellite:nth-child(2) { animation-delay: 0.08s, 0.0s; }
+.hex.satellite:nth-child(3) { animation-delay: 0.16s, 0.7s; }
+.hex.satellite:nth-child(4) { animation-delay: 0.24s, 1.4s; }
+.hex.satellite:nth-child(5) { animation-delay: 0.32s, 2.1s; }
+.hex.satellite:nth-child(6) { animation-delay: 0.40s, 2.8s; }
+.hex.satellite:nth-child(7) { animation-delay: 0.48s, 3.5s; }
+
+/* ── Sibling dim on hover ── */
+.hex-grid:has(.satellite:hover) .satellite:not(:hover) {
+  filter: brightness(0.55);
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO CONTROLS  (remove for production)
+   ════════════════════════════════════════════════════════════ */
+.demo-controls {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.demo-controls h3 {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.control-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.control-btn {
+  font-family: var(--font-heading);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  background: rgba(245,240,232,0.06);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  clip-path: polygon(8% 0%, 92% 0%, 100% 50%, 92% 100%, 8% 100%, 0% 50%);
+}
+.control-btn:hover {
+  background: rgba(245,240,232,0.12);
+  border-color: var(--border-medium);
+}
+.control-btn.active {
+  background: rgba(139,32,32,0.25);
+  border-color: var(--accent-red);
+  color: #E8C4C4;
+}
+.count-display {
+  font-family: var(--font-heading);
+  font-size: 24px;
+  letter-spacing: 0.1em;
+  color: var(--text-primary);
+  min-width: 40px;
+  text-align: center;
+}
+
+/* ── Background vignette ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 30%, var(--bg-deep) 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+.page-title, .hex-grid, .demo-controls { position: relative; z-index: 1; }
+</style>
+</head>
+<body>
+
+<div class="page-title">HEADQUARTERS</div>
+
+<div class="hex-grid" id="hexGrid"></div>
+
+<div class="demo-controls">
+  <h3>Configuration Panel</h3>
+  <div class="control-row">
+    <button class="control-btn" onclick="changeCount(-1)">−</button>
+    <span class="count-display" id="countDisplay">6</span>
+    <button class="control-btn" onclick="changeCount(1)">+</button>
+  </div>
+  <div class="control-row" style="margin-top:4px">
+    <button class="control-btn" id="btnToggleActive" onclick="toggleActiveDemo()">Toggle Active States</button>
+  </div>
+</div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   HexGrid Engine v1.0
+   ════════════════════════════════════════════════════════════
+
+   USAGE:
+     const grid = new HexGrid('#hexGrid', {
+       hub:   { label:'Ninja Learning', icon:'🥷' },
+       items: [
+         { id:'slp',  label:'Subject\nLaunch Pad', active:true, href:'/subjects' },
+         { id:'mc',   label:'Minecraft',           active:true, onClick: fn },
+         { id:'fit',  label:'Ninja\nFitness',      active:true },
+         { id:'contact', label:'Contact Us' },
+         { id:'story',   label:'Our Story' },
+         { id:'team',    label:'Meet The\nTeam' },
+       ]
+     });
+
+   CONFIGURATION (per item):
+     id       — unique string identifier
+     label    — display text (use \n for line breaks)
+     icon     — optional emoji / icon string
+     active   — boolean, shows red accent ring (selected state)
+     href     — URL/route to navigate on click
+     onClick  — callback function(item, event)
+     disabled — boolean, dims & disables interaction
+
+   METHODS:
+     grid.setItems(newItems)    — re-render with new array (1–6)
+     grid.setActive(id, bool)   — toggle active state on one hex
+     grid.getConfig()           — returns current config object
+
+   ──────────────────────────────────────────────────────────
+   PRODUCTION NOTES:
+   • Convert to Web Component or framework component
+   • Replace emoji icons with SVG icon system
+   • Add touch-action:manipulation for mobile
+   • Add ARIA: role="navigation" on grid, role="button"
+     + aria-label on each hex, aria-pressed for active
+   • Implement routing integration (React Router / native nav)
+   • Consider IntersectionObserver for scroll-triggered entrance
+   ════════════════════════════════════════════════════════════ */
+
+class HexGrid {
+  constructor(selector, config = {}) {
+    this.container = typeof selector === 'string'
+      ? document.querySelector(selector)
+      : selector;
+
+    this.hub = config.hub || { label: 'Ninja\nLearning', icon: '🥷' };
+    this.items = config.items || [];
+    this.onItemClick = config.onItemClick || null; // global click handler
+
+    this.render();
+  }
+
+  /* ── Orbital position calculator ── */
+  _getPositions(count) {
+    /* Attempt to replicate the organic, slightly staggered
+       layout from the concept art rather than a rigid circle */
+    const layouts = {
+      1: [{ angle: 0,   dist: 1.0, scale: 1.0 }],
+      2: [
+        { angle: -60,  dist: 1.0, scale: 1.0 },
+        { angle: 120,  dist: 1.0, scale: 1.0 },
+      ],
+      3: [
+        { angle: -30,  dist: 1.0, scale: 1.0 },
+        { angle: 90,   dist: 1.0, scale: 1.0 },
+        { angle: 210,  dist: 1.0, scale: 1.0 },
+      ],
+      4: [
+        { angle: -50,  dist: 1.0,  scale: 1.0 },
+        { angle: 20,   dist: 1.05, scale: 1.0 },
+        { angle: 140,  dist: 1.0,  scale: 1.0 },
+        { angle: 220,  dist: 1.05, scale: 0.88 },
+      ],
+      5: [
+        { angle: -65,  dist: 0.98, scale: 0.82 },  /* Contact Us — small top-left */
+        { angle: -20,  dist: 1.08, scale: 1.0  },   /* Subject Launch Pad — top-right */
+        { angle: 50,   dist: 1.10, scale: 1.0  },   /* Minecraft — right */
+        { angle: 140,  dist: 1.05, scale: 1.0  },   /* Ninja Fitness — bottom-right */
+        { angle: 200,  dist: 0.95, scale: 0.82 },   /* Meet The Team — bottom-left */
+      ],
+      6: [
+        { angle: -70,  dist: 0.95, scale: 0.78 },   /* Contact Us */
+        { angle: -22,  dist: 1.10, scale: 1.0  },   /* Subject Launch Pad */
+        { angle: 168,  dist: 0.90, scale: 0.78 },   /* Our Story */
+        { angle: 48,   dist: 1.12, scale: 1.0  },   /* Minecraft */
+        { angle: 210,  dist: 0.98, scale: 0.82 },   /* Meet The Team */
+        { angle: 135,  dist: 1.10, scale: 1.0  },   /* Ninja Fitness */
+      ],
+    };
+    return layouts[count] || layouts[6].slice(0, count);
+  }
+
+  /* ── Build DOM ── */
+  render() {
+    this.container.innerHTML = '';
+    const count = Math.min(Math.max(this.items.length, 0), 6);
+    const positions = this._getPositions(count);
+    const orbit = parseInt(getComputedStyle(document.documentElement)
+                    .getPropertyValue('--hex-orbit')) || 170;
+
+    /* Hub */
+    const hubEl = this._createHex(this.hub, true);
+    this.container.appendChild(hubEl);
+
+    /* Satellites */
+    this.items.forEach((item, i) => {
+      if (i >= 6) return;
+      const pos = positions[i];
+      const rad = (pos.angle * Math.PI) / 180;
+      const dist = orbit * pos.dist;
+      const x = Math.cos(rad) * dist;
+      const y = Math.sin(rad) * dist;
+      const itemSize = parseInt(getComputedStyle(document.documentElement)
+                         .getPropertyValue('--hex-item-size')) || 120;
+      const scaledSize = itemSize * pos.scale;
+
+      const el = this._createHex(item, false);
+      el.style.width  = scaledSize + 'px';
+      el.style.height = scaledSize + 'px';
+      el.style.left   = `calc(50% + ${x}px - ${scaledSize/2}px)`;
+      el.style.top    = `calc(50% + ${y}px - ${scaledSize/2}px)`;
+
+      /* Scale label for smaller hexes */
+      if (pos.scale < 0.9) {
+        const label = el.querySelector('.hex-label');
+        if (label) label.style.fontSize = '11px';
+      }
+
+      this.container.appendChild(el);
+    });
+
+    /* Size container */
+    const totalSize = orbit * 2.4 + 120;
+    this.container.style.width  = totalSize + 'px';
+    this.container.style.height = totalSize + 'px';
+  }
+
+  _createHex(data, isHub) {
+    const el = document.createElement('div');
+    el.className = `hex ${isHub ? 'hub' : 'satellite'}${data.active ? ' active' : ''}${data.disabled ? ' disabled' : ''}`;
+    if (data.id) el.dataset.hexId = data.id;
+
+    el.innerHTML = `
+      <div class="hex-shell">
+        <div class="hex-face">
+          ${data.icon ? `<span class="hex-icon">${data.icon}</span>` : ''}
+          <span class="hex-label">${(data.label || '').replace(/\\n|\n/g, '<br>')}</span>
+        </div>
+      </div>
+    `;
+
+    if (!isHub && !data.disabled) {
+      el.addEventListener('click', (e) => {
+        /* Item-specific callback */
+        if (data.onClick) data.onClick(data, e);
+        /* Global callback */
+        if (this.onItemClick) this.onItemClick(data, e);
+        /* Navigation */
+        if (data.href) window.location.href = data.href;
+      });
+    }
+
+    if (data.disabled) {
+      el.style.opacity = '0.35';
+      el.style.pointerEvents = 'none';
+      el.style.filter = 'grayscale(0.3)';
+    }
+
+    return el;
+  }
+
+  /* ── Public API ── */
+  setItems(newItems) {
+    this.items = newItems;
+    this.render();
+  }
+
+  setActive(id, isActive) {
+    const hex = this.container.querySelector(`[data-hex-id="${id}"]`);
+    if (hex) hex.classList.toggle('active', isActive);
+    const item = this.items.find(i => i.id === id);
+    if (item) item.active = isActive;
+  }
+
+  getConfig() {
+    return { hub: this.hub, items: [...this.items] };
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════
+   DEMO INSTANCE
+   ════════════════════════════════════════════════════════════ */
+
+const DEMO_ITEMS = [
+  { id: 'contact', label: 'Contact\nUs',           icon: '',  active: false },
+  { id: 'slp',     label: 'Subject\nLaunch Pad',   icon: '',  active: true  },
+  { id: 'story',   label: 'Our\nStory',            icon: '',  active: false },
+  { id: 'mc',      label: 'Minecraft',             icon: '',  active: true  },
+  { id: 'team',    label: 'Meet The\nTeam',         icon: '',  active: false },
+  { id: 'fitness', label: 'Ninja\nFitness',         icon: '',  active: true  },
+];
+
+let currentCount = 6;
+
+const grid = new HexGrid('#hexGrid', {
+  hub: { label: 'Ninja\nLearning', icon: '🥷' },
+  items: DEMO_ITEMS.slice(0, currentCount),
+  onItemClick: (item, e) => {
+    console.log('Hex clicked:', item.id, item);
+    /* Toggle active on click for demo purposes */
+    grid.setActive(item.id, !item.active);
+  }
+});
+
+function changeCount(delta) {
+  currentCount = Math.min(6, Math.max(1, currentCount + delta));
+  document.getElementById('countDisplay').textContent = currentCount;
+  grid.setItems(DEMO_ITEMS.slice(0, currentCount));
+}
+
+function toggleActiveDemo() {
+  grid.items.forEach(item => {
+    grid.setActive(item.id, !item.active);
+  });
+}
+</script>
+
+</body>
+</html>

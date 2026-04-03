@@ -1363,7 +1363,7 @@
     </div>
 
     <div class="home-hero">
-      <div class="page-header" style="padding-top:8px; padding-bottom: 14px;">
+      <div class="page-header" style="padding-top:42px; padding-bottom: 14px;">
         <div class="header-eyebrow">Good morning</div>
         <div class="home-greeting"><strong>The Gunn Family</strong></div>
         <div class="home-date" style="margin-top:2px;">Wednesday, 25 March · Spring Term</div>
@@ -1956,7 +1956,7 @@
         <div class="billing-total-card">
           <div class="billing-total-label">MONTHLY TOTAL</div>
           <div class="billing-total-amount">£114.99</div>
-          <div class="billing-total-period">Next payment: 1 April 2026</div>
+          <div class="billing-total-period" id="billing-next-date">Next payment: 1 May 2026</div>
         </div>
 
         <div class="section-label" style="padding:0; margin-bottom:8px;">Per Student Breakdown</div>
@@ -2396,6 +2396,15 @@ function showScreen(id) {
 }
 
 function goHome() { showScreen('screen-home'); }
+
+// Set billing next payment date dynamically to next 1st of month
+(function() {
+  var now = new Date();
+  var next = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  var el = document.getElementById('billing-next-date');
+  if (el) el.textContent = 'Next payment: 1 ' + months[next.getMonth()] + ' ' + next.getFullYear();
+})();
 
 function goToStudentFromLock(name) {
   // <!-- TODO: C3 — navigate to Student Profile screen once built -->

@@ -194,14 +194,14 @@ Items marked URGENT must be resolved before Phase 1 can go live.
 | # | Decision Required | Blocks | Owner | Status |
 |---|-------------------|--------|-------|--------|
 | 1 | Grading reference doc | Phase 1 grading schema | John Gunn | **RESOLVED** |
-| 2 | AES-256 key management | Field encryption (Task 6) | John + Legal | **PENDING** |
+| 2 | AES-256 key management | Field encryption (Task 6) | John + Legal | **REFERRED TO JOHN — must-have for Phase 1 launch** |
 | 3 | WhatsApp integration model | Comms Phase 2/3 | John Gunn | **PENDING** |
 | 4 | JWT secret & DB password rotation | Security Phase 1 go-live | John Gunn | **URGENT** |
-| 5 | Field-level RBAC matrix | Role access Phase 2 | Us | **PENDING** |
+| 5 | Field-level RBAC matrix | Role access Phase 2 | Us | **RESOLVED — application-level enforcement** |
 | 6 | GDPR audit — family consent validity | Phase 4 onboarding | John + Legal | **PHASE 4** |
-| 7 | Avatar placeholder for Phase 1 | Avatar component | John Gunn | **PENDING** |
-| 8 | XP system values | XP bar on student profile | John Gunn | **PENDING** |
-| 9 | Fifth element (Chokyu) | Chokyu stripe UI 5th slot | John Gunn | **PENDING** |
+| 7 | Avatar placeholder for Phase 1 | Avatar component | John Gunn | **RESOLVED — ninja silhouette SVG; full avatar design before launch** |
+| 8 | XP system values | XP bar on student profile | John Gunn | **DEFERRED — post-launch; placeholder logic in Phase 1** |
+| 9 | Fifth element (Chokyu) | Chokyu stripe UI 5th slot | John Gunn | **RESOLVED — plan for 5th element now; nullable column in belt_progression** |
 | 10 | Two-Week Challenge — standalone table vs fields | Challenge Pending impl. | Us | **PENDING** |
 
 ---

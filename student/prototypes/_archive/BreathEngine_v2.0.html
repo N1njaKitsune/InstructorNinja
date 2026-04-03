@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BreathEngine v2.0 — All Elements</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:      #0E0E16;
+    --surface: #16161F;
+    --border:  #2A2A3A;
+    --text:    #D8D4C8;
+    --muted:   #6B6880;
+    --danger:  #C96E6E;
+    --green:   #6EBF9A;
+    --accent:  #C9A96E;
+    /* Element theme — updated by JS */
+    --el:      #8BB8D4;
+    --el-glow: rgba(139,184,212,0.35);
+    --el-dim:  rgba(139,184,212,0.16);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px 60px;
+  }
+
+  /* ─── Page header ─────────────────────────────────────────────── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  .page-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .page-header .version { font-size: 10px; color: var(--muted); opacity: 0.45; letter-spacing: 0.1em; }
+
+  /* ─── Element tabs ────────────────────────────────────────────── */
+  .el-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px;
+  }
+  .el-tab {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.15em;
+    padding: 9px 20px;
+    border-radius: 7px;
+    border: 1px solid transparent;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .el-tab:hover { color: var(--text); border-color: var(--border); }
+  .el-tab.active {
+    color: var(--el);
+    border-color: var(--el-dim);
+    background: var(--el-dim);
+  }
+  .el-tab .el-emoji { font-size: 14px; line-height: 1; }
+
+  /* ─── Dev Panel ───────────────────────────────────────────────── */
+  .dev-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+  .dev-label { font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; white-space: nowrap; }
+  .dev-section { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+  .dev-family-block {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 9px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .dev-family-name { font-size: 11px; color: var(--el); min-width: 26px; font-family: 'Cinzel', serif; }
+  .dev-btn {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    font-family: 'Crimson Pro', serif; font-size: 11px; padding: 3px 9px;
+    border-radius: 4px; cursor: pointer; transition: all 0.15s; letter-spacing: 0.04em;
+  }
+  .dev-btn:hover { border-color: var(--el); color: var(--el); }
+  .dev-btn.active { background: var(--el); border-color: var(--el); color: var(--bg); }
+  .dev-divider { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+  .dev-session-block { display: flex; align-items: center; gap: 6px; }
+  .dev-restart-btn {
+    background: none; border: 1px solid var(--border); color: var(--danger);
+    font-family: 'Crimson Pro', serif; font-size: 11px; padding: 4px 12px;
+    border-radius: 4px; cursor: pointer; transition: all 0.15s; margin-left: auto;
+  }
+  .dev-restart-btn:hover { border-color: var(--danger); background: rgba(201,110,110,0.08); }
+
+  /* ─── Main layout ─────────────────────────────────────────────── */
+  .engine-wrap {
+    display: grid;
+    grid-template-columns: 210px 1fr 210px;
+    gap: 22px;
+    width: 100%;
+    max-width: 900px;
+    align-items: start;
+  }
+
+  /* ─── Left panel ──────────────────────────────────────────────── */
+  .panel-left { display: flex; flex-direction: column; gap: 12px; }
+  .technique-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    transition: border-color 0.4s;
+  }
+  .technique-card .kanji { font-family: 'Cinzel', serif; font-size: 26px; color: var(--el); line-height: 1; margin-bottom: 8px; }
+  .technique-card .ninja-name { font-family: 'Cinzel', serif; font-size: 13px; color: var(--text); margin-bottom: 2px; }
+  .technique-card .real-name { font-size: 12px; color: var(--muted); margin-bottom: 10px; font-style: italic; }
+  .tier-badge {
+    display: inline-block; font-size: 9px; letter-spacing: 0.14em;
+    text-transform: uppercase; padding: 3px 8px; border-radius: 3px; border: 1px solid; margin-bottom: 12px;
+  }
+  .tier-badge.beginner     { color: var(--green);  border-color: rgba(110,191,154,0.28); }
+  .tier-badge.intermediate { color: var(--accent); border-color: rgba(201,169,110,0.28); }
+  .tier-badge.advanced     { color: var(--el);     border-color: var(--el-dim); }
+  .tier-badge.expert       { color: var(--danger); border-color: rgba(201,110,110,0.28); }
+  .pattern-display { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
+  .pattern-display span { color: var(--el); }
+  .level-dots { display: flex; gap: 6px; align-items: center; margin-top: 10px; }
+  .level-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--border); transition: background 0.3s; }
+  .level-dot.filled { background: var(--el); }
+  .level-dot-label { font-size: 10px; color: var(--muted); margin-left: 4px; letter-spacing: 0.08em; }
+  .technique-cue {
+    font-size: 12.5px; line-height: 1.55; color: var(--muted); font-style: italic;
+    margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);
+  }
+
+  /* ─── Centre panel ────────────────────────────────────────────── */
+  .panel-centre { display: flex; flex-direction: column; align-items: center; gap: 16px; padding-top: 4px; }
+
+  .circle-stage {
+    position: relative; width: 240px; height: 240px;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+  }
+  .breath-ring {
+    position: absolute; width: 228px; height: 228px;
+    border-radius: 50%; border: 1px solid rgba(139,184,212,0.12);
+    pointer-events: none; transition: border-color 0.6s, box-shadow 0.6s;
+  }
+  @keyframes idle-pulse {
+    0%, 100% { border-color: var(--el-dim); box-shadow: none; }
+    50%       { border-color: var(--el-glow); box-shadow: 0 0 16px 4px var(--el-dim); }
+  }
+  .breath-ring.idle { animation: idle-pulse 4s ease-in-out infinite; }
+
+  .arc-svg {
+    position: absolute; width: 240px; height: 240px;
+    transform: rotate(-90deg); pointer-events: none;
+    opacity: 0; transition: opacity 0.5s ease;
+  }
+  .arc-svg.visible { opacity: 1; }
+  .arc-track    { fill: none; stroke: rgba(255,255,255,0.04); stroke-width: 2; }
+  .arc-progress { fill: none; stroke: var(--el); stroke-width: 2; stroke-linecap: round; }
+
+  .breath-circle {
+    position: relative; width: 110px; height: 110px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 36%, var(--el-dim), rgba(0,0,0,0) 70%);
+    border: 1.5px solid var(--el-dim);
+    box-shadow: 0 0 24px rgba(0,0,0,0);
+    z-index: 2;
+  }
+  .circle-text {
+    position: absolute; display: flex; flex-direction: column;
+    align-items: center; gap: 3px; pointer-events: none; z-index: 10;
+  }
+  .phase-label-inner {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.22em;
+    color: var(--el); opacity: 0.75; text-transform: uppercase; min-height: 14px;
+    transition: opacity 0.3s;
+  }
+  .timer-inner {
+    font-family: 'Cinzel', serif; font-size: 28px; color: var(--el);
+    line-height: 1; min-width: 40px; text-align: center; transition: opacity 0.3s;
+  }
+  .timer-inner.muted { opacity: 0.25; font-size: 20px; }
+
+  .next-hint {
+    font-size: 11px; color: var(--muted); opacity: 0; letter-spacing: 0.12em;
+    font-style: italic; transition: opacity 0.5s ease; height: 14px; text-align: center;
+  }
+  .next-hint.visible { opacity: 0.4; }
+
+  /* Cycle dots */
+  .cycle-row-centre { display: flex; gap: 14px; align-items: center; }
+  .cycle-dot-lg {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: var(--border); border: 1px solid rgba(255,255,255,0.06);
+    transition: background 0.5s ease, box-shadow 0.5s ease;
+  }
+  .cycle-dot-lg.done { background: var(--el); box-shadow: 0 0 8px var(--el-glow); border-color: var(--el); }
+
+  /* Pulse dots */
+  .pulse-dots { display: flex; gap: 8px; align-items: center; height: 16px; }
+  .pulse-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    border: 1.5px solid var(--el-dim); background: transparent;
+    transition: background 0.12s, box-shadow 0.12s; visibility: hidden;
+  }
+  .pulse-dot.active-seg { background: var(--el); border-color: var(--el); box-shadow: 0 0 8px var(--el-glow); }
+  .pulse-dot.done-seg   { background: var(--el-dim); border-color: var(--el-dim); }
+
+  /* Continue button */
+  .continue-btn {
+    font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.22em;
+    text-transform: uppercase; background: none; border: 1px solid var(--el);
+    color: var(--el); padding: 11px 32px; border-radius: 5px; cursor: pointer;
+    opacity: 0; pointer-events: none; transform: translateY(6px); box-shadow: none;
+    transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.7s ease, background 0.2s, color 0.2s;
+  }
+  .continue-btn.visible { opacity: 1; pointer-events: auto; transform: translateY(0); box-shadow: 0 0 28px var(--el-glow); }
+  .continue-btn:hover { background: var(--el); color: var(--bg); }
+
+  .tap-hint {
+    font-size: 12px; color: var(--muted); letter-spacing: 0.1em;
+    font-style: italic; transition: opacity 0.4s ease; opacity: 0.4;
+  }
+  .tap-hint.hidden { opacity: 0; pointer-events: none; }
+
+  /* ─── Right panel — Queue ─────────────────────────────────────── */
+  .panel-right { display: flex; flex-direction: column; gap: 7px; }
+  .queue-label { font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+  .queue-item {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 11px 13px; display: flex; flex-direction: column;
+    gap: 4px; opacity: 0.35; transition: opacity 0.5s ease, border-color 0.5s ease;
+    cursor: pointer;
+  }
+  .queue-item:hover { opacity: 0.7; border-color: var(--border); }
+  .queue-item.active { opacity: 1; border-color: var(--el-dim); cursor: default; }
+  .queue-item.active:hover { opacity: 1; }
+  .queue-item.done   { opacity: 0.18; }
+  .queue-item-head   { display: flex; justify-content: space-between; align-items: baseline; }
+  .queue-name    { font-family: 'Cinzel', serif; font-size: 11px; color: var(--text); }
+  .queue-level   { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+  .queue-pattern { font-size: 11px; color: var(--muted); font-style: italic; }
+  .queue-ldots   { display: flex; gap: 4px; }
+  .queue-ldot    { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .queue-ldot.f  { background: var(--el); }
+
+  /* ─── Session Complete Overlay ────────────────────────────────── */
+  .complete-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(14,14,22,0.93); z-index: 100;
+    flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  }
+  .complete-overlay.visible { display: flex; }
+  .complete-kanji   { font-family: 'Cinzel', serif; font-size: 52px; color: var(--el); opacity: 0.7; }
+  .complete-title   { font-family: 'Cinzel', serif; font-size: 17px; letter-spacing: 0.14em; color: var(--text); }
+  .complete-sub     { font-size: 14px; color: var(--muted); font-style: italic; }
+  .complete-restart {
+    margin-top: 14px; font-family: 'Cinzel', serif; font-size: 11px; letter-spacing: 0.2em;
+    background: none; border: 1px solid var(--el); color: var(--el); padding: 10px 28px;
+    border-radius: 5px; cursor: pointer; transition: background 0.2s, color 0.2s;
+    box-shadow: 0 0 24px var(--el-glow);
+  }
+  .complete-restart:hover { background: var(--el); color: var(--bg); }
+
+  /* ─── Caution flag ────────────────────────────────────────────── */
+  .caution-flag {
+    display: none; font-size: 10px; color: var(--danger);
+    letter-spacing: 0.08em; margin-top: 6px;
+  }
+  .caution-flag.visible { display: block; }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>Nendō Breathwork Engine</h1>
+  <div class="version">v2.0 · All Elements · Testbed</div>
+</div>
+
+<!-- Element Tab Switcher -->
+<div class="el-tabs">
+  <button class="el-tab active" id="tab-kaze" onclick="switchElement('kaze')">
+    <span class="el-emoji">🌬️</span> Kaze
+  </button>
+  <button class="el-tab" id="tab-chi" onclick="switchElement('chi')">
+    <span class="el-emoji">🌍</span> Chi
+  </button>
+  <button class="el-tab" id="tab-mizu" onclick="switchElement('mizu')">
+    <span class="el-emoji">🌊</span> Mizu
+  </button>
+  <button class="el-tab" id="tab-hi" onclick="switchElement('hi')">
+    <span class="el-emoji">🔥</span> Hi
+  </button>
+</div>
+
+<!-- Dev Panel -->
+<div class="dev-panel">
+  <span class="dev-label">Levels</span>
+  <div class="dev-section" id="dev-levels-section"></div>
+  <div class="dev-divider"></div>
+  <div class="dev-session-block">
+    <span class="dev-label">Session</span>
+    <button class="dev-btn" id="btn-standard" onclick="setSessionLength(3)">Standard · 3</button>
+    <button class="dev-btn" id="btn-expert"   onclick="setSessionLength(4)">Expert · 4</button>
+  </div>
+  <div class="dev-divider"></div>
+  <div class="dev-session-block">
+    <span class="dev-label">Jump</span>
+    <button class="dev-btn" id="btn-prev" onclick="jumpRelative(-1)">← Prev</button>
+    <button class="dev-btn" id="btn-next" onclick="jumpRelative(1)">Next →</button>
+  </div>
+  <div class="dev-divider"></div>
+  <button class="dev-restart-btn" onclick="restartSession()">↺ Restart</button>
+</div>
+
+<!-- Engine -->
+<div class="engine-wrap">
+
+  <!-- LEFT -->
+  <div class="panel-left">
+    <div class="technique-card">
+      <div class="kanji"      id="info-kanji">風息</div>
+      <div class="ninja-name" id="info-name">Kaze no Iki</div>
+      <div class="real-name"  id="info-real">Equal Breath</div>
+      <div class="tier-badge" id="info-tier">Beginner</div>
+      <div class="pattern-display" id="info-pattern">Pattern: <span>3 – 0 – 3 – 0</span></div>
+      <div class="level-dots" id="info-ldots"></div>
+      <div class="caution-flag" id="caution-flag">⚠️ Advanced technique — supervise younger students</div>
+      <div class="technique-cue" id="info-cue"></div>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="panel-centre">
+
+    <div class="circle-stage" onclick="handleCircleTap()">
+      <div class="breath-ring idle" id="breath-ring"></div>
+      <svg class="arc-svg" id="arc-svg" viewBox="0 0 240 240">
+        <circle class="arc-track"    cx="120" cy="120" r="113"/>
+        <circle class="arc-progress" id="arc-progress" cx="120" cy="120" r="113"
+                stroke-dasharray="709.9" stroke-dashoffset="709.9"/>
+      </svg>
+      <div class="breath-circle" id="breath-circle"></div>
+      <div class="circle-text">
+        <div class="phase-label-inner" id="phase-label">—</div>
+        <div class="timer-inner muted" id="timer-text">·</div>
+      </div>
+    </div>
+
+    <div class="next-hint" id="next-hint"></div>
+
+    <div class="cycle-row-centre">
+      <div class="cycle-dot-lg" id="cy0"></div>
+      <div class="cycle-dot-lg" id="cy1"></div>
+      <div class="cycle-dot-lg" id="cy2"></div>
+    </div>
+
+    <div class="pulse-dots" id="pulse-dots">
+      <div class="pulse-dot" id="pd0"></div>
+      <div class="pulse-dot" id="pd1"></div>
+      <div class="pulse-dot" id="pd2"></div>
+      <div class="pulse-dot" id="pd3"></div>
+      <div class="pulse-dot" id="pd4"></div>
+    </div>
+
+    <button class="continue-btn" id="continue-btn" onclick="advanceTechnique()">Continue →</button>
+    <div class="tap-hint" id="tap-hint">tap to begin</div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel-right">
+    <div class="queue-label">This Session</div>
+    <div id="queue-list"></div>
+  </div>
+
+</div>
+
+<!-- Session Complete -->
+<div class="complete-overlay" id="complete-overlay">
+  <div class="complete-kanji" id="complete-kanji">風</div>
+  <div class="complete-title">Session Complete</div>
+  <div class="complete-sub"  id="complete-sub">All techniques practised.</div>
+  <button class="complete-restart" onclick="restartSession()">Begin Again</button>
+</div>
+
+<script>
+'use strict';
+
+// ─── ELEMENT DEFINITIONS ──────────────────────────────────────────────────────
+
+var ELEMENTS = {
+  kaze: {
+    key:'kaze', emoji:'🌬️', name:'Kaze', sub:'Wind · Calming',   kanji:'風',
+    color:'#8BB8D4', glow:'rgba(139,184,212,0.35)', dim:'rgba(139,184,212,0.16)'
+  },
+  chi: {
+    key:'chi',  emoji:'🌍', name:'Chi',  sub:'Earth · Grounding', kanji:'地',
+    color:'#9BBF82', glow:'rgba(155,191,130,0.35)', dim:'rgba(155,191,130,0.16)'
+  },
+  mizu: {
+    key:'mizu', emoji:'🌊', name:'Mizu', sub:'Water · Deepening', kanji:'水',
+    color:'#68A8C4', glow:'rgba(104,168,196,0.35)', dim:'rgba(104,168,196,0.16)'
+  },
+  hi: {
+    key:'hi',   emoji:'🔥', name:'Hi',   sub:'Fire · Activating', kanji:'火',
+    color:'#D4916A', glow:'rgba(212,145,106,0.35)', dim:'rgba(212,145,106,0.16)'
+  }
+};
+
+// ─── ALL FAMILIES ─────────────────────────────────────────────────────────────
+
+var ALL_FAMILIES = {
+  kaze: [
+    { key:'K1', kanji:'風息', name:'Kaze no Iki', realName:'Equal Breath',      tier:'Beginner',
+      cue:'Steady as wind through tall grass.', caution:false,
+      levels:[
+        {n:1, pattern:[3,0,3,0],                         label:'3 – 0 – 3 – 0'},
+        {n:2, pattern:[4,0,4,0],                         label:'4 – 0 – 4 – 0'},
+        {n:3, pattern:[5,0,5,0],                         label:'5 – 0 – 5 – 0'}
+      ]},
+    { key:'K2', kanji:'然',   name:'Shizen',      realName:'Extended Exhale',   tier:'Intermediate',
+      cue:'Let the breath slide out long and slow.', caution:false,
+      levels:[
+        {n:1, pattern:[4,0,6,0],                         label:'4 – 0 – 6 – 0'},
+        {n:2, pattern:[4,2,6,0],                         label:'4 – 2 – 6 – 0'},
+        {n:3, pattern:[4,0,8,0],                         label:'4 – 0 – 8 – 0'}
+      ]},
+    { key:'K3', kanji:'千里', name:'Senri',        realName:'Long Wave',         tier:'Advanced',
+      cue:'Far and unhurried. The path is long. The breath is longer.', caution:false,
+      levels:[
+        {n:1, pattern:[5,0,8,0],                         label:'5 – 0 – 8 – 0'},
+        {n:2, pattern:[7,0,11,0],                        label:'7 – 0 – 11 – 0'},
+        {n:3, pattern:[8,0,13,0],                        label:'8 – 0 – 13 – 0'}
+      ]},
+    { key:'K4', kanji:'大蛇', name:'Orochi',       realName:'Segmented Exhale',  tier:'Expert',
+      cue:'Fill up completely. Then let go in careful steps.', caution:false,
+      levels:[
+        {n:1, pattern:[5,0,{segs:3,dur:1},0],            label:'5 – 0 – 3×1 – 0'},
+        {n:2, pattern:[6,0,{segs:4,dur:2},0],            label:'6 – 0 – 4×2 – 0'},
+        {n:3, pattern:[8,0,{segs:5,dur:2},0],            label:'8 – 0 – 5×2 – 0'}
+      ]}
+  ],
+
+  chi: [
+    { key:'C1', kanji:'中',   name:'Tanden',       realName:'Box Breath',        tier:'Beginner',
+      cue:'Equal in all directions. The foundation.', caution:false,
+      levels:[
+        {n:1, pattern:[3,3,3,3],                         label:'3 – 3 – 3 – 3'},
+        {n:2, pattern:[4,4,4,4],                         label:'4 – 4 – 4 – 4'},
+        {n:3, pattern:[5,5,5,5],                         label:'5 – 5 – 5 – 5'}
+      ]},
+    { key:'C2', kanji:'大地', name:'Daichi',        realName:'Extended Box',      tier:'Intermediate',
+      cue:'Wide as the earth. Patient as stone. Hold your ground.', caution:false,
+      levels:[
+        {n:1, pattern:[5,3,5,3],                         label:'5 – 3 – 5 – 3'},
+        {n:2, pattern:[6,4,6,4],                         label:'6 – 4 – 6 – 4'},
+        {n:3, pattern:[7,5,7,5],                         label:'7 – 5 – 7 – 5'}
+      ]},
+    { key:'C3', kanji:'昇',   name:'Noboru',        realName:'Staircase Inhale',  tier:'Advanced',
+      cue:'Four steps up. One long way down.', caution:false,
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,5,0],            label:'3×1 – 0 – 5 – 0'},
+        {n:2, pattern:[{segs:4,dur:2},0,8,0],            label:'4×2 – 0 – 8 – 0'},
+        {n:3, pattern:[{segs:5,dur:2},0,10,0],           label:'5×2 – 0 – 10 – 0'}
+      ]},
+    { key:'C4', kanji:'梯子', name:'Hashigo',       realName:'Dual Staircase',    tier:'Expert',
+      cue:'Up in steps. Down in steps. The ladder runs both ways.', caution:false,
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,{segs:3,dur:1},0], label:'3×1 – 0 – 3×1 – 0'},
+        {n:2, pattern:[{segs:4,dur:2},0,{segs:4,dur:2},0], label:'4×2 – 0 – 4×2 – 0'},
+        {n:3, pattern:[{segs:5,dur:2},0,{segs:5,dur:2},0], label:'5×2 – 0 – 5×2 – 0'}
+      ]}
+  ],
+
+  mizu: [
+    { key:'M1', kanji:'水',   name:'Mizu',          realName:'Deep Equal',        tier:'Beginner',
+      cue:'Slow like the tide. Strong like the deep.', caution:false,
+      levels:[
+        {n:1, pattern:[5,0,5,0],                         label:'5 – 0 – 5 – 0'},
+        {n:2, pattern:[6,0,6,0],                         label:'6 – 0 – 6 – 0'},
+        {n:3, pattern:[7,0,7,0],                         label:'7 – 0 – 7 – 0'}
+      ]},
+    { key:'M2', kanji:'月',   name:'Tsuki',          realName:'Hold & Release',    tier:'Intermediate',
+      cue:'Slow and deep. The moon waits for no one.', caution:false,
+      levels:[
+        {n:1, pattern:[4,4,6,0],                         label:'4 – 4 – 6 – 0'},
+        {n:2, pattern:[4,7,8,0],                         label:'4 – 7 – 8 – 0'},
+        {n:3, pattern:[5,7,9,0],                         label:'5 – 7 – 9 – 0'}
+      ]},
+    { key:'M3', kanji:'波',   name:'Nami',           realName:'Wave Breath',       tier:'Advanced',
+      cue:'Breathe in, breathe out — then wait for the wave.', caution:false,
+      levels:[
+        {n:1, pattern:[5,0,7,2],                         label:'5 – 0 – 7 – 2'},
+        {n:2, pattern:[6,0,8,3],                         label:'6 – 0 – 8 – 3'},
+        {n:3, pattern:[7,0,9,4],                         label:'7 – 0 – 9 – 4'}
+      ]},
+    { key:'M4', kanji:'沈み', name:'Shizumi',        realName:'Exhale Hold',       tier:'Expert',
+      cue:'Empty completely. Then sink into the silence.', caution:false,
+      levels:[
+        {n:1, pattern:[4,0,6,4],                         label:'4 – 0 – 6 – 4'},
+        {n:2, pattern:[5,0,7,5],                         label:'5 – 0 – 7 – 5'},
+        {n:3, pattern:[6,0,8,6],                         label:'6 – 0 – 8 – 6'}
+      ]}
+  ],
+
+  hi: [
+    { key:'H1', kanji:'火息', name:'Hi no Iki',      realName:'Activation Breath', tier:'Beginner',
+      cue:'Sharp and quick. Awaken the flame within.', caution:false,
+      levels:[
+        {n:1, pattern:[2,0,3,0],                         label:'2 – 0 – 3 – 0'},
+        {n:2, pattern:[2,0,4,0],                         label:'2 – 0 – 4 – 0'},
+        {n:3, pattern:[2,0,6,0],                         label:'2 – 0 – 6 – 0'}
+      ]},
+    { key:'H2', kanji:'火山', name:'Kazan',          realName:'Power Breath',      tier:'Intermediate',
+      cue:'Quick and fierce. Fan every flame inside you.', caution:true,
+      levels:[
+        {n:1, pattern:[2,0,2,2],                         label:'2 – 0 – 2 – 2'},
+        {n:2, pattern:[2,0,2,0],                         label:'2 – 0 – 2 – 0'},
+        {n:3, pattern:[2,2,2,0],                         label:'2 – 2 – 2 – 0'}
+      ]},
+    { key:'H3', kanji:'鷹の息', name:'Taka no Iki',  realName:"Hawk's Breath",     tier:'Advanced',
+      cue:'Sharp and quick — gather everything. Then let it all go.', caution:true,
+      levels:[
+        {n:1, pattern:[{segs:3,dur:1},0,6,0],            label:'3×1 – 0 – 6 – 0'},
+        {n:2, pattern:[{segs:4,dur:1},0,8,0],            label:'4×1 – 0 – 8 – 0'},
+        {n:3, pattern:[{segs:5,dur:1},0,10,0],           label:'5×1 – 0 – 10 – 0'}
+      ]},
+    { key:'H4', kanji:'龍火', name:'Ryuhi',          realName:'Dragon Fire',       tier:'Expert',
+      cue:'Take it in sharp. Hold the fire. Then let it burn out slowly.', caution:true,
+      levels:[
+        {n:1, pattern:[2,2,4,0],                         label:'2 – 2 – 4 – 0'},
+        {n:2, pattern:[2,4,4,0],                         label:'2 – 4 – 4 – 0'},
+        {n:3, pattern:[2,6,4,0],                         label:'2 – 6 – 4 – 0'}
+      ]}
+  ]
+};
+
+// ─── PHASE NAMES ──────────────────────────────────────────────────────────────
+
+var PHASE_NAMES = ['Inhale','Hold','Exhale','Rest'];
+var ARC_C = 2 * Math.PI * 113; // ≈ 709.9
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+var activeElement   = 'kaze';
+var studentLevels   = {K1:1,K2:1,K3:1,K4:1,C1:1,C2:1,C3:1,C4:1,M1:1,M2:1,M3:1,M4:1,H1:1,H2:1,H3:1,H4:1};
+var sessionLength   = 3;
+var sessionFamilies = [];
+var familyIndex     = 0;
+var cycleCount      = 0;
+var running         = false;
+var tickTimer       = null;
+var phaseIndex      = 0;
+var segStep         = 0;
+var awaitingAdvance = false;
+var circleScale     = 1.0;
+var _kfIdx          = 0;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  applyElementTheme('kaze');
+  buildDevLevels();
+  buildSession();
+  renderQueue();
+  renderTechniqueInfo();
+  renderCycleDots();
+  renderPulseDots();
+  resetContinueBtn();
+  showTapHint(true);
+  setPhaseLabel('—');
+  setTimerText('·', true);
+  setNextHint('');
+  clearArc();
+  syncCircleToRest();
+  setIdlePulse(true);
+}
+
+// ─── ELEMENT THEMING ──────────────────────────────────────────────────────────
+
+function applyElementTheme(key) {
+  var el = ELEMENTS[key];
+  var root = document.documentElement.style;
+  root.setProperty('--el',      el.color);
+  root.setProperty('--el-glow', el.glow);
+  root.setProperty('--el-dim',  el.dim);
+  // update breath circle gradient inline
+  var bc = document.getElementById('breath-circle');
+  bc.style.background = 'radial-gradient(circle at 38% 36%, ' + el.dim + ', rgba(0,0,0,0) 70%)';
+  bc.style.borderColor = el.dim;
+  // update arc colour
+  document.getElementById('arc-progress').style.stroke = el.color;
+  // update complete overlay kanji
+  document.getElementById('complete-kanji').textContent = el.kanji;
+  document.getElementById('complete-sub').textContent   = el.name + ' session complete.';
+}
+
+function switchElement(key) {
+  if (key === activeElement) return;
+  stopIfRunning();
+  activeElement = key;
+  applyElementTheme(key);
+  // update tabs
+  ['kaze','chi','mizu','hi'].forEach(function(k) {
+    document.getElementById('tab-' + k).className = 'el-tab' + (k === key ? ' active' : '');
+  });
+  // reset session
+  buildSession();
+  buildDevLevels();
+  renderQueue();
+  renderTechniqueInfo();
+  renderCycleDots();
+  renderPulseDots();
+  resetContinueBtn();
+  showTapHint(true);
+  setPhaseLabel('—');
+  setTimerText('·', true);
+  setNextHint('');
+  clearArc();
+  syncCircleToRest();
+  setIdlePulse(true);
+  awaitingAdvance = false;
+  familyIndex = 0;
+  cycleCount = 0;
+}
+
+// ─── DEV PANEL ────────────────────────────────────────────────────────────────
+
+function buildDevLevels() {
+  var sec = document.getElementById('dev-levels-section');
+  sec.innerHTML = '';
+  var families = ALL_FAMILIES[activeElement];
+  families.forEach(function(fam) {
+    var block = document.createElement('div');
+    block.className = 'dev-family-block';
+    var nameEl = document.createElement('span');
+    nameEl.className = 'dev-family-name';
+    nameEl.textContent = fam.key;
+    block.appendChild(nameEl);
+    [1,2,3].forEach(function(lv) {
+      var btn = document.createElement('button');
+      btn.className = 'dev-btn' + (studentLevels[fam.key] === lv ? ' active' : '');
+      btn.id = 'dlv-' + fam.key + '-' + lv;
+      btn.textContent = 'L' + lv;
+      btn.onclick = (function(k,v){ return function(){ setLevel(k,v); }; })(fam.key, lv);
+      block.appendChild(btn);
+    });
+    sec.appendChild(block);
+  });
+  document.getElementById('btn-standard').className = 'dev-btn' + (sessionLength === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (sessionLength === 4 ? ' active' : '');
+}
+
+function setLevel(key, lv) {
+  stopIfRunning();
+  studentLevels[key] = lv;
+  [1,2,3].forEach(function(v) {
+    var b = document.getElementById('dlv-' + key + '-' + v);
+    if (b) b.className = 'dev-btn' + (v === lv ? ' active' : '');
+  });
+  var cf = sessionFamilies[familyIndex];
+  if (cf && cf.key === key) {
+    cycleCount = 0; awaitingAdvance = false;
+    resetContinueBtn(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+    clearArc(); syncCircleToRest(); showTapHint(true);
+    setPhaseLabel('—'); setTimerText('·', true); setNextHint(''); setIdlePulse(true);
+  }
+  renderQueue();
+}
+
+function setSessionLength(n) {
+  stopIfRunning(); sessionLength = n;
+  document.getElementById('btn-standard').className = 'dev-btn' + (n === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (n === 4 ? ' active' : '');
+  restartSession();
+}
+
+// ─── SESSION ──────────────────────────────────────────────────────────────────
+
+function buildSession() {
+  sessionFamilies = ALL_FAMILIES[activeElement].slice(0, sessionLength);
+  familyIndex = 0; cycleCount = 0; awaitingAdvance = false;
+}
+
+function restartSession() {
+  stopIfRunning();
+  document.getElementById('complete-overlay').className = 'complete-overlay';
+  buildSession(); buildDevLevels();
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+  resetContinueBtn(); showTapHint(true);
+  setPhaseLabel('—'); setTimerText('·', true); setNextHint(''); clearArc(); syncCircleToRest(); setIdlePulse(true);
+  awaitingAdvance = false;
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function currentFamily()  { return sessionFamilies[familyIndex]; }
+function currentPattern() {
+  var fam = currentFamily(), lv = studentLevels[fam.key] || 1;
+  return fam.levels[lv - 1].pattern;
+}
+function currentLevelData() {
+  var fam = currentFamily(), lv = studentLevels[fam.key] || 1;
+  return fam.levels[lv - 1];
+}
+function isSegmented(ph) { return ph !== null && typeof ph === 'object' && ph.segs; }
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function renderTechniqueInfo() {
+  var fam = currentFamily(), lvData = currentLevelData(), lv = studentLevels[fam.key] || 1;
+  document.getElementById('info-kanji').textContent  = fam.kanji;
+  document.getElementById('info-name').textContent   = fam.name;
+  document.getElementById('info-real').textContent   = fam.realName;
+  document.getElementById('info-cue').textContent    = fam.cue;
+  document.getElementById('info-pattern').innerHTML  = 'Pattern: <span>' + lvData.label + '</span>';
+  var tierEl = document.getElementById('info-tier');
+  tierEl.textContent = fam.tier;
+  tierEl.className   = 'tier-badge ' + fam.tier.toLowerCase();
+  // level dots
+  var ldots = document.getElementById('info-ldots'); ldots.innerHTML = '';
+  for (var i = 1; i <= 3; i++) {
+    var d = document.createElement('div');
+    d.className = 'level-dot' + (i <= lv ? ' filled' : '');
+    ldots.appendChild(d);
+  }
+  var lbl = document.createElement('div');
+  lbl.className = 'level-dot-label'; lbl.textContent = 'L' + lv;
+  ldots.appendChild(lbl);
+  // caution flag
+  var cf = document.getElementById('caution-flag');
+  cf.className = 'caution-flag' + (fam.caution ? ' visible' : '');
+}
+
+function renderCycleDots() {
+  for (var i = 0; i < 3; i++) {
+    var d = document.getElementById('cy' + i);
+    if (d) d.className = 'cycle-dot-lg' + (i < cycleCount ? ' done' : '');
+  }
+}
+
+function renderPulseDots() {
+  var pattern = currentPattern(), maxSegs = 0;
+  pattern.forEach(function(ph) { if (isSegmented(ph) && ph.segs > maxSegs) maxSegs = ph.segs; });
+  for (var i = 0; i < 5; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    pd.className = 'pulse-dot';
+    pd.style.visibility = (i < maxSegs) ? 'visible' : 'hidden';
+  }
+}
+
+function renderQueue() {
+  var list = document.getElementById('queue-list'); list.innerHTML = '';
+  sessionFamilies.forEach(function(fam, idx) {
+    var lv = studentLevels[fam.key] || 1, lvData = fam.levels[lv - 1];
+    var item = document.createElement('div');
+    var cls  = 'queue-item';
+    if (idx === familyIndex)    cls += ' active';
+    else if (idx < familyIndex) cls += ' done';
+    item.className = cls;
+    item.title = 'Jump to ' + fam.name;
+    var dots = '';
+    for (var d = 1; d <= 3; d++) dots += '<div class="queue-ldot' + (d <= lv ? ' f' : '') + '"></div>';
+    item.innerHTML =
+      '<div class="queue-item-head"><div class="queue-name">' + fam.name + '</div><div class="queue-level">L' + lv + '</div></div>' +
+      '<div class="queue-pattern">' + lvData.label + '</div>' +
+      '<div class="queue-ldots">' + dots + '</div>';
+    item.onclick = (function(i){ return function(){ jumpToFamily(i); }; })(idx);
+    list.appendChild(item);
+  });
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+
+function setPhaseLabel(txt) { document.getElementById('phase-label').textContent = txt; }
+
+function setTimerText(txt, muted) {
+  var el = document.getElementById('timer-text');
+  el.textContent = txt;
+  el.className   = 'timer-inner' + (muted ? ' muted' : '');
+}
+
+function setNextHint(txt) {
+  var el = document.getElementById('next-hint');
+  if (txt) { el.textContent = 'next: ' + txt.toLowerCase(); el.className = 'next-hint visible'; }
+  else      { el.textContent = ''; el.className = 'next-hint'; }
+}
+
+function showTapHint(show) {
+  document.getElementById('tap-hint').className = 'tap-hint' + (show ? '' : ' hidden');
+}
+
+function resetContinueBtn() { document.getElementById('continue-btn').className = 'continue-btn'; }
+function showContinueBtn()  { setTimeout(function() { document.getElementById('continue-btn').className = 'continue-btn visible'; }, 400); }
+
+function setIdlePulse(on) {
+  document.getElementById('breath-ring').className = 'breath-ring' + (on ? ' idle' : '');
+}
+
+// ─── ARC ──────────────────────────────────────────────────────────────────────
+
+function clearArc() {
+  var arc = document.getElementById('arc-progress');
+  arc.style.strokeDashoffset = ARC_C;
+  arc.style.transition = 'none';
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg');
+}
+
+function showArc(totalSecs) {
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '0';
+  void arc.getBoundingClientRect();
+  arc.style.transition = 'stroke-dashoffset ' + totalSecs + 's linear';
+  arc.style.strokeDashoffset = ARC_C;
+}
+
+function resetArcInstant() {
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '0';
+}
+
+function setArcColour(col) {
+  document.getElementById('arc-progress').style.stroke = col;
+}
+
+// ─── CIRCLE ANIMATION ─────────────────────────────────────────────────────────
+
+function injectKF(fromS, toS) {
+  var name = 'bf_' + (_kfIdx++);
+  var s = document.createElement('style');
+  s.textContent = '@keyframes ' + name + '{from{transform:scale(' + fromS + ')}to{transform:scale(' + toS + ')}}';
+  document.head.appendChild(s);
+  return name;
+}
+
+function animateSmoothPhase(fromS, toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  var name = injectKF(fromS, toS);
+  el.style.transition = 'box-shadow 0.6s ease';
+  el.style.transform  = 'scale(' + toS + ')';
+  el.style.animation  = name + ' ' + durMs + 'ms linear forwards';
+  circleScale = toS;
+  var gR = Math.max(0, Math.round((toS - 0.78) / 1.07 * 40));
+  el.style.boxShadow = '0 0 ' + gR + 'px var(--el-glow)';
+}
+
+function clearAnimation() {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  el.style.transition = 'none';
+}
+
+function syncCircleToRest() {
+  var el = document.getElementById('breath-circle');
+  el.style.animation  = 'none';
+  el.style.transition = 'transform 0.8s ease, box-shadow 0.8s ease';
+  el.style.transform  = 'scale(1.0)';
+  el.style.boxShadow  = '0 0 16px rgba(0,0,0,0)';
+  circleScale = 1.0;
+}
+
+function stepCircle(toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation  = 'none';
+  el.style.transition = 'transform ' + durMs + 'ms linear, box-shadow ' + durMs + 'ms ease';
+  el.style.transform  = 'scale(' + toS + ')';
+  var gR = Math.max(0, Math.round((toS - 0.78) / 1.07 * 40));
+  el.style.boxShadow  = '0 0 ' + gR + 'px var(--el-glow)';
+  circleScale = toS;
+}
+
+// ─── NEXT PHASE ───────────────────────────────────────────────────────────────
+
+function getNextPhaseName(currentIdx, pattern) {
+  for (var i = 1; i < pattern.length; i++) {
+    var ni = (currentIdx + i) % pattern.length;
+    var ph = pattern[ni];
+    if (isSegmented(ph) || ph !== 0) return PHASE_NAMES[ni];
+  }
+  return '';
+}
+
+// ─── ENGINE ───────────────────────────────────────────────────────────────────
+
+function handleCircleTap() {
+  if (awaitingAdvance) return;
+  running ? stopBreath() : startBreath();
+}
+
+function startBreath() {
+  running = true; phaseIndex = 0; segStep = 0;
+  showTapHint(false); setIdlePulse(false);
+  runPhase();
+}
+
+function stopBreath() {
+  running = false;
+  clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('—'); setTimerText('·', true);
+  setNextHint(''); resetPulseDots(); showTapHint(true); setIdlePulse(true);
+}
+
+function stopIfRunning() { if (running) stopBreath(); }
+function clearTickTimer() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+function runPhase() {
+  var pattern = currentPattern(), ph = pattern[phaseIndex];
+  if (isSegmented(ph))  runSegmentedPhase(ph);
+  else if (ph === 0)    nextPhase();
+  else                  runSmoothPhase(phaseIndex, ph);
+}
+
+function runSmoothPhase(pidx, secs) {
+  var fromS, toS, arcCol;
+  var el = ELEMENTS[activeElement];
+
+  if (pidx === 0) {      // Inhale
+    fromS = circleScale; toS = 1.85; arcCol = el.color;
+    setPhaseLabel('Inhale');
+  } else if (pidx === 1) { // Hold (full)
+    fromS = circleScale; toS = circleScale; arcCol = 'rgba(201,169,110,0.75)';
+    setPhaseLabel('Hold');
+  } else if (pidx === 2) { // Exhale
+    fromS = circleScale; toS = 0.78; arcCol = el.dim.replace('0.16', '0.55');
+    setPhaseLabel('Exhale');
+  } else {               // Rest (empty)
+    fromS = circleScale; toS = circleScale; arcCol = 'rgba(107,104,128,0.45)';
+    setPhaseLabel('Rest');
+  }
+
+  setArcColour(arcCol);
+  showArc(secs);
+  resetPulseDots();
+  animateSmoothPhase(fromS, toS, secs * 1000);
+  setNextHint(getNextPhaseName(pidx, currentPattern()));
+
+  var elapsed = 0;
+  clearTickTimer();
+  tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = secs - elapsed;
+    setTimerText(rem > 0 ? rem : '', false);
+    if (elapsed >= secs) { clearTickTimer(); nextPhase(); }
+  }, 1000);
+}
+
+function runSegmentedPhase(ph) {
+  var totalSegs = ph.segs, segDur = ph.dur;
+  var isEx = (phaseIndex === 2 || phaseIndex === 3); // true = exhale direction
+  var el = ELEMENTS[activeElement];
+
+  showPulseDots(totalSegs);
+  setPhaseLabel(isEx ? 'Exhale' : 'Inhale');
+  setArcColour(isEx ? el.dim.replace('0.16', '0.55') : el.color);
+  setNextHint(getNextPhaseName(phaseIndex, currentPattern()));
+
+  // Snap circle to phase start position
+  var startS = isEx ? 1.85 : 0.78;
+  stepCircle(startS, 80);
+  circleScale = startS;
+
+  var stepSize = isEx
+    ? (startS - 0.78) / totalSegs
+    : (1.85 - startS) / totalSegs;
+
+  segStep = 0;
+  doSegStep(totalSegs, segDur, isEx, stepSize);
+}
+
+function doSegStep(totalSegs, segDur, isEx, stepSize) {
+  if (!running) return;
+
+  // Update pulse dots
+  for (var i = 0; i < totalSegs; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    pd.style.visibility = 'visible';
+    if (i < segStep)        pd.className = 'pulse-dot done-seg';
+    else if (i === segStep) pd.className = 'pulse-dot active-seg';
+    else                    pd.className = 'pulse-dot';
+  }
+
+  setTimerText(segDur, false);
+
+  // Per-segment arc
+  resetArcInstant();
+  void document.getElementById('arc-progress').getBoundingClientRect();
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'stroke-dashoffset ' + segDur + 's linear';
+  arc.style.strokeDashoffset = ARC_C;
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+
+  // Step the circle
+  var targetS = isEx
+    ? Math.max(0.78, circleScale - stepSize)
+    : Math.min(1.85, circleScale + stepSize);
+  stepCircle(targetS, segDur * 1000 * 0.85);
+  circleScale = targetS;
+
+  var elapsed = 0;
+  clearTickTimer();
+  tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = segDur - elapsed;
+    if (rem > 0) setTimerText(rem, false);
+    if (elapsed >= segDur) {
+      clearTickTimer();
+      segStep++;
+      if (segStep >= totalSegs) nextPhase();
+      else                       doSegStep(totalSegs, segDur, isEx, stepSize);
+    }
+  }, 1000);
+}
+
+function nextPhase() {
+  if (!running) return;
+  var pattern = currentPattern();
+  phaseIndex++;
+  if (phaseIndex >= pattern.length) {
+    phaseIndex = 0; cycleCount++;
+    renderCycleDots();
+    if (cycleCount >= 3) onTechniqueDone();
+    else { segStep = 0; runPhase(); }
+  } else {
+    runPhase();
+  }
+}
+
+function onTechniqueDone() {
+  running = false; clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('Complete'); setTimerText('', false);
+  setNextHint(''); resetPulseDots(); awaitingAdvance = true;
+  if (familyIndex >= sessionFamilies.length - 1) {
+    setTimeout(function() {
+      document.getElementById('complete-overlay').className = 'complete-overlay visible';
+    }, 700);
+  } else {
+    showContinueBtn();
+  }
+}
+
+function advanceTechnique() {
+  jumpToFamily(familyIndex + 1);
+}
+
+function jumpToFamily(idx) {
+  if (idx < 0 || idx >= sessionFamilies.length) return;
+  stopIfRunning();
+  resetContinueBtn(); awaitingAdvance = false;
+  familyIndex = idx; cycleCount = 0; phaseIndex = 0; segStep = 0;
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+  setPhaseLabel('—'); setTimerText('·', true); setNextHint('');
+  clearArc(); syncCircleToRest(); showTapHint(true); setIdlePulse(true);
+}
+
+function jumpRelative(delta) {
+  var target = familyIndex + delta;
+  if (target < 0) target = 0;
+  if (target >= sessionFamilies.length) target = sessionFamilies.length - 1;
+  jumpToFamily(target);
+}
+
+// ─── PULSE DOTS ───────────────────────────────────────────────────────────────
+
+function showPulseDots(n) {
+  for (var i = 0; i < 5; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    pd.style.visibility = (i < n) ? 'visible' : 'hidden';
+    pd.className = 'pulse-dot';
+  }
+}
+
+function resetPulseDots() { renderPulseDots(); }
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

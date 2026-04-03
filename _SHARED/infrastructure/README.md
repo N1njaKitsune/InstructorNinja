@@ -66,7 +66,7 @@ This is a domain-knowledge department. It operates on expertise and procedures r
 
 | Output | Location |
 |--------|----------|
-| Server guides | `student/Server-Guides/` |
+| Server guides | `_SHARED/infrastructure/` |
 | Deployment configs | `_REPOS/Ninja-Learning-App-Demo/.github/workflows/` |
 
 ---

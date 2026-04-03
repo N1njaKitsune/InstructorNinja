@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BreathEngine v1.1 — Kaze Testbed</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:           #0E0E16;
+    --surface:      #16161F;
+    --border:       #2A2A3A;
+    --text:         #D8D4C8;
+    --muted:        #6B6880;
+    --kaze:         #8BB8D4;
+    --kaze-dim:     rgba(139,184,212,0.18);
+    --kaze-glow:    rgba(139,184,212,0.35);
+    --kaze-glow-hi: rgba(139,184,212,0.55);
+    --accent:       #C9A96E;
+    --danger:       #C96E6E;
+    --green:        #6EBF9A;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Crimson Pro', serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 20px 60px;
+  }
+
+  /* ─── Header ─────────────────────────────────────────────────── */
+  .page-header {
+    text-align: center;
+    margin-bottom: 28px;
+  }
+  .page-header h1 {
+    font-family: 'Cinzel', serif;
+    font-size: 12px;
+    letter-spacing: 0.28em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+  .page-header .version {
+    font-size: 10px;
+    color: var(--muted);
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+  }
+
+  /* ─── Dev Panel ───────────────────────────────────────────────── */
+  .dev-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    width: 100%;
+    max-width: 880px;
+    margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .dev-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .dev-section { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .dev-family-block {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 9px;
+    background: rgba(255,255,255,0.025);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+  .dev-family-name {
+    font-size: 11px;
+    color: var(--kaze);
+    min-width: 26px;
+    font-family: 'Cinzel', serif;
+  }
+  .dev-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
+  }
+  .dev-btn:hover { border-color: var(--kaze); color: var(--kaze); }
+  .dev-btn.active { background: var(--kaze); border-color: var(--kaze); color: var(--bg); }
+  .dev-divider { width: 1px; height: 22px; background: var(--border); flex-shrink: 0; }
+  .dev-session-block { display: flex; align-items: center; gap: 6px; }
+  .dev-restart-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    font-family: 'Crimson Pro', serif;
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: auto;
+  }
+  .dev-restart-btn:hover { border-color: var(--danger); background: rgba(201,110,110,0.08); }
+
+  /* ─── Main Layout ─────────────────────────────────────────────── */
+  .engine-wrap {
+    display: grid;
+    grid-template-columns: 210px 1fr 210px;
+    gap: 24px;
+    width: 100%;
+    max-width: 880px;
+    align-items: start;
+  }
+
+  /* ─── Left Panel ──────────────────────────────────────────────── */
+  .panel-left { display: flex; flex-direction: column; gap: 14px; }
+  .technique-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+  }
+  .technique-card .kanji {
+    font-family: 'Cinzel', serif;
+    font-size: 26px;
+    color: var(--kaze);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .technique-card .ninja-name {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    color: var(--text);
+    margin-bottom: 2px;
+  }
+  .technique-card .real-name {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+    font-style: italic;
+  }
+  .tier-badge {
+    display: inline-block;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 3px;
+    border: 1px solid;
+    margin-bottom: 12px;
+  }
+  .tier-badge.beginner     { color: var(--green);  border-color: rgba(110,191,154,0.28); }
+  .tier-badge.intermediate { color: var(--accent); border-color: rgba(201,169,110,0.28); }
+  .tier-badge.advanced     { color: var(--kaze);   border-color: rgba(139,184,212,0.28); }
+  .tier-badge.expert       { color: var(--danger); border-color: rgba(201,110,110,0.28); }
+
+  .pattern-display {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .pattern-display span { color: var(--kaze); }
+
+  /* Level dots */
+  .level-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-top: 10px;
+  }
+  .level-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--border);
+    transition: background 0.3s;
+  }
+  .level-dot.filled { background: var(--kaze); }
+  .level-dot-label {
+    font-size: 10px;
+    color: var(--muted);
+    margin-left: 4px;
+    letter-spacing: 0.08em;
+  }
+
+  .technique-cue {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--muted);
+    font-style: italic;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ─── Centre Panel ────────────────────────────────────────────── */
+  .panel-centre {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    padding-top: 8px;
+  }
+
+  /* ── Circle Stage ── */
+  .circle-stage {
+    position: relative;
+    width: 240px;
+    height: 240px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+
+  /* Ambient outer ring (idle pulse) */
+  .breath-ring {
+    position: absolute;
+    width: 228px; height: 228px;
+    border-radius: 50%;
+    border: 1px solid rgba(139,184,212,0.12);
+    pointer-events: none;
+    transition: box-shadow 1s ease;
+  }
+  @keyframes idle-pulse {
+    0%, 100% { border-color: rgba(139,184,212,0.10); box-shadow: 0 0 0 0 transparent; }
+    50%       { border-color: rgba(139,184,212,0.30); box-shadow: 0 0 18px 4px var(--kaze-dim); }
+  }
+  .breath-ring.idle { animation: idle-pulse 4s ease-in-out infinite; }
+
+  /* SVG Arc — progress ring */
+  .arc-svg {
+    position: absolute;
+    width: 240px; height: 240px;
+    transform: rotate(-90deg);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+  .arc-svg.visible { opacity: 1; }
+  .arc-track {
+    fill: none;
+    stroke: rgba(139,184,212,0.07);
+    stroke-width: 2;
+  }
+  .arc-progress {
+    fill: none;
+    stroke: var(--kaze);
+    stroke-width: 2;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 1s linear, stroke 0.4s ease;
+  }
+
+  /* Breath circle — the main orb */
+  .breath-circle {
+    position: relative;
+    width: 110px; height: 110px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 38% 36%, rgba(139,184,212,0.22), rgba(139,184,212,0.06) 65%, transparent);
+    border: 1.5px solid rgba(139,184,212,0.38);
+    box-shadow: 0 0 24px rgba(139,184,212,0.10);
+    z-index: 2;
+    /* scale + box-shadow driven by JS */
+  }
+
+  /* Text overlaid on the circle (not inside the element, absolute to stage) */
+  .circle-text {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .phase-label-inner {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    color: rgba(139,184,212,0.7);
+    text-transform: uppercase;
+    transition: opacity 0.35s ease;
+    min-height: 14px;
+  }
+  .timer-inner {
+    font-family: 'Cinzel', serif;
+    font-size: 28px;
+    color: var(--kaze);
+    line-height: 1;
+    min-width: 40px;
+    text-align: center;
+    transition: opacity 0.35s ease;
+  }
+  .timer-inner.muted { opacity: 0.28; font-size: 20px; }
+
+  /* Next phase hint */
+  .next-hint {
+    font-size: 11px;
+    color: var(--muted);
+    opacity: 0;
+    letter-spacing: 0.12em;
+    font-style: italic;
+    transition: opacity 0.5s ease;
+    height: 14px;
+    text-align: center;
+  }
+  .next-hint.visible { opacity: 0.45; }
+
+  /* ── Cycle Dots (centre, below circle) ── */
+  .cycle-row-centre {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .cycle-dot-lg {
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 1px solid rgba(139,184,212,0.12);
+    transition: background 0.5s ease, box-shadow 0.5s ease;
+  }
+  .cycle-dot-lg.done {
+    background: var(--kaze);
+    box-shadow: 0 0 8px var(--kaze-glow);
+    border-color: var(--kaze);
+  }
+
+  /* Pulse dots — segmented steps */
+  .pulse-dots {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    height: 16px;
+  }
+  .pulse-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(139,184,212,0.35);
+    background: transparent;
+    transition: background 0.12s, box-shadow 0.12s;
+    visibility: hidden;
+  }
+  .pulse-dot.active-seg {
+    background: var(--kaze);
+    border-color: var(--kaze);
+    box-shadow: 0 0 8px var(--kaze-glow);
+  }
+  .pulse-dot.done-seg {
+    background: rgba(139,184,212,0.2);
+    border-color: rgba(139,184,212,0.3);
+  }
+
+  /* Continue button — fade + glow ceremony */
+  .continue-btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    background: none;
+    border: 1px solid var(--kaze);
+    color: var(--kaze);
+    padding: 11px 32px;
+    border-radius: 5px;
+    cursor: pointer;
+    /* Fade-in state */
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(6px);
+    box-shadow: none;
+    transition: opacity 0.7s ease, transform 0.7s ease, box-shadow 0.7s ease, background 0.2s, color 0.2s;
+  }
+  .continue-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+    box-shadow: 0 0 28px var(--kaze-glow), 0 0 6px var(--kaze-dim);
+  }
+  .continue-btn:hover { background: var(--kaze); color: var(--bg); box-shadow: 0 0 36px var(--kaze-glow-hi); }
+
+  /* Tap hint */
+  .tap-hint {
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    font-style: italic;
+    transition: opacity 0.4s ease;
+    opacity: 0.45;
+  }
+  .tap-hint.hidden { opacity: 0; pointer-events: none; }
+
+  /* ─── Right Panel — Queue ─────────────────────────────────────── */
+  .panel-right { display: flex; flex-direction: column; gap: 8px; }
+  .queue-label {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .queue-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    opacity: 0.38;
+    transition: opacity 0.5s ease, border-color 0.5s ease;
+  }
+  .queue-item.active  { opacity: 1; border-color: rgba(139,184,212,0.45); }
+  .queue-item.done    { opacity: 0.2; }
+  .queue-item-head    { display: flex; justify-content: space-between; align-items: baseline; }
+  .queue-name   { font-family: 'Cinzel', serif; font-size: 12px; color: var(--text); }
+  .queue-level  { font-size: 10px; color: var(--muted); letter-spacing: 0.08em; }
+  .queue-pattern { font-size: 11px; color: var(--muted); font-style: italic; }
+  .queue-ldots  { display: flex; gap: 4px; }
+  .queue-ldot   { width: 5px; height: 5px; border-radius: 50%; background: var(--border); }
+  .queue-ldot.f { background: var(--kaze); }
+
+  /* ─── Session Complete Overlay ────────────────────────────────── */
+  .complete-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(14,14,22,0.93);
+    z-index: 100;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+  .complete-overlay.visible { display: flex; }
+  .complete-kanji  { font-family: 'Cinzel', serif; font-size: 52px; color: var(--kaze); opacity: 0.75; }
+  .complete-title  { font-family: 'Cinzel', serif; font-size: 17px; letter-spacing: 0.14em; color: var(--text); }
+  .complete-sub    { font-size: 14px; color: var(--muted); font-style: italic; }
+  .complete-restart {
+    margin-top: 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    background: none;
+    border: 1px solid var(--kaze);
+    color: var(--kaze);
+    padding: 10px 28px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    box-shadow: 0 0 24px var(--kaze-glow);
+  }
+  .complete-restart:hover { background: var(--kaze); color: var(--bg); }
+</style>
+</head>
+<body>
+
+<div class="page-header">
+  <h1>🌬️ Kaze — Wind Breathwork</h1>
+  <div class="version">BreathEngine v1.1 · Testbed</div>
+</div>
+
+<!-- Dev Panel -->
+<div class="dev-panel">
+  <span class="dev-label">Levels</span>
+  <div class="dev-section" id="dev-levels-section"></div>
+  <div class="dev-divider"></div>
+  <div class="dev-session-block">
+    <span class="dev-label">Session</span>
+    <button class="dev-btn" id="btn-standard" onclick="setSessionLength(3)">Standard · 3</button>
+    <button class="dev-btn" id="btn-expert"   onclick="setSessionLength(4)">Expert · 4</button>
+  </div>
+  <div class="dev-divider"></div>
+  <button class="dev-restart-btn" onclick="restartSession()">↺ Restart</button>
+</div>
+
+<!-- Engine -->
+<div class="engine-wrap">
+
+  <!-- LEFT -->
+  <div class="panel-left">
+    <div class="technique-card" id="info-card">
+      <div class="kanji"     id="info-kanji">風息</div>
+      <div class="ninja-name" id="info-name">Kaze no Iki</div>
+      <div class="real-name"  id="info-real">Equal Breath</div>
+      <div class="tier-badge" id="info-tier">Beginner</div>
+      <div class="pattern-display" id="info-pattern">Pattern: <span>3 – 0 – 3 – 0</span></div>
+      <div class="level-dots" id="info-ldots">
+        <div class="level-dot filled"></div>
+        <div class="level-dot"></div>
+        <div class="level-dot"></div>
+        <div class="level-dot-label">L1</div>
+      </div>
+      <div class="technique-cue" id="info-cue">Steady as wind through tall grass.</div>
+    </div>
+  </div>
+
+  <!-- CENTRE -->
+  <div class="panel-centre">
+
+    <div class="circle-stage" onclick="handleCircleTap()">
+      <!-- Ambient idle ring -->
+      <div class="breath-ring idle" id="breath-ring"></div>
+
+      <!-- SVG progress arc -->
+      <svg class="arc-svg" id="arc-svg" viewBox="0 0 240 240">
+        <circle class="arc-track"    cx="120" cy="120" r="113"/>
+        <circle class="arc-progress" id="arc-progress" cx="120" cy="120" r="113"
+                stroke-dasharray="709.9" stroke-dashoffset="709.9"/>
+      </svg>
+
+      <!-- Breath circle -->
+      <div class="breath-circle" id="breath-circle"></div>
+
+      <!-- Overlaid text (phase + timer) -->
+      <div class="circle-text">
+        <div class="phase-label-inner" id="phase-label">—</div>
+        <div class="timer-inner muted" id="timer-text">·</div>
+      </div>
+    </div>
+
+    <!-- Next phase ghost hint -->
+    <div class="next-hint" id="next-hint"></div>
+
+    <!-- Cycle dots — now below the circle -->
+    <div class="cycle-row-centre">
+      <div class="cycle-dot-lg" id="cy0"></div>
+      <div class="cycle-dot-lg" id="cy1"></div>
+      <div class="cycle-dot-lg" id="cy2"></div>
+    </div>
+
+    <!-- Pulse dots (segmented phases) -->
+    <div class="pulse-dots" id="pulse-dots">
+      <div class="pulse-dot" id="pd0"></div>
+      <div class="pulse-dot" id="pd1"></div>
+      <div class="pulse-dot" id="pd2"></div>
+      <div class="pulse-dot" id="pd3"></div>
+      <div class="pulse-dot" id="pd4"></div>
+    </div>
+
+    <!-- Continue — fade in -->
+    <button class="continue-btn" id="continue-btn" onclick="advanceTechnique()">Continue →</button>
+
+    <!-- Tap hint -->
+    <div class="tap-hint" id="tap-hint">tap to begin</div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="panel-right">
+    <div class="queue-label">This Session</div>
+    <div id="queue-list"></div>
+  </div>
+
+</div>
+
+<!-- Session Complete Overlay -->
+<div class="complete-overlay" id="complete-overlay">
+  <div class="complete-kanji">風</div>
+  <div class="complete-title">Session Complete</div>
+  <div class="complete-sub">All Kaze techniques practised.</div>
+  <button class="complete-restart" onclick="restartSession()">Begin Again</button>
+</div>
+
+<script>
+'use strict';
+
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+var FAMILIES = [
+  {
+    key:'K1', kanji:'風息', name:'Kaze no Iki', realName:'Equal Breath', tier:'Beginner',
+    cue:'Steady as wind through tall grass.',
+    levels:[
+      {n:1, pattern:[3,0,3,0],                           label:'3 – 0 – 3 – 0'},
+      {n:2, pattern:[4,0,4,0],                           label:'4 – 0 – 4 – 0'},
+      {n:3, pattern:[5,0,5,0],                           label:'5 – 0 – 5 – 0'}
+    ]
+  },
+  {
+    key:'K2', kanji:'然', name:'Shizen', realName:'Extended Exhale', tier:'Intermediate',
+    cue:'Let the breath slide out long and slow.',
+    levels:[
+      {n:1, pattern:[4,0,6,0],                           label:'4 – 0 – 6 – 0'},
+      {n:2, pattern:[4,2,6,0],                           label:'4 – 2 – 6 – 0'},
+      {n:3, pattern:[4,0,8,0],                           label:'4 – 0 – 8 – 0'}
+    ]
+  },
+  {
+    key:'K3', kanji:'千里', name:'Senri', realName:'Long Wave', tier:'Advanced',
+    cue:'Far and unhurried. The path is long. The breath is longer.',
+    levels:[
+      {n:1, pattern:[5,0,8,0],                           label:'5 – 0 – 8 – 0'},
+      {n:2, pattern:[7,0,11,0],                          label:'7 – 0 – 11 – 0'},
+      {n:3, pattern:[8,0,13,0],                          label:'8 – 0 – 13 – 0'}
+    ]
+  },
+  {
+    key:'K4', kanji:'大蛇', name:'Orochi', realName:'Segmented Exhale', tier:'Expert',
+    cue:'Fill up completely. Then let go in careful steps.',
+    levels:[
+      {n:1, pattern:[5,0,{segs:3,dur:1},0],              label:'5 – 0 – 3×1 – 0'},
+      {n:2, pattern:[6,0,{segs:4,dur:2},0],              label:'6 – 0 – 4×2 – 0'},
+      {n:3, pattern:[8,0,{segs:5,dur:2},0],              label:'8 – 0 – 5×2 – 0'}
+    ]
+  }
+];
+
+var PHASE_NAMES = ['Inhale','Hold','Exhale','Rest'];
+var CYCLES_PER_TECHNIQUE = 3;
+
+// Arc circumference: 2π × 113 ≈ 709.9
+var ARC_C = 2 * Math.PI * 113;
+
+// ─── STATE ────────────────────────────────────────────────────────────────────
+
+var studentLevels = {K1:1, K2:1, K3:1, K4:1};
+var sessionLength  = 3;
+var sessionFamilies = [];
+var familyIndex    = 0;
+var cycleCount     = 0;
+var running        = false;
+var tickTimer      = null;
+var phaseIndex     = 0;
+var segStep        = 0;
+var awaitingAdvance = false;
+var circleScale    = 1.0;
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  buildDevLevels();
+  buildSession();
+  renderQueue();
+  renderTechniqueInfo();
+  renderCycleDots();
+  renderPulseDots();
+  resetContinueBtn();
+  showTapHint(true);
+  setPhaseLabel('—');
+  setTimerText('·', true);
+  setNextHint('');
+  clearArc();
+  syncCircleToRest();
+  setIdlePulse(true);
+}
+
+// ─── DEV CONTROLS ────────────────────────────────────────────────────────────
+
+function buildDevLevels() {
+  var sec = document.getElementById('dev-levels-section');
+  sec.innerHTML = '';
+  FAMILIES.forEach(function(fam) {
+    var block = document.createElement('div');
+    block.className = 'dev-family-block';
+    var nameEl = document.createElement('span');
+    nameEl.className = 'dev-family-name';
+    nameEl.textContent = fam.key;
+    block.appendChild(nameEl);
+    [1,2,3].forEach(function(lv) {
+      var btn = document.createElement('button');
+      btn.className = 'dev-btn' + (studentLevels[fam.key] === lv ? ' active' : '');
+      btn.id = 'dlv-' + fam.key + '-' + lv;
+      btn.textContent = 'L' + lv;
+      btn.onclick = (function(k,v){ return function(){ setLevel(k,v); }; })(fam.key, lv);
+      block.appendChild(btn);
+    });
+    sec.appendChild(block);
+  });
+  document.getElementById('btn-standard').className = 'dev-btn' + (sessionLength === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (sessionLength === 4 ? ' active' : '');
+}
+
+function setLevel(key, lv) {
+  stopIfRunning();
+  studentLevels[key] = lv;
+  [1,2,3].forEach(function(v) {
+    var b = document.getElementById('dlv-' + key + '-' + v);
+    if (b) b.className = 'dev-btn' + (v === lv ? ' active' : '');
+  });
+  var cf = sessionFamilies[familyIndex];
+  if (cf && cf.key === key) {
+    cycleCount = 0; awaitingAdvance = false;
+    resetContinueBtn(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+    clearArc(); syncCircleToRest(); showTapHint(true);
+    setPhaseLabel('—'); setTimerText('·', true); setNextHint(''); setIdlePulse(true);
+  }
+  renderQueue();
+}
+
+function setSessionLength(n) {
+  stopIfRunning(); sessionLength = n;
+  document.getElementById('btn-standard').className = 'dev-btn' + (n === 3 ? ' active' : '');
+  document.getElementById('btn-expert').className   = 'dev-btn' + (n === 4 ? ' active' : '');
+  restartSession();
+}
+
+// ─── SESSION ──────────────────────────────────────────────────────────────────
+
+function buildSession() {
+  sessionFamilies = FAMILIES.slice(0, sessionLength);
+  familyIndex = 0; cycleCount = 0; awaitingAdvance = false;
+}
+
+function restartSession() {
+  stopIfRunning();
+  document.getElementById('complete-overlay').className = 'complete-overlay';
+  buildSession(); buildDevLevels();
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+  resetContinueBtn(); showTapHint(true);
+  setPhaseLabel('—'); setTimerText('·', true); setNextHint(''); clearArc(); syncCircleToRest(); setIdlePulse(true);
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+
+function currentFamily()  { return sessionFamilies[familyIndex]; }
+function currentPattern() {
+  var fam = currentFamily(), lv = studentLevels[fam.key] || 1;
+  return fam.levels[lv - 1].pattern;
+}
+function currentLevelData() {
+  var fam = currentFamily(), lv = studentLevels[fam.key] || 1;
+  return fam.levels[lv - 1];
+}
+function isSegmented(ph)  { return ph !== null && typeof ph === 'object' && ph.segs; }
+
+// ─── RENDER ───────────────────────────────────────────────────────────────────
+
+function renderTechniqueInfo() {
+  var fam = currentFamily(), lvData = currentLevelData(), lv = studentLevels[fam.key] || 1;
+  document.getElementById('info-kanji').textContent   = fam.kanji;
+  document.getElementById('info-name').textContent    = fam.name;
+  document.getElementById('info-real').textContent    = fam.realName;
+  document.getElementById('info-cue').textContent     = fam.cue;
+  document.getElementById('info-pattern').innerHTML   = 'Pattern: <span>' + lvData.label + '</span>';
+  var tierEl = document.getElementById('info-tier');
+  tierEl.textContent = fam.tier;
+  tierEl.className   = 'tier-badge ' + fam.tier.toLowerCase();
+  // level dots
+  var ldots = document.getElementById('info-ldots'); ldots.innerHTML = '';
+  for (var i = 1; i <= 3; i++) {
+    var d = document.createElement('div');
+    d.className = 'level-dot' + (i <= lv ? ' filled' : '');
+    ldots.appendChild(d);
+  }
+  var lbl = document.createElement('div');
+  lbl.className = 'level-dot-label'; lbl.textContent = 'L' + lv;
+  ldots.appendChild(lbl);
+}
+
+function renderCycleDots() {
+  for (var i = 0; i < 3; i++) {
+    var d = document.getElementById('cy' + i);
+    if (d) d.className = 'cycle-dot-lg' + (i < cycleCount ? ' done' : '');
+  }
+}
+
+function renderPulseDots() {
+  var pattern = currentPattern(), maxSegs = 0;
+  pattern.forEach(function(ph) { if (isSegmented(ph) && ph.segs > maxSegs) maxSegs = ph.segs; });
+  for (var i = 0; i < 5; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    pd.className = 'pulse-dot';
+    pd.style.visibility = (i < maxSegs) ? 'visible' : 'hidden';
+  }
+}
+
+function renderQueue() {
+  var list = document.getElementById('queue-list'); list.innerHTML = '';
+  sessionFamilies.forEach(function(fam, idx) {
+    var lv = studentLevels[fam.key] || 1, lvData = fam.levels[lv - 1];
+    var item = document.createElement('div');
+    var cls = 'queue-item';
+    if (idx === familyIndex)     cls += ' active';
+    else if (idx < familyIndex)  cls += ' done';
+    item.className = cls;
+    var dots = '';
+    for (var d = 1; d <= 3; d++) dots += '<div class="queue-ldot' + (d <= lv ? ' f' : '') + '"></div>';
+    item.innerHTML =
+      '<div class="queue-item-head"><div class="queue-name">' + fam.name + '</div><div class="queue-level">L' + lv + '</div></div>' +
+      '<div class="queue-pattern">' + lvData.label + '</div>' +
+      '<div class="queue-ldots">' + dots + '</div>';
+    list.appendChild(item);
+  });
+}
+
+// ─── UI HELPERS ───────────────────────────────────────────────────────────────
+
+function setPhaseLabel(txt) { document.getElementById('phase-label').textContent = txt; }
+
+function setTimerText(txt, muted) {
+  var el = document.getElementById('timer-text');
+  el.textContent = txt;
+  el.className = 'timer-inner' + (muted ? ' muted' : '');
+}
+
+function setNextHint(txt) {
+  var el = document.getElementById('next-hint');
+  if (txt) { el.textContent = 'next: ' + txt.toLowerCase(); el.className = 'next-hint visible'; }
+  else      { el.textContent = ''; el.className = 'next-hint'; }
+}
+
+function showTapHint(show) {
+  document.getElementById('tap-hint').className = 'tap-hint' + (show ? '' : ' hidden');
+}
+
+function resetContinueBtn() {
+  document.getElementById('continue-btn').className = 'continue-btn';
+}
+function showContinueBtn() {
+  // slight delay so the "Complete" moment lands first
+  setTimeout(function() {
+    document.getElementById('continue-btn').className = 'continue-btn visible';
+  }, 400);
+}
+
+function setIdlePulse(on) {
+  document.getElementById('breath-ring').className = 'breath-ring' + (on ? ' idle' : '');
+}
+
+// ─── ARC ──────────────────────────────────────────────────────────────────────
+
+function clearArc() {
+  var arc = document.getElementById('arc-progress');
+  arc.style.strokeDashoffset = ARC_C;
+  arc.style.transition = 'none';
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg');
+}
+
+function showArc(totalSecs) {
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '0';
+  void arc.getBoundingClientRect(); // force reflow
+  arc.style.transition = 'stroke-dashoffset ' + totalSecs + 's linear';
+  arc.style.strokeDashoffset = ARC_C;
+}
+
+function resetArcInstant() {
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'none';
+  arc.style.strokeDashoffset = '0';
+}
+
+function setArcColour(col) {
+  document.getElementById('arc-progress').style.stroke = col;
+}
+
+// ─── CIRCLE ANIMATION ─────────────────────────────────────────────────────────
+// Base 110px, scale 0.75 (rest) → 1.85 (full inhale)
+
+var _kfIdx = 0;
+function injectKF(fromS, toS) {
+  var name = 'bf_' + (_kfIdx++);
+  var s = document.createElement('style');
+  s.textContent = '@keyframes ' + name + '{ from{transform:scale(' + fromS + ')} to{transform:scale(' + toS + ')} }';
+  document.head.appendChild(s);
+  return name;
+}
+
+function animateSmoothPhase(fromS, toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  var name = injectKF(fromS, toS);
+  el.style.transition = 'box-shadow 0.5s ease';
+  el.style.transform  = 'scale(' + toS + ')';
+  el.style.animation  = name + ' ' + durMs + 'ms linear forwards';
+  circleScale = toS;
+  var glowR = Math.round((toS - 0.75) / 1.1 * 40);
+  el.style.boxShadow = '0 0 ' + glowR + 'px var(--kaze-glow)';
+}
+
+function clearAnimation() {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  el.style.transition = 'none';
+}
+
+function syncCircleToRest() {
+  var el = document.getElementById('breath-circle');
+  el.style.animation  = 'none';
+  el.style.transition = 'transform 0.8s ease, box-shadow 0.8s ease';
+  el.style.transform  = 'scale(1.0)';
+  el.style.boxShadow  = '0 0 24px rgba(139,184,212,0.10)';
+  circleScale = 1.0;
+}
+
+function stepCircle(toS, durMs) {
+  var el = document.getElementById('breath-circle');
+  el.style.animation = 'none';
+  el.style.transition = 'transform ' + durMs + 'ms linear, box-shadow ' + durMs + 'ms ease';
+  el.style.transform  = 'scale(' + toS + ')';
+  var glowR = Math.round((toS - 0.75) / 1.1 * 40);
+  el.style.boxShadow  = '0 0 ' + glowR + 'px var(--kaze-glow)';
+  circleScale = toS;
+}
+
+// ─── NEXT PHASE HELPER ────────────────────────────────────────────────────────
+
+function getNextPhaseName(currentIdx, pattern) {
+  for (var i = 1; i < pattern.length; i++) {
+    var ni = (currentIdx + i) % pattern.length;
+    var ph = pattern[ni];
+    if (isSegmented(ph) || ph !== 0) return PHASE_NAMES[ni];
+  }
+  return '';
+}
+
+// ─── ENGINE ───────────────────────────────────────────────────────────────────
+
+function handleCircleTap() {
+  if (awaitingAdvance) return;
+  running ? stopBreath() : startBreath();
+}
+
+function startBreath() {
+  running = true; phaseIndex = 0; segStep = 0;
+  showTapHint(false); setIdlePulse(false);
+  runPhase();
+}
+
+function stopBreath() {
+  running = false;
+  clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('—'); setTimerText('·', true);
+  setNextHint(''); resetPulseDots(); showTapHint(true); setIdlePulse(true);
+}
+
+function stopIfRunning() { if (running) stopBreath(); }
+function clearTickTimer() { if (tickTimer) { clearInterval(tickTimer); tickTimer = null; } }
+
+function runPhase() {
+  var pattern = currentPattern(), ph = pattern[phaseIndex];
+  if (isSegmented(ph))  { runSegmentedPhase(ph); }
+  else if (ph === 0)    { nextPhase(); }
+  else                  { runSmoothPhase(phaseIndex, ph); }
+}
+
+function runSmoothPhase(pidx, secs) {
+  var fromS, toS, label, arcCol;
+  if (pidx === 0) {
+    fromS = circleScale; toS = 1.85; label = 'Inhale'; arcCol = 'var(--kaze)';
+  } else if (pidx === 1) {
+    fromS = circleScale; toS = circleScale; label = 'Hold'; arcCol = 'rgba(201,169,110,0.7)';
+  } else if (pidx === 2) {
+    fromS = circleScale; toS = 0.78; label = 'Exhale'; arcCol = 'rgba(139,184,212,0.5)';
+  } else {
+    fromS = circleScale; toS = circleScale; label = 'Rest'; arcCol = 'rgba(107,104,128,0.4)';
+  }
+
+  setPhaseLabel(label);
+  setArcColour(arcCol);
+  showArc(secs);
+  resetPulseDots();
+  animateSmoothPhase(fromS, toS, secs * 1000);
+  setNextHint(getNextPhaseName(pidx, currentPattern()));
+
+  var elapsed = 0;
+  clearTickTimer();
+  tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = secs - elapsed;
+    setTimerText(rem > 0 ? rem : '', false);
+    if (elapsed >= secs) { clearTickTimer(); nextPhase(); }
+  }, 1000);
+}
+
+function runSegmentedPhase(ph) {
+  var totalSegs = ph.segs, segDur = ph.dur;
+  showPulseDots(totalSegs);
+  var isEx = (phaseIndex === 2 || phaseIndex === 3);
+  setPhaseLabel(isEx ? 'Exhale' : 'Inhale');
+  setArcColour(isEx ? 'rgba(139,184,212,0.5)' : 'var(--kaze)');
+  setNextHint(getNextPhaseName(phaseIndex, currentPattern()));
+
+  // position circle at start of this phase
+  var startS = isEx ? 1.85 : 0.78;
+  stepCircle(startS, 100);
+  circleScale = startS;
+
+  var stepSize = isEx
+    ? (startS - 0.78) / totalSegs
+    : (1.85 - startS) / totalSegs;
+
+  segStep = 0;
+  doSegStep(totalSegs, segDur, isEx, stepSize);
+}
+
+function doSegStep(totalSegs, segDur, isEx, stepSize) {
+  if (!running) return;
+
+  // light up current dot, dim previous
+  for (var i = 0; i < totalSegs; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    if (i < segStep)       { pd.className = 'pulse-dot done-seg'; pd.style.visibility = 'visible'; }
+    else if (i === segStep){ pd.className = 'pulse-dot active-seg'; pd.style.visibility = 'visible'; }
+    else                   { pd.className = 'pulse-dot'; pd.style.visibility = 'visible'; }
+  }
+
+  setTimerText(segDur, false);
+
+  // arc per segment — reset + drain over segDur
+  resetArcInstant();
+  void document.getElementById('arc-progress').getBoundingClientRect();
+  var arc = document.getElementById('arc-progress');
+  arc.style.transition = 'stroke-dashoffset ' + segDur + 's linear';
+  arc.style.strokeDashoffset = ARC_C;
+  document.getElementById('arc-svg').setAttribute('class', 'arc-svg visible');
+
+  // step circle
+  var targetS = isEx
+    ? Math.max(0.78, circleScale - stepSize)
+    : Math.min(1.85, circleScale + stepSize);
+  stepCircle(targetS, segDur * 1000 * 0.85);
+  circleScale = targetS;
+
+  var elapsed = 0;
+  clearTickTimer();
+  tickTimer = setInterval(function() {
+    elapsed++;
+    var rem = segDur - elapsed;
+    if (rem > 0) setTimerText(rem, false);
+    if (elapsed >= segDur) {
+      clearTickTimer();
+      segStep++;
+      if (segStep >= totalSegs) { nextPhase(); }
+      else                       { doSegStep(totalSegs, segDur, isEx, stepSize); }
+    }
+  }, 1000);
+}
+
+function nextPhase() {
+  if (!running) return;
+  var pattern = currentPattern();
+  phaseIndex++;
+  if (phaseIndex >= pattern.length) {
+    phaseIndex = 0; cycleCount++;
+    renderCycleDots();
+    if (cycleCount >= CYCLES_PER_TECHNIQUE) { onTechniqueDone(); }
+    else { segStep = 0; runPhase(); }
+  } else {
+    runPhase();
+  }
+}
+
+function onTechniqueDone() {
+  running = false; clearTickTimer(); clearAnimation(); clearArc();
+  syncCircleToRest(); setPhaseLabel('Complete'); setTimerText('', false);
+  setNextHint(''); resetPulseDots(); awaitingAdvance = true;
+  if (familyIndex >= sessionFamilies.length - 1) {
+    setTimeout(function() {
+      document.getElementById('complete-overlay').className = 'complete-overlay visible';
+    }, 700);
+  } else {
+    showContinueBtn();
+  }
+}
+
+function advanceTechnique() {
+  resetContinueBtn(); awaitingAdvance = false;
+  familyIndex++; cycleCount = 0; phaseIndex = 0; segStep = 0;
+  renderQueue(); renderTechniqueInfo(); renderCycleDots(); renderPulseDots();
+  setPhaseLabel('—'); setTimerText('·', true); setNextHint('');
+  clearArc(); syncCircleToRest(); showTapHint(true); setIdlePulse(true);
+}
+
+// ─── PULSE DOTS ───────────────────────────────────────────────────────────────
+
+function showPulseDots(n) {
+  for (var i = 0; i < 5; i++) {
+    var pd = document.getElementById('pd' + i);
+    if (!pd) continue;
+    pd.style.visibility = (i < n) ? 'visible' : 'hidden';
+    pd.className = 'pulse-dot';
+  }
+}
+
+function resetPulseDots() { renderPulseDots(); }
+
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>

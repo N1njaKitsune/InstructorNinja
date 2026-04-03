@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid v2.0 — Ninja Learning</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Crimson+Pro:wght@300;400&display=swap" rel="stylesheet">
+<style>
+/* ── Reset ── */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* ── Page ── */
+body {
+  background: #05050A;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Cinzel', serif;
+  overflow: hidden;
+}
+
+/* ── Vignette ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 20%, #05050A 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── SVG container ── */
+#hexGrid {
+  position: relative;
+  z-index: 1;
+  cursor: default;
+}
+
+/* ── SVG-embedded text inherits this ── */
+text {
+  font-family: 'Cinzel', serif;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Hex group interactions ── */
+.hex-item {
+  cursor: pointer;
+  transition: opacity 0.25s ease;
+}
+.hex-item .face       { transition: fill 0.2s ease; }
+.hex-item .ring       { transition: opacity 0.2s ease; }
+.hex-item .label-text { transition: fill 0.2s ease; }
+
+/* Hover — handled in JS with SVG attributes for SVG elements */
+
+/* Dim siblings on hover — CSS :has() for SVG groups */
+#satellites:has(.hex-item:hover) .hex-item:not(:hover) {
+  opacity: 0.45;
+}
+</style>
+</head>
+<body>
+
+<svg id="hexGrid"></svg>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════
+   GEOMETRY — locked in. Three functions, zero trig elsewhere.
+   ═══════════════════════════════════════════════════════════════════ */
+const SQRT3_OVER2 = Math.sqrt(3) / 2;
+const DEG         = Math.PI / 180;
+
+function hexVertices(cx, cy, R) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (-90 + 60 * i) * DEG;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+}
+function sideNormal(s) {
+  const a = (-60 + 60 * s) * DEG;
+  return { dx: Math.cos(a), dy: Math.sin(a) };
+}
+function itemCentre(menuR, itemR, sideIndex, gap) {
+  const d = (menuR + itemR) * SQRT3_OVER2 + gap;
+  const n = sideNormal(sideIndex);
+  return { x: n.dx * d, y: n.dy * d };
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   CONFIRMED GEOMETRY CONSTANTS
+   ═══════════════════════════════════════════════════════════════════ */
+const MENU_R     = 108;
+const ITEM_RATIO = 0.59;
+const GAP        = 22;
+const ITEM_R     = MENU_R * ITEM_RATIO;         // 63.72px
+const FILL_ORDER = [0, 1, 2, 3, 4, 5];          // clockwise from upper-right
+
+/* ═══════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ═══════════════════════════════════════════════════════════════════ */
+const T = {
+  bgDeep:       '#05050A',
+  bgFace:       '#0D0D14',
+  bgFaceHover:  '#14141F',
+  borderDim:    'rgba(245,240,232,0.12)',
+  borderMid:    'rgba(245,240,232,0.22)',
+  borderHover:  'rgba(245,240,232,0.38)',
+  textPrimary:  'rgba(245,240,232,0.92)',
+  textDim:      'rgba(245,240,232,0.50)',
+  accentRed:    '#8B2020',
+  accentRedGlow:'rgba(139,32,32,0.55)',
+  ringInner:    '#0D0D14',
+  hubBorder:    'rgba(245,240,232,0.18)',
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   MENU CONFIGURATION
+   ─────────────────────────────────────────────────────────────────
+   items: array of up to 6 objects, filled clockwise from upper-right.
+
+   Each item:
+     label    — display text (use \n for line break)
+     icon     — optional text/emoji above label
+     active   — boolean: shows red accent ring
+     disabled — boolean: dimmed, not clickable
+     href     — navigate on click
+     onClick  — callback(item, event)
+   ═══════════════════════════════════════════════════════════════════ */
+const MENU_CONFIG = {
+  hub: {
+    label: 'Ninja\nLearning',
+    icon:  '🥷',
+  },
+  items: [
+    { id: 'slp',     label: 'Subject\nLaunch Pad', active: true  },
+    { id: 'mc',      label: 'Minecraft',            active: true  },
+    { id: 'fitness', label: 'Ninja\nFitness',       active: true  },
+    { id: 'team',    label: 'Meet The\nTeam',        active: false },
+    { id: 'story',   label: 'Our\nStory',           active: false },
+    { id: 'contact', label: 'Contact\nUs',          active: false },
+  ],
+  onItemClick: (item) => {
+    console.log('clicked:', item.id);
+    /* Toggle active for demo */
+    item.active = !item.active;
+    buildGrid();
+  },
+};
+
+/* ═══════════════════════════════════════════════════════════════════
+   SVG HELPERS
+   ═══════════════════════════════════════════════════════════════════ */
+const NS  = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('hexGrid');
+
+function el(tag, attrs = {}) {
+  const e = document.createElementNS(NS, tag);
+  Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+
+function ptsAttr(verts) {
+  return verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' ');
+}
+
+/* Dropshadow filter for hub */
+function addDefs() {
+  const defs   = el('defs');
+
+  /* Hub glow */
+  const fHub   = el('filter', { id: 'hubGlow', x: '-30%', y: '-30%', width: '160%', height: '160%' });
+  const feHub  = el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '6', result: 'blur' });
+  const feMHub = el('feMerge');
+  const feMN1  = el('feMergeNode', { in: 'blur' });
+  const feMN2  = el('feMergeNode', { in: 'SourceGraphic' });
+  feMHub.appendChild(feMN1); feMHub.appendChild(feMN2);
+  fHub.appendChild(feHub); fHub.appendChild(feMHub);
+
+  /* Red ring glow */
+  const fRed   = el('filter', { id: 'redGlow', x: '-40%', y: '-40%', width: '180%', height: '180%' });
+  const feRed  = el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '5' });
+  fRed.appendChild(feRed);
+
+  defs.appendChild(fHub);
+  defs.appendChild(fRed);
+  svg.appendChild(defs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   BUILD GRID
+   ═══════════════════════════════════════════════════════════════════ */
+function buildGrid() {
+  svg.innerHTML = '';
+  addDefs();
+
+  const cfg   = MENU_CONFIG;
+  const count = Math.min(cfg.items.length, 6);
+  const menuV = hexVertices(0, 0, MENU_R);
+
+  /* Compute item positions */
+  const itemData = FILL_ORDER.slice(0, count).map((side, i) => {
+    const item = cfg.items[i];
+    const c    = itemCentre(MENU_R, ITEM_R, side, GAP);
+    return {
+      ...item,
+      side,
+      cx: c.x, cy: c.y,
+      verts: hexVertices(c.x, c.y, ITEM_R),
+    };
+  });
+
+  /* Bounding box */
+  const all  = [...menuV, ...itemData.flatMap(d => d.verts)];
+  const PAD  = 36;
+  const minX = Math.min(...all.map(v => v.x)) - PAD;
+  const minY = Math.min(...all.map(v => v.y)) - PAD;
+  const maxX = Math.max(...all.map(v => v.x)) + PAD;
+  const maxY = Math.max(...all.map(v => v.y)) + PAD;
+  const W = maxX - minX, H = maxY - minY;
+
+  svg.setAttribute('viewBox', `${minX} ${minY} ${W} ${H}`);
+  svg.setAttribute('width', W);
+  svg.setAttribute('height', H);
+
+  /* ── Draw satellites group ── */
+  const satGroup = el('g', { id: 'satellites' });
+
+  itemData.forEach(item => {
+    if (item.disabled) return;
+
+    const g = el('g', { class: 'hex-item' });
+
+    /* Active glow (behind everything) */
+    if (item.active) {
+      const glow = el('polygon', {
+        points:  ptsAttr(hexVertices(item.cx, item.cy, ITEM_R * 1.22)),
+        fill:    T.accentRed,
+        opacity: '0.18',
+        filter:  'url(#redGlow)',
+      });
+      g.appendChild(glow);
+    }
+
+    /* Ring (active = red, inactive = subtle border) */
+    const ringR    = ITEM_R * 1.10;
+    const ringVert = hexVertices(item.cx, item.cy, ringR);
+    const ring     = el('polygon', {
+      class:          'ring',
+      points:         ptsAttr(ringVert),
+      fill:           item.active ? T.accentRed : 'none',
+      stroke:         item.active ? 'none' : T.borderDim,
+      'stroke-width': item.active ? '0' : '1',
+    });
+    g.appendChild(ring);
+
+    /* Face */
+    const face = el('polygon', {
+      class:          'face',
+      points:         ptsAttr(item.verts),
+      fill:           T.bgFace,
+      stroke:         item.active ? T.accentRed : T.borderDim,
+      'stroke-width': item.active ? '1.5' : '1',
+    });
+    g.appendChild(face);
+
+    /* Label — handle \n line breaks */
+    const lines  = (item.label || '').split('\n');
+    const lineH  = ITEM_R * 0.28;
+    const totalH = lines.length * lineH;
+    const startY = item.cy - totalH / 2 + lineH * 0.5 + (item.icon ? ITEM_R * 0.12 : 0);
+
+    if (item.icon) {
+      const iconEl = el('text', {
+        x:            item.cx,
+        y:            item.cy - totalH / 2 - ITEM_R * 0.05,
+        'text-anchor':'middle',
+        'font-size':  ITEM_R * 0.32,
+        fill:         T.textPrimary,
+      });
+      iconEl.textContent = item.icon;
+      g.appendChild(iconEl);
+    }
+
+    lines.forEach((line, li) => {
+      const t = el('text', {
+        x:              item.cx,
+        y:              startY + li * lineH,
+        'text-anchor':  'middle',
+        'dominant-baseline': 'middle',
+        'font-size':    ITEM_R * 0.175,
+        'letter-spacing': '0.06em',
+        fill:           T.textPrimary,
+        'font-weight':  '600',
+      });
+      t.textContent = line;
+      g.appendChild(t);
+    });
+
+    /* Hit area + interaction */
+    const hit = el('polygon', {
+      points:  ptsAttr(item.verts),
+      fill:    'transparent',
+      stroke:  'none',
+      style:   'cursor:pointer',
+    });
+
+    hit.addEventListener('mouseenter', () => {
+      face.setAttribute('fill', T.bgFaceHover);
+      if (!item.active) {
+        ring.setAttribute('stroke', T.borderHover);
+        face.setAttribute('stroke', T.borderMid);
+      }
+    });
+    hit.addEventListener('mouseleave', () => {
+      face.setAttribute('fill', T.bgFace);
+      if (!item.active) {
+        ring.setAttribute('stroke', T.borderDim);
+        face.setAttribute('stroke', T.borderDim);
+      }
+    });
+    hit.addEventListener('click', (e) => {
+      if (cfg.onItemClick) cfg.onItemClick(item, e);
+      if (item.href) window.location.href = item.href;
+    });
+
+    g.appendChild(hit);
+    satGroup.appendChild(g);
+  });
+
+  svg.appendChild(satGroup);
+
+  /* ── Draw hub (on top of satellites) ── */
+  const hubGroup = el('g', { id: 'hub' });
+
+  /* Hub outer ring — subtle */
+  const hubRingV = hexVertices(0, 0, MENU_R * 1.04);
+  hubGroup.appendChild(el('polygon', {
+    points:         ptsAttr(hubRingV),
+    fill:           'none',
+    stroke:         T.hubBorder,
+    'stroke-width': '1',
+  }));
+
+  /* Hub face */
+  hubGroup.appendChild(el('polygon', {
+    points:         ptsAttr(menuV),
+    fill:           T.bgFace,
+    stroke:         T.hubBorder,
+    'stroke-width': '1.5',
+    filter:         'url(#hubGlow)',
+  }));
+
+  /* Hub icon */
+  if (cfg.hub.icon) {
+    const iconEl = el('text', {
+      x: 0, y: -MENU_R * 0.1,
+      'text-anchor': 'middle',
+      'dominant-baseline': 'middle',
+      'font-size': MENU_R * 0.32,
+      fill: T.textPrimary,
+    });
+    iconEl.textContent = cfg.hub.icon;
+    hubGroup.appendChild(iconEl);
+  }
+
+  /* Hub label */
+  const hubLines = (cfg.hub.label || '').split('\n');
+  const hubLineH = MENU_R * 0.22;
+  const hubStartY = (cfg.hub.icon ? MENU_R * 0.18 : -hubLines.length * hubLineH / 2 + hubLineH * 0.5);
+  hubLines.forEach((line, li) => {
+    const t = el('text', {
+      x: 0, y: hubStartY + li * hubLineH,
+      'text-anchor': 'middle',
+      'dominant-baseline': 'middle',
+      'font-size': MENU_R * 0.15,
+      'letter-spacing': '0.12em',
+      fill: T.textPrimary,
+      'font-weight': '400',
+    });
+    t.textContent = li === 1 ? line.toUpperCase() : line;
+    hubGroup.appendChild(t);
+  });
+
+  svg.appendChild(hubGroup);
+}
+
+buildGrid();
+</script>
+</body>
+</html>

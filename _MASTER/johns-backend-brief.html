@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Learning — John's Backend Brief</title>
+<style>
+  :root {
+    --bg: #0F0F1A;
+    --surface: #1A1A2E;
+    --surface2: #222240;
+    --border: #2E2E50;
+    --text: #E8E8F0;
+    --text-dim: #9999B0;
+    --accent: #F0C830;
+    --green: #4ADE80;
+    --green-dim: #1A4010;
+    --red: #FF6B6B;
+    --red-dim: #3D0A0A;
+    --amber: #FBBF24;
+    --amber-dim: #4A3800;
+    --blue: #60A5FA;
+    --blue-dim: #0E2260;
+    --purple: #A78BFA;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:var(--bg); color:var(--text); line-height:1.6; }
+
+  .container { max-width:1100px; margin:0 auto; padding:32px 24px; }
+
+  header { text-align:center; padding:48px 0 32px; border-bottom:1px solid var(--border); margin-bottom:40px; }
+  header h1 { font-size:28px; font-weight:700; color:var(--accent); margin-bottom:8px; letter-spacing:-0.5px; }
+  header p { color:var(--text-dim); font-size:15px; }
+  header .date { display:inline-block; background:var(--surface); padding:4px 14px; border-radius:20px; font-size:13px; color:var(--amber); margin-top:12px; }
+
+  /* Stats bar */
+  .stats-bar { display:flex; gap:16px; margin-bottom:40px; flex-wrap:wrap; }
+  .stat-card { flex:1; min-width:140px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px; text-align:center; }
+  .stat-card .number { font-size:32px; font-weight:700; }
+  .stat-card .label { font-size:12px; color:var(--text-dim); text-transform:uppercase; letter-spacing:0.5px; margin-top:4px; }
+  .stat-card.green .number { color:var(--green); }
+  .stat-card.amber .number { color:var(--amber); }
+  .stat-card.red .number { color:var(--red); }
+  .stat-card.blue .number { color:var(--blue); }
+
+  /* Sections */
+  .section { margin-bottom:48px; }
+  .section-header { display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; }
+  .section-header h2 { font-size:20px; font-weight:600; }
+  .section-header .badge { font-size:11px; padding:3px 10px; border-radius:12px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+  .badge-urgent { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,107,107,0.3); }
+  .badge-ready { background:var(--green-dim); color:var(--green); border:1px solid rgba(74,222,128,0.3); }
+  .badge-blocked { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(251,191,36,0.3); }
+  .badge-info { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(96,165,250,0.3); }
+
+  /* Cards */
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:12px; margin-bottom:12px; overflow:hidden; transition: border-color 0.2s; }
+  .card:hover { border-color: #444466; }
+  .card-header { display:flex; align-items:center; justify-content:space-between; padding:16px 20px; cursor:pointer; user-select:none; }
+  .card-header h3 { font-size:15px; font-weight:600; display:flex; align-items:center; gap:10px; }
+  .card-header .task-id { color:var(--text-dim); font-size:13px; font-weight:400; }
+  .card-header .arrow { color:var(--text-dim); font-size:12px; transition:transform 0.2s; }
+  .card.open .card-header .arrow { transform:rotate(90deg); }
+  .card-body { display:none; padding:0 20px 16px; }
+  .card.open .card-body { display:block; }
+  .card-body p { font-size:14px; color:var(--text-dim); line-height:1.7; margin-bottom:8px; }
+  .card-body .decision { background:var(--surface2); border-left:3px solid var(--blue); padding:12px 16px; border-radius:0 8px 8px 0; margin:12px 0; }
+  .card-body .decision strong { color:var(--blue); }
+  .card-body .for-john { background:var(--surface2); border-left:3px solid var(--amber); padding:12px 16px; border-radius:0 8px 8px 0; margin:12px 0; }
+  .card-body .for-john strong { color:var(--amber); }
+  .card-body .open-q { background:var(--surface2); border-left:3px solid var(--red); padding:12px 16px; border-radius:0 8px 8px 0; margin:12px 0; }
+  .card-body .open-q strong { color:var(--red); }
+
+  /* Priority indicator */
+  .priority { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:4px; }
+  .priority.urgent { background:var(--red); }
+  .priority.critical { background:var(--amber); }
+  .priority.high { background:var(--blue); }
+
+  /* Data flow diagram */
+  .flow-diagram { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:28px; margin-bottom:32px; font-family:'Courier New', monospace; font-size:13px; line-height:1.8; color:var(--text-dim); overflow-x:auto; white-space:pre; }
+  .flow-diagram .highlight { color:var(--accent); font-weight:600; }
+  .flow-diagram .green-txt { color:var(--green); }
+  .flow-diagram .dim { color:#555570; }
+
+  /* Tables */
+  .schema-table { width:100%; border-collapse:collapse; font-size:13px; margin:16px 0; }
+  .schema-table th { text-align:left; padding:10px 14px; background:var(--surface2); color:var(--text-dim); font-weight:600; text-transform:uppercase; font-size:11px; letter-spacing:0.5px; border-bottom:1px solid var(--border); }
+  .schema-table td { padding:10px 14px; border-bottom:1px solid var(--border); }
+  .schema-table code { background:var(--surface2); padding:2px 6px; border-radius:4px; font-size:12px; color:var(--purple); }
+  .schema-table .status-resolved { color:var(--green); }
+  .schema-table .status-open { color:var(--red); }
+  .schema-table .status-john { color:var(--amber); }
+  .schema-table .status-deferred { color:var(--text-dim); }
+
+  /* Footer */
+  footer { border-top:1px solid var(--border); padding:32px 0 16px; text-align:center; color:var(--text-dim); font-size:13px; }
+
+  /* Expand all */
+  .expand-all { background:var(--surface); border:1px solid var(--border); color:var(--text-dim); padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; float:right; }
+  .expand-all:hover { border-color:#555; color:var(--text); }
+
+  @media (max-width:600px) {
+    .stats-bar { flex-direction:column; }
+    .container { padding:16px; }
+    header h1 { font-size:22px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>Ninja Learning — Backend Brief for John</h1>
+  <p>We've worked through the open integration questions and put together our recommendations. Everything here is a suggestion for you to review, challenge, or confirm before you start building.</p>
+  <div class="date">Prepared 1 April 2026 — for Friday start</div>
+</header>
+
+<div style="background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:20px 24px; margin-bottom:28px; font-size:14px; color:var(--text-dim); line-height:1.7;">
+  <strong style="color:var(--accent);">Hey John</strong> — Hazza and I went through the 23 open questions across the integration specs and Working Doc. We've put forward our thinking on 15 of them, deferred 3 to later phases, and flagged 2 that are squarely in your court. The remaining 3 we weren't sure on yet. <strong style="color:var(--text);">None of this is final until you've signed off.</strong> If anything feels wrong or you'd approach it differently, say so — that's exactly what this doc is for.
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card green"><div class="number">15</div><div class="label">Recommendations</div></div>
+  <div class="stat-card red"><div class="number">3</div><div class="label">Still Open</div></div>
+  <div class="stat-card amber"><div class="number">2</div><div class="label">Need Your Input</div></div>
+  <div class="stat-card blue"><div class="number">17</div><div class="label">Phase 1 Tasks</div></div>
+</div>
+
+<!-- SECTION: THE BIG PICTURE -->
+<div class="section">
+  <div class="section-header">
+    <h2>The Big Picture — Data Flows</h2>
+    <span class="badge badge-info">Reference</span>
+  </div>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:16px;">This is how data moves between the three sections. Every backend endpoint you build serves one of these flows.</p>
+
+  <div class="flow-diagram"><span class="highlight">INSTRUCTOR</span>                          <span class="highlight">STUDENT</span>                         <span class="highlight">PARENT</span>
+<span class="dim">-----------</span>                          <span class="dim">-------</span>                         <span class="dim">------</span>
+
+Takes register                                                         Reports absent/late
+    <span class="dim">|</span>                                                                      <span class="dim">|</span>
+    v                                                                      v
+<span class="green-txt">attendance record created</span>  <span class="dim">--------------------------------------></span>  <span class="green-txt">instructor sees late indicator</span>
+
+Enters grading mode
+Awards stripes
+Confirms (double-confirm)
+    <span class="dim">|</span>
+    v
+<span class="green-txt">grading_event + awards created (IMMUTABLE)</span>
+    <span class="dim">|</span>
+    <span class="dim">+--></span> Student profile updated              <span class="dim">+--></span> Parent notified
+         belt_progression rows changed              "Kai earned 3 stripes"
+         <span class="dim">|</span>                                         <span class="dim">|</span>
+         <span class="dim">+--></span> If all stripes complete:             <span class="dim">+--></span> If challenge_pending:
+              status = challenge_pending              Challenge banner shown
+                                                      Parent sets challenge
+                                                      <span class="dim">|</span>
+                                                      v
+                                                 Parent confirms complete
+                                                      <span class="dim">|</span>
+                                                      v
+                                                 <span class="green-txt">Belt awarded (automatic)</span>
+                                                 <span class="green-txt">Student status = active + new belt</span>
+                                                 <span class="green-txt">Instructor notified</span></div>
+</div>
+
+<!-- SECTION: URGENT - FOR JOHN -->
+<div class="section">
+  <div class="section-header">
+    <h2>Urgent — Needs Your Decision, John</h2>
+    <span class="badge badge-urgent">Action Required</span>
+  </div>
+
+  <div class="card open">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="priority urgent"></span>B2: JWT Secret & DB Password Rotation</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="for-john">
+        <strong>URGENT — must happen before any live data.</strong><br>
+        The server is running with default/weak credentials. Rotate JWT_SECRET and database password. Store new secrets in environment variables (.env), not in code. You have SSH access — this is your domain.
+      </div>
+      <p><strong>Where:</strong> Live server — 35.176.192.161</p>
+      <p><strong>Files:</strong> /home/ubuntu/NinjaApp/backend/.env</p>
+      <p><strong>Impact:</strong> Security prerequisite for everything else. Nothing goes live until this is done.</p>
+    </div>
+  </div>
+
+  <div class="card open">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="priority urgent"></span>B3: AES-256 Key Management</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="for-john">
+        <strong>Must-have for Phase 1 launch.</strong><br>
+        Sensitive fields (guardian email, phone, emergency contact) need encryption at rest. We need you to decide: where is the encryption key stored? What's the backup strategy? What happens if the key is lost?
+      </div>
+      <p><strong>May need:</strong> Legal/GDPR input on child data requirements.</p>
+      <p><strong>Blocks:</strong> Task #6 in Phase 1 build plan (field encryption).</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: CONFIRMED SCHEMA DECISIONS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Proposed Schema Approach</h2>
+    <span class="badge badge-ready">For Review</span>
+    <button class="expand-all" onclick="toggleAll(this)">Expand all</button>
+  </div>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:16px;">Our recommendations on schema design. If you're happy with these, build against them. If not, let's talk it through.</p>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A1</span> Element Stripes: Separate <code>belt_progression</code> Table</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Separate table, not JSON on student.</div>
+      <p>One row per student per belt level. Columns: <code>student_id</code>, <code>belt_id</code>, <code>air</code>, <code>earth</code>, <code>water</code>, <code>fire</code>, <code>element_5</code> (nullable — see A7).</p>
+      <p>Keeps history naturally across belt levels. Cleaner queries for grading and profile display.</p>
+      <table class="schema-table">
+        <tr><th>Column</th><th>Type</th><th>Notes</th></tr>
+        <tr><td><code>progression_id</code></td><td>UUID</td><td>Primary key</td></tr>
+        <tr><td><code>student_id</code></td><td>FK &rarr; students</td><td></td></tr>
+        <tr><td><code>belt_id</code></td><td>FK &rarr; belts</td><td>Which belt these stripes belong to</td></tr>
+        <tr><td><code>air</code></td><td>DECIMAL</td><td>0 / 0.5 / 1</td></tr>
+        <tr><td><code>earth</code></td><td>DECIMAL</td><td>0 / 0.5 / 1</td></tr>
+        <tr><td><code>water</code></td><td>DECIMAL</td><td>0 / 0.5 / 1</td></tr>
+        <tr><td><code>fire</code></td><td>DECIMAL</td><td>0 / 0.5 / 1</td></tr>
+        <tr><td><code>element_5</code></td><td>DECIMAL (nullable)</td><td>Reserved for 5th element — NULL until designed</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A2</span> Aura Stage: Integer on Student Record</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Single integer field on the student table.</div>
+      <p><code>aura_stage INTEGER DEFAULT 1</code> — range 1 to 13. Updated only by Nendo session completions. Grading does NOT affect it.</p>
+      <p>Simple linear progression, doesn't warrant its own table. Can be migrated to a table in Stage 2 if Nendo gets complex.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A5</span> Grading: Two Tables (Events + Awards)</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Separate <code>grading_events</code> and <code>grading_awards</code> tables.</div>
+      <p><strong>grading_events</strong> = one row per grading session (class, instructor, date).</p>
+      <p><strong>grading_awards</strong> = one row per stripe awarded (student, element, value, FK to event).</p>
+      <p>Both tables are <strong>immutable</strong> (Rule #9). Corrections use a supersedes FK (see C1 below).</p>
+      <table class="schema-table">
+        <tr><th colspan="3" style="color:var(--accent);">grading_events</th></tr>
+        <tr><td><code>grading_event_id</code></td><td>UUID</td><td>Primary key</td></tr>
+        <tr><td><code>class_id</code></td><td>FK</td><td>Which class was graded</td></tr>
+        <tr><td><code>instructor_id</code></td><td>FK</td><td>Who graded</td></tr>
+        <tr><td><code>session_date</code></td><td>DATE</td><td>Server clock</td></tr>
+        <tr><td><code>created_at</code></td><td>TIMESTAMP</td><td></td></tr>
+      </table>
+      <table class="schema-table">
+        <tr><th colspan="3" style="color:var(--accent);">grading_awards</th></tr>
+        <tr><td><code>award_id</code></td><td>UUID</td><td>Primary key</td></tr>
+        <tr><td><code>grading_event_id</code></td><td>FK</td><td>Links to session</td></tr>
+        <tr><td><code>student_id</code></td><td>FK</td><td>Who received the award</td></tr>
+        <tr><td><code>element</code></td><td>ENUM</td><td>Air / Earth / Water / Fire</td></tr>
+        <tr><td><code>stripe_value</code></td><td>DECIMAL</td><td>0.5 (half) or 1 (full)</td></tr>
+        <tr><td><code>belt_at_time</code></td><td>STRING</td><td>Snapshot of student's belt at time of award</td></tr>
+        <tr><td><code>correction_type</code></td><td>ENUM (nullable)</td><td>NULL for normal awards; 'revoke' / 'amend' for corrections</td></tr>
+        <tr><td><code>supersedes_award_id</code></td><td>FK (nullable)</td><td>Points to the award being corrected</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A7</span> Fifth Element: Nullable Column Now</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Plan for 5 elements. Add nullable <code>element_5</code> column to belt_progression.</div>
+      <p>Column stays NULL until the 5th element is designed and named (expected 6-12 months). UI should be flexible for 4-5 badges. Near-zero cost now, avoids retrofitting later.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">B1</span> RBAC: Application-Level Enforcement</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Field-level access control at the application layer, not middleware.</div>
+      <p>Each API endpoint/serializer explicitly includes or excludes fields based on the user's role. Three roles: Student, Parent (Guardian), Instructor. Access matrix defined in the Shared Data Model spec (Section 6).</p>
+      <p>Faster to build, easier to debug. The access matrix is simple enough that app-level enforcement is sufficient.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">B4</span> Avatar Placeholder: Ninja Silhouette</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Generic ninja silhouette SVG as placeholder. Full avatar system designed before launch.</div>
+      <p>A simple ninja character icon renders when no photo is set. SVG asset — no external dependency. Full avatar customisation is a later feature (logged in Improvement Log).</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: CONFIRMED API DECISIONS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Proposed API & Data Flow Approach</h2>
+    <span class="badge badge-ready">For Review</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">C1</span> Grading Corrections: Supersedes FK</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> Corrections are new rows with a <code>supersedes_award_id</code> FK. Originals are never modified.</div>
+      <p>When a mistake is found, create a new <code>grading_awards</code> row with <code>correction_type = 'revoke'</code> and <code>supersedes_award_id</code> pointing to the original. The system reads the latest non-superseded award as truth. Full audit trail preserved (Rule #9).</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">C2</span> Grading Receipts: Server-Generated</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> The <code>POST /api/grading-events</code> endpoint returns the receipt in its response.</div>
+      <p>One source of truth — the receipt always matches what the database recorded. The instructor app displays what comes back, no client-side receipt generation.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">C3</span> Belt Promotion: Automatic on Challenge Confirm</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="decision"><strong>Recommendation:</strong> When parent confirms challenge, server promotes belt in the same transaction.</div>
+      <p>One API call from the parent app: <code>POST /api/challenges/{id}/confirm</code>. Server sets <code>challenge_confirmed = true</code>, creates belt award event, updates student status to active with new belt, sends notifications — all in one transaction. No separate promotion endpoint needed.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: CONFIRMED NOTIFICATION DECISIONS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Proposed Notification Approach</h2>
+    <span class="badge badge-ready">For Review</span>
+  </div>
+
+  <div class="card">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">D1-D4</span> Notification Rules (Our Suggestions)</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <table class="schema-table">
+        <tr><th>Rule</th><th>Recommendation</th></tr>
+        <tr><td>Delivery (Phase 1)</td><td>On screen load only. No timed polling. Fetch on Home screen open or pull-to-refresh.</td></tr>
+        <tr><td>Batching</td><td>One notification per grading session (not per stripe). Summary lists all elements earned.</td></tr>
+        <tr><td>Recipients</td><td>All guardians in the family. Each gets their own row with independent <code>read_at</code>.</td></tr>
+        <tr><td>Preferences</td><td>Per-type toggles with mandatory exceptions (see below).</td></tr>
+      </table>
+      <p style="margin-top:12px;"><strong>Mandatory notifications (always on, no toggle):</strong></p>
+      <p><code>challenge_ready</code> &middot; <code>belt_awarded</code> &middot; <code>payment_failed</code> &middot; <code>grading_update</code> &middot; <code>transfer_request</code> &middot; <code>transfer_outcome</code></p>
+      <p style="margin-top:8px;"><strong>Optional (toggle, on by default):</strong></p>
+      <p><code>attendance_absent</code> &middot; <code>attendance_late</code> &middot; <code>makeup_booked</code> &middot; <code>enrolment_request</code></p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: STILL OPEN -->
+<div class="section">
+  <div class="section-header">
+    <h2>Still Open — Needs Resolution</h2>
+    <span class="badge badge-blocked">3 Items</span>
+  </div>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:16px;">These are unresolved. You can start around them but they'll need answering before the relevant tables are finalised.</p>
+
+  <div class="card open">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A3</span> Soft Delete Convention</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="open-q"><strong>OPEN:</strong> Should all tables use a <code>status</code> enum, a <code>deleted_at</code> timestamp, or both?</div>
+      <p>Affects every table. Student already uses a <code>status</code> enum. Options: extend that pattern to all tables, use a universal <code>deleted_at</code>, or use both (deleted_at for soft delete, status for business meaning).</p>
+    </div>
+  </div>
+
+  <div class="card open">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A4</span> Student-to-Family Relationship</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="open-q"><strong>OPEN:</strong> One family per student (simple FK) or many-to-many (junction table for blended families)?</div>
+      <p>Affects parent schema, notification routing, and billing. One-to-many covers 95%+ of cases. Many-to-many properly handles shared custody but adds complexity everywhere.</p>
+    </div>
+  </div>
+
+  <div class="card open">
+    <div class="card-header" onclick="toggleCard(this)">
+      <h3><span class="task-id">A6</span> Challenge Schema</h3>
+      <span class="arrow">&#9654;</span>
+    </div>
+    <div class="card-body">
+      <div class="open-q"><strong>OPEN:</strong> Standalone <code>challenges</code> table or fields directly on the student record?</div>
+      <p>Standalone table preserves challenge history across belts. Fields on student are simpler but lose history when belt changes. Related to Working Doc Pending Decision #10.</p>
+    </div>
+  </div>
+</div>
+
+<!-- SECTION: PHASE 1 BUILD ORDER -->
+<div class="section">
+  <div class="section-header">
+    <h2>Phase 1 — Build Order</h2>
+    <span class="badge badge-info">17 Tasks</span>
+  </div>
+  <p style="color:var(--text-dim); font-size:14px; margin-bottom:16px;">From the Working Doc. All NOT STARTED except Task #6 which is blocked on your encryption key decision (B3).</p>
+
+  <table class="schema-table">
+    <tr><th>#</th><th>Task</th><th>Priority</th><th>Status</th><th>Notes</th></tr>
+    <tr><td>1</td><td>Rotate JWT_SECRET and DB password</td><td><span class="priority urgent"></span> URGENT</td><td class="status-john">YOUR CALL</td><td>B2 — do this first</td></tr>
+    <tr><td>2</td><td>Set up HTTPS via Certbot</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td>Security prerequisite</td></tr>
+    <tr><td>3</td><td>Make GitHub repo accessible for Claude</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td>Your action — repo settings</td></tr>
+    <tr><td>4</td><td>Complete Parent schema</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td>Spec in shared data model</td></tr>
+    <tr><td>5</td><td>Complete Student schema</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td>Includes challenge_pending status</td></tr>
+    <tr><td>6</td><td>AES-256 encryption for sensitive fields</td><td><span class="priority critical"></span> Critical</td><td class="status-john">BLOCKED ON B3</td><td>Needs your key management decision</td></tr>
+    <tr><td>7</td><td>Soft deletes across all tables</td><td><span class="priority critical"></span> Critical</td><td class="status-open">BLOCKED ON A3</td><td>Convention not yet decided</td></tr>
+    <tr><td>8</td><td>Create grading_events table</td><td><span class="priority critical"></span> Critical</td><td class="status-resolved">READY if A5 approved</td><td>Two-table design proposed (A5)</td></tr>
+    <tr><td>9</td><td>belt_progression — half-stripe support</td><td><span class="priority critical"></span> Critical</td><td class="status-resolved">READY if A1 approved</td><td>Separate table proposed (A1)</td></tr>
+    <tr><td>10</td><td>belt_progression — element_category + 5th column</td><td><span class="priority critical"></span> Critical</td><td class="status-resolved">READY if A7 approved</td><td>5th element nullable column proposed (A7)</td></tr>
+    <tr><td>11</td><td>Create grading_rules table — all 11 belts</td><td><span class="priority critical"></span> Critical</td><td class="status-resolved">READY</td><td>Config-driven (Rule #1)</td></tr>
+    <tr><td>12</td><td>Create Two-Week Challenge schema</td><td><span class="priority critical"></span> Critical</td><td class="status-open">BLOCKED ON A6</td><td>Table vs fields not yet decided</td></tr>
+    <tr><td>13</td><td>Create parent_notifications table</td><td><span class="priority critical"></span> Critical</td><td class="status-resolved">READY if D3 approved</td><td>Schema in notification spec; all-guardian delivery proposed (D3)</td></tr>
+    <tr><td>14</td><td>Create makeup_bookings table</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td></td></tr>
+    <tr><td>15</td><td>Create LMS tables</td><td><span class="priority high"></span> High</td><td>Not started</td><td>Schema only</td></tr>
+    <tr><td>16</td><td>Automated daily database backups</td><td><span class="priority critical"></span> Critical</td><td>Not started</td><td>Before live data</td></tr>
+    <tr><td>17</td><td>Schema review and sign-off</td><td>Gate</td><td>Not started</td><td>Your sign-off required</td></tr>
+  </table>
+</div>
+
+<!-- SECTION: DEFERRED ITEMS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Deferred — Not for Phase 1</h2>
+    <span class="badge badge-info">Parked</span>
+  </div>
+  <table class="schema-table">
+    <tr><th>Item</th><th>Deferred To</th><th>Notes</th></tr>
+    <tr><td>C4: XP system values</td><td>Post-launch</td><td>Build XP bar with placeholder logic. Real values defined after launch.</td></tr>
+    <tr><td>D5: Push notification service</td><td>Phase C</td><td>OneSignal vs direct APNs/FCM. Notification schema works either way.</td></tr>
+    <tr><td>D6: Real-time delivery method</td><td>Phase C</td><td>Websocket vs push vs upgraded polling. Schema is delivery-agnostic.</td></tr>
+  </table>
+</div>
+
+<!-- SECTION: KEY SPECS -->
+<div class="section">
+  <div class="section-header">
+    <h2>Where to Find the Full Specs</h2>
+    <span class="badge badge-info">Reference</span>
+  </div>
+  <table class="schema-table">
+    <tr><th>Document</th><th>Location</th><th>Status</th></tr>
+    <tr><td>Decision Map (this brief's source)</td><td><code>_SHARED/integration/DECISION_MAP.md</code></td><td class="status-resolved">Active</td></tr>
+    <tr><td>Shared Data Model</td><td><code>_SHARED/integration/shared-data-model.md</code></td><td>Partially resolved</td></tr>
+    <tr><td>Grading Pipeline</td><td><code>_SHARED/integration/grading-pipeline.md</code></td><td>Partially resolved</td></tr>
+    <tr><td>Notification System</td><td><code>_SHARED/integration/notification-system.md</code></td><td>Partially resolved</td></tr>
+    <tr><td>Working Doc v2.0</td><td><code>_MASTER/NinjaLearning_WorkingDoc_v2.0.md</code></td><td>Active</td></tr>
+  </table>
+</div>
+
+<footer>
+  Ninja Learning &middot; Backend Brief &middot; April 2026 &middot; Prepared by Hazza + Claude &middot; All recommendations subject to your review
+</footer>
+
+</div>
+
+<script>
+function toggleCard(header) {
+  header.closest('.card').classList.toggle('open');
+}
+function toggleAll(btn) {
+  const section = btn.closest('.section');
+  const cards = section.querySelectorAll('.card');
+  const allOpen = [...cards].every(c => c.classList.contains('open'));
+  cards.forEach(c => {
+    if (allOpen) c.classList.remove('open');
+    else c.classList.add('open');
+  });
+  btn.textContent = allOpen ? 'Expand all' : 'Collapse all';
+}
+</script>
+</body>
+</html>

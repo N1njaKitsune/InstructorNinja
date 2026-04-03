@@ -28,4 +28,4 @@
 ## How to Push to InstructorNinja Public Repo
 > ⚠️ This is done from the master project only.
 > Run from master repo root:
-> `git subtree push --prefix=instructor origin InstructorNinja`
+> `git subtree push --prefix=instructor InstructorNinja main`

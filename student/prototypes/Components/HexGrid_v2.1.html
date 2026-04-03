@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexGrid v2.1 — Template</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #05050A;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 20%, #05050A 85%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+#hexGrid {
+  position: relative;
+  z-index: 1;
+}
+
+/* Dim siblings on hover */
+#satellites:has(.hex-item:hover) .hex-item:not(:hover) {
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+.hex-item { transition: opacity 0.2s ease; }
+</style>
+</head>
+<body>
+<svg id="hexGrid"></svg>
+
+<script>
+/* ═══════════════════════════════════════════
+   GEOMETRY — do not edit
+   ═══════════════════════════════════════════ */
+const SQRT3_OVER2 = Math.sqrt(3) / 2;
+const DEG         = Math.PI / 180;
+
+function hexVertices(cx, cy, R) {
+  return Array.from({ length: 6 }, (_, i) => {
+    const a = (-90 + 60 * i) * DEG;
+    return { x: cx + R * Math.cos(a), y: cy + R * Math.sin(a) };
+  });
+}
+function sideNormal(s) {
+  const a = (-60 + 60 * s) * DEG;
+  return { dx: Math.cos(a), dy: Math.sin(a) };
+}
+function itemCentre(menuR, itemR, side, gap) {
+  const d = (menuR + itemR) * SQRT3_OVER2 + gap;
+  const n = sideNormal(side);
+  return { x: n.dx * d, y: n.dy * d };
+}
+
+/* ═══════════════════════════════════════════
+   CONSTANTS — confirmed
+   ═══════════════════════════════════════════ */
+const MENU_R     = 108;
+const ITEM_RATIO = 0.59;
+const GAP        = 22;
+const ITEM_R     = MENU_R * ITEM_RATIO;
+const FILL_ORDER = [0, 1, 2, 3, 4, 5];   // clockwise from upper-right
+
+/* ═══════════════════════════════════════════
+   CONFIG — how many items, which selected
+   ═══════════════════════════════════════════ */
+const CONFIG = {
+  count:    6,          // 1–6
+  selected: new Set(),  // item indices that are selected
+};
+
+/* ═══════════════════════════════════════════
+   COLOURS
+   ═══════════════════════════════════════════ */
+const C = {
+  hubFill:       '#0D0D16',
+  hubStroke:     'rgba(245,240,232,0.15)',
+  itemFill:      '#0D0D16',
+  itemStroke:    'rgba(245,240,232,0.12)',
+  itemHover:     '#13131E',
+  selectionRing: '#8B1A1A',
+  selectionGlow: 'rgba(139,26,26,0.4)',
+};
+
+/* ═══════════════════════════════════════════
+   SVG HELPERS
+   ═══════════════════════════════════════════ */
+const NS  = 'http://www.w3.org/2000/svg';
+const svg = document.getElementById('hexGrid');
+
+function el(tag, attrs) {
+  const e = document.createElementNS(NS, tag);
+  if (attrs) Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+  return e;
+}
+function pts(verts) {
+  return verts.map(v => `${v.x.toFixed(2)},${v.y.toFixed(2)}`).join(' ');
+}
+
+/* ═══════════════════════════════════════════
+   SELECTION RING ANIMATION
+   ═══════════════════════════════════════════ */
+function animateSelectionOn(ringEl, glowEl) {
+  ringEl.style.transition = 'none';
+  ringEl.setAttribute('stroke-opacity', '0');
+  glowEl.setAttribute('opacity', '0');
+
+  /* Force reflow */
+  void ringEl.getBoundingClientRect();
+
+  ringEl.style.transition = 'stroke-opacity 0.3s ease';
+  glowEl.style.transition = 'opacity 0.3s ease';
+  ringEl.setAttribute('stroke-opacity', '1');
+  glowEl.setAttribute('opacity', '1');
+}
+
+function animateSelectionOff(ringEl, glowEl) {
+  ringEl.style.transition = 'stroke-opacity 0.25s ease';
+  glowEl.style.transition = 'opacity 0.25s ease';
+  ringEl.setAttribute('stroke-opacity', '0');
+  glowEl.setAttribute('opacity', '0');
+}
+
+/* ═══════════════════════════════════════════
+   BUILD
+   ═══════════════════════════════════════════ */
+function build() {
+  svg.innerHTML = '';
+
+  /* Defs — glow filter */
+  const defs = el('defs');
+  const f    = el('filter', { id: 'glow', x: '-50%', y: '-50%', width: '200%', height: '200%' });
+  f.appendChild(el('feGaussianBlur', { in: 'SourceGraphic', stdDeviation: '7' }));
+  defs.appendChild(f);
+  svg.appendChild(defs);
+
+  /* Positions */
+  const menuV = hexVertices(0, 0, MENU_R);
+  const items = FILL_ORDER.slice(0, CONFIG.count).map((side, i) => {
+    const c = itemCentre(MENU_R, ITEM_R, side, GAP);
+    return { index: i, cx: c.x, cy: c.y, verts: hexVertices(c.x, c.y, ITEM_R) };
+  });
+
+  /* Bounding box */
+  const all  = [...menuV, ...items.flatMap(it => it.verts)];
+  const PAD  = 40;
+  const minX = Math.min(...all.map(v => v.x)) - PAD;
+  const minY = Math.min(...all.map(v => v.y)) - PAD;
+  const maxX = Math.max(...all.map(v => v.x)) + PAD;
+  const maxY = Math.max(...all.map(v => v.y)) + PAD;
+  svg.setAttribute('viewBox', `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+  svg.setAttribute('width',   maxX - minX);
+  svg.setAttribute('height',  maxY - minY);
+
+  /* ── Satellites ── */
+  const satG = el('g', { id: 'satellites' });
+
+  items.forEach(item => {
+    const selected  = CONFIG.selected.has(item.index);
+    const ringR     = ITEM_R * 1.115;
+    const ringVerts = hexVertices(item.cx, item.cy, ringR);
+    const g         = el('g', { class: 'hex-item' });
+
+    /* Glow (selection only) */
+    const glow = el('polygon', {
+      points:  pts(hexVertices(item.cx, item.cy, ringR * 1.1)),
+      fill:    C.selectionGlow,
+      filter:  'url(#glow)',
+      opacity: selected ? '1' : '0',
+    });
+    g.appendChild(glow);
+
+    /* Selection ring */
+    const ring = el('polygon', {
+      points:          pts(ringVerts),
+      fill:            'none',
+      stroke:          C.selectionRing,
+      'stroke-width':  '2',
+      'stroke-opacity': selected ? '1' : '0',
+    });
+    g.appendChild(ring);
+
+    /* Face */
+    const face = el('polygon', {
+      points:         pts(item.verts),
+      fill:           C.itemFill,
+      stroke:         C.itemStroke,
+      'stroke-width': '1',
+    });
+    g.appendChild(face);
+
+    /* Hit area */
+    const hit = el('polygon', {
+      points: pts(item.verts),
+      fill:   'transparent',
+      style:  'cursor:pointer',
+    });
+
+    hit.addEventListener('mouseenter', () => {
+      face.setAttribute('fill', C.itemHover);
+    });
+    hit.addEventListener('mouseleave', () => {
+      face.setAttribute('fill', C.itemFill);
+    });
+    hit.addEventListener('click', () => {
+      if (CONFIG.selected.has(item.index)) {
+        CONFIG.selected.delete(item.index);
+        animateSelectionOff(ring, glow);
+      } else {
+        CONFIG.selected.add(item.index);
+        animateSelectionOn(ring, glow);
+      }
+    });
+
+    g.appendChild(hit);
+    satG.appendChild(g);
+  });
+
+  svg.appendChild(satG);
+
+  /* ── Hub (on top) ── */
+  const hubG = el('g', { id: 'hub' });
+
+  /* Outer subtle ring */
+  hubG.appendChild(el('polygon', {
+    points:         pts(hexVertices(0, 0, MENU_R * 1.03)),
+    fill:           'none',
+    stroke:         C.hubStroke,
+    'stroke-width': '0.75',
+  }));
+
+  /* Face */
+  hubG.appendChild(el('polygon', {
+    points:         pts(menuV),
+    fill:           C.hubFill,
+    stroke:         C.hubStroke,
+    'stroke-width': '1.5',
+  }));
+
+  svg.appendChild(hubG);
+}
+
+build();
+</script>
+</body>
+</html>

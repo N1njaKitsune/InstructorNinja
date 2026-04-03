@@ -1,12 +1,12 @@
 # StudentNinja — Workflow
 
-**Last updated:** 2026-03-31
+**Last updated:** 2026-04-02
 
 ---
 
-## Sprint Status: Doc Restructure Complete ✅
+## Sprint Status: Demo Polish Pass 🔧
 
-All 12 Nendō screens built and self-contained. Documentation architecture rebuilt. Two code bugs fixed.
+All 12 Nendō screens built. Now cleaning up dev tools, viewport fitting, and rough edges so the suite works as a smooth testable demo. Full audit in `DEMO_POLISH_AUDIT.md`.
 
 ---
 
@@ -45,9 +45,10 @@ All 12 Nendō screens built and self-contained. Documentation architecture rebui
 
 | Priority | Task |
 |----------|------|
-| 🔴 High | Live testing pass — open each screen in browser, check visuals + nav |
-| 🔴 High | Update `StudentNinja_ScreenIndex_v1.0.html` to v4.0 links |
-| 🟡 Medium | Git push from master project (`git subtree push --prefix=student origin StudentNinja`) |
+| 🔴 High | **Demo polish — Phase 1:** Remove sessionStorage dev-mode persistence, gate version labels + dev panels, fix ScreenIndex Kaze link |
+| 🔴 High | **Demo polish — Phase 2:** Fix 100vw scrollbar issue, standardise viewport meta, ensure clean overflow in non-dev mode |
+| 🔴 High | **Demo polish — Phase 3:** Full walkthrough verification (no-dev + dev mode) |
+| 🟡 Medium | Git push from master project (`git subtree push --prefix=student StudentNinja main`) |
 | 🟡 Medium | Nendō ↔ Student Profile data flow spec (`_SHARED/integration/`) |
 | 🟡 Medium | Student Profile section doc — move Profile spec out of nendo/ARCHITECTURE.md into its own `profile/` subfolder |
 | 🟡 Medium | Wire remaining Nendō screens to `aura.js` when aura is added to them |
@@ -124,5 +125,6 @@ Hi: `rgba(215, 130, 100, x)` — orange-red
 ## How to Push to StudentNinja Public Repo
 > ⚠️ Git operations handled from master project only — not this workspace.
 > ```
-> git subtree push --prefix=student origin StudentNinja
+> git subtree push --prefix=student StudentNinja main
 > ```
+> Note: `StudentNinja` is the remote name (points to `github.com/N1njaKitsune/StudentNinja.git`), `main` is the branch. Do **not** use `origin StudentNinja` — that pushes a branch to the master project repo instead.
