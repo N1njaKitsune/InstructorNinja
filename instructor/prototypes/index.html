@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ninja Learning — Instructor Prototypes</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #141010;
+    --bg-mid: #1E1814;
+    --amber: #D4943A;
+    --amber-light: #E8B86D;
+    --copper: #C17832;
+    --text-primary: rgba(255,248,240,0.94);
+    --text-secondary: rgba(255,230,210,0.55);
+    --text-muted: rgba(255,220,190,0.35);
+    --glass-bg: rgba(255,220,180,0.045);
+    --glass-border: rgba(255,200,150,0.09);
+    --glass-border-top: rgba(255,220,180,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    padding: 0 0 80px;
+  }
+
+  /* ── Header ── */
+  .header {
+    padding: 52px 24px 28px;
+    border-bottom: 1px solid rgba(255,200,150,0.07);
+    background: linear-gradient(180deg, rgba(212,148,58,0.04) 0%, transparent 100%);
+  }
+  .header-eyebrow {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 20px;
+    height: 1px;
+    background: var(--amber);
+    opacity: 0.5;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: 8px;
+  }
+  .header p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* ── Section ── */
+  .section {
+    padding: 28px 20px 0;
+  }
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+
+  /* ── Card grid ── */
+  .card-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .proto-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--glass-bg);
+    border: 1px solid var(--glass-border);
+    border-top: 1px solid var(--glass-border-top);
+    border-radius: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .proto-card:active {
+    background: rgba(255,220,180,0.07);
+    transform: scale(0.985);
+  }
+
+  .proto-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 18px;
+  }
+  .proto-icon.amber  { background: rgba(212,148,58,0.12); border: 1px solid rgba(212,148,58,0.2); }
+  .proto-icon.green  { background: rgba(107,191,122,0.10); border: 1px solid rgba(107,191,122,0.18); }
+  .proto-icon.blue   { background: rgba(100,160,220,0.10); border: 1px solid rgba(100,160,220,0.18); }
+  .proto-icon.purple { background: rgba(160,132,200,0.10); border: 1px solid rgba(160,132,200,0.18); }
+  .proto-icon.red    { background: rgba(217,91,78,0.10);  border: 1px solid rgba(217,91,78,0.18); }
+
+  .proto-info { flex: 1; min-width: 0; }
+  .proto-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .proto-desc {
+    font-size: 11px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  .proto-badge {
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .badge-latest { background: rgba(212,148,58,0.14); border: 1px solid rgba(212,148,58,0.25); color: var(--amber); }
+  .badge-wip    { background: rgba(107,191,122,0.10); border: 1px solid rgba(107,191,122,0.2); color: #6BBF7A; }
+  .badge-prev   { background: rgba(255,220,190,0.05); border: 1px solid rgba(255,220,190,0.1); color: var(--text-muted); }
+
+  .proto-arrow {
+    opacity: 0.25;
+    flex-shrink: 0;
+  }
+
+  /* ── Glow divider ── */
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,148,58,0.15), transparent);
+    margin: 28px 20px 0;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    padding: 28px 24px 0;
+    text-align: center;
+  }
+  .footer p {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .footer .dot { color: var(--amber); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-eyebrow">Ninja Learning</div>
+  <h1>Instructor App<br>Prototypes</h1>
+  <p>Live preview — tap any build to open it.</p>
+</div>
+
+<!-- CURRENT BUILD -->
+<div class="section">
+  <div class="section-label">Current Build</div>
+  <div class="card-grid">
+
+    <a class="proto-card" href="NinjaLearning_InstructorApp_v3.0.html">
+      <div class="proto-icon amber">🥷</div>
+      <div class="proto-info">
+        <div class="proto-name">Instructor App v3.0</div>
+        <div class="proto-desc">Glassmorphism warm premium — full app</div>
+      </div>
+      <span class="proto-badge badge-latest">Latest</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <a class="proto-card" href="ClassCard_Carousel_v1.html">
+      <div class="proto-icon green">🃏</div>
+      <div class="proto-info">
+        <div class="proto-name">Class Card Carousel v1</div>
+        <div class="proto-desc">Standalone carousel component — warm glass</div>
+      </div>
+      <span class="proto-badge badge-wip">Component</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- DESIGN DIRECTIONS -->
+<div class="section">
+  <div class="section-label">Design Directions</div>
+  <div class="card-grid">
+
+    <a class="proto-card" href="Instructor_Glassmorphism_Premium.html">
+      <div class="proto-icon amber">✨</div>
+      <div class="proto-info">
+        <div class="proto-name">Glassmorphism Premium</div>
+        <div class="proto-desc">Full premium glass — warm amber</div>
+      </div>
+      <span class="proto-badge badge-prev">v2.x</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <a class="proto-card" href="Instructor_RefinedInk.html">
+      <div class="proto-icon purple">🖋</div>
+      <div class="proto-info">
+        <div class="proto-name">Refined Ink</div>
+        <div class="proto-desc">Dark ink direction — high contrast</div>
+      </div>
+      <span class="proto-badge badge-prev">Direction</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <a class="proto-card" href="Instructor_DirectionA_DojoInk.html">
+      <div class="proto-icon red">⛩</div>
+      <div class="proto-info">
+        <div class="proto-name">Dojo Ink</div>
+        <div class="proto-desc">Direction A — bold dojo aesthetic</div>
+      </div>
+      <span class="proto-badge badge-prev">Direction</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <a class="proto-card" href="Instructor_DirectionB_CleanSensei.html">
+      <div class="proto-icon blue">🧘</div>
+      <div class="proto-info">
+        <div class="proto-name">Clean Sensei</div>
+        <div class="proto-desc">Direction B — minimal, clean</div>
+      </div>
+      <span class="proto-badge badge-prev">Direction</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+  </div>
+</div>
+
+<div class="glow-line"></div>
+
+<!-- PREVIOUS VERSIONS -->
+<div class="section">
+  <div class="section-label">Previous Versions</div>
+  <div class="card-grid">
+
+    <a class="proto-card" href="NinjaLearning_InstructorApp_v2.0.html">
+      <div class="proto-icon amber">📱</div>
+      <div class="proto-info">
+        <div class="proto-name">Instructor App v2.0</div>
+        <div class="proto-desc">Previous full build</div>
+      </div>
+      <span class="proto-badge badge-prev">v2.0</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+    <a class="proto-card" href="NinjaLearning_InstructorApp_v1.0.html">
+      <div class="proto-icon amber">📱</div>
+      <div class="proto-info">
+        <div class="proto-name">Instructor App v1.0</div>
+        <div class="proto-desc">Original build</div>
+      </div>
+      <span class="proto-badge badge-prev">v1.0</span>
+      <svg class="proto-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3.5L10.5 8L6 12.5" stroke="rgba(255,230,210,0.8)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+
+  </div>
+</div>
+
+<div class="footer">
+  <p>Ninja Learning <span class="dot">·</span> Instructor App <span class="dot">·</span> Internal Preview</p>
+</div>
+
+</body>
+</html>
